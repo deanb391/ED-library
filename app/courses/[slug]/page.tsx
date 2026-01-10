@@ -22,6 +22,11 @@ import { useRouter } from 'next/navigation';
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';
 import ImageMessages from '@/components/ImageMessage';
 
+interface Post {
+  id: string;
+  images: { id: string; url: string }[];
+  description?: string;
+}
 
 
 // --- Dummy Data ---
@@ -65,7 +70,7 @@ export default function CourseDetailsPage() {
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
-  const [modalImages, setModalImages] = useState([])
+  const [modalImages, setModalImages] = useState<Post[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -170,7 +175,7 @@ export default function CourseDetailsPage() {
         </div> */}
 
         {
-          posts.map((post, key) => {
+          posts.map((post: Post, key: number) => {
             return (
               <div className='mb-5'>
                 <ImageMessages
