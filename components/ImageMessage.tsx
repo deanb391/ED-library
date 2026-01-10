@@ -10,7 +10,7 @@ interface ImageMessage {
 interface ImageMessagesProps {
   images: ImageMessage[];
   message?: string;
-  onPress: (index) => void
+  onPress: (index: number) => void
 }
 
 export default function ImageMessages({ images, message, onPress }: ImageMessagesProps) {
