@@ -109,7 +109,7 @@ export default function UploadPage() {
     
   } catch (err) {
     console.error(err);
-    alert("Upload failed");
+    alert(`Upload failed ${err}`);
   } finally {
     setIsUploading(false);
   }

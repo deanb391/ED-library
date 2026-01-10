@@ -162,7 +162,7 @@ export async function createPost(
     COLLECTION_ID,
     courseId,
     {
-      lastOperation: Date.now()
+      lastOperation: "Now"
     }
   )
   return post
@@ -231,11 +231,11 @@ export async function deleteFileFromCourse(courseId: string, fileUrl: string) {
     await storage.deleteFile(BUCKET_ID, fileId);
 
     // Get current course files
-    const course = await databases.getDocument(DATABASE_ID, COLLECTION_ID, courseId);
-    const updatedFiles = (course.files || []).filter((url: string) => url !== fileUrl);
+    const course = await databases.getDocument(DATABASE_ID, POST_COLLECTION, courseId);
+    const updatedFiles = (course.images || []).filter((url: string) => url !== fileUrl);
 
     // Update course document
-    await databases.updateDocument(DATABASE_ID, COLLECTION_ID, courseId, { files: updatedFiles });
+    await databases.updateDocument(DATABASE_ID, POST_COLLECTION, courseId, { images: updatedFiles });
 
     return true;
   } catch (err) {
