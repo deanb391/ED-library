@@ -7,7 +7,8 @@ import { getCurrentUser } from '@/lib/appwrite';
 import Image from "next/image";
 
 export default function Header() {
-    const [user, setUser] = useState()
+    const [user, setUser] = useState<any>(null);
+
     
       useEffect(() =>{
         const getUser = async () => {
