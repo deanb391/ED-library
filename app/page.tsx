@@ -233,8 +233,7 @@ export default function EDLibraryHome() {
 
               {/* Content */}
               <div className="p-4 flex flex-col gap-2 flex-grow">
-                <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wide ${course.color}`}>
-                  {course.icon}
+                <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wide `}>
                   <span>{course.code}</span>
                 </div>
 
