@@ -182,7 +182,7 @@ const prevImage = () => {
         <div className="flex items-center gap-3">
           { isAdmin && (
             <button 
-              onClick={() => { onDelete(files[currentIndex].previewUrl)}}
+              onClick={() => { onDelete(files[currentIndex])}}
               className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-colors">
               <Trash2 size={14} />
               Delete Note
