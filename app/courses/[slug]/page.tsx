@@ -179,7 +179,7 @@ export default function CourseDetailsPage() {
             return (
               <div className='mb-5'>
                 <ImageMessages
-                images={post.images.map((f, key) => ({ id: key, url: f.url }))}
+                images={post.images}
                 message={post.description}
                 onPress={(index) =>{
                   setSelectedNoteIndex(index)

@@ -8,7 +8,7 @@ interface ImageMessage {
 }
 
 interface ImageMessagesProps {
-  images: ImageMessage[];
+  images: string [];
   message?: string;
   onPress: (index: number) => void
 }
@@ -31,15 +31,11 @@ export default function ImageMessages({ images, message, onPress }: ImageMessage
         {previewImages.map((img, i) => (
           <div 
             onClick={() => onPress(i)}
-            key={img.id} className="relative aspect-square overflow-hidden
-            transition
-    active:scale-[0.98]
-    active:bg-gray-50
-    hover:shadow-md
-    cursor-pointer
-            ">
+            key={i} className="relative aspect-square overflow-hidden"
+    >
+
             <Image
-              src={img.url}
+              src={img}
               alt=""
               fill
               className="object-cover"
