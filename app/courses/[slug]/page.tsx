@@ -24,7 +24,7 @@ import ImageMessages from '@/components/ImageMessage';
 
 interface Post {
   id: string;
-  images: { id: string; url: string }[];
+  images: string [];
   description?: string;
 }
 
@@ -70,7 +70,7 @@ export default function CourseDetailsPage() {
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
-  const [modalImages, setModalImages] = useState<{ id: string; url: string }[]>([])
+  const [modalImages, setModalImages] = useState<string []>([])
   const router = useRouter()
 
   useEffect(() => {
