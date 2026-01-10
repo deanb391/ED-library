@@ -23,4 +23,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  
+}
+
+@tailwind utilities;
+
+@layer components {
+  .label {
+    @apply block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none;
+  }
 }
