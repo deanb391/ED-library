@@ -51,11 +51,22 @@ const PENDING_FILES = [
   },
 ];
 
+export type Course = {
+  id: string;
+  title: string;
+  code: string;
+  description: string;
+  lecturer?: string;
+  thumbnailId: string;
+  thumbnailUrl: string;
+  files?: string[];
+};
+
 export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [semester, setSemester] = useState('Fall 2023');
   const [files, setFiles] = useState<File[]>([]);
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const MAX_FILES = 15;
