@@ -132,20 +132,20 @@ const prevImage = () => {
 
 // example import
 
-const downloadImage = async () => {
-  const file = files[currentIndex];
-  try {
-    const url = await storage.getFileDownload(file.id); // generates a signed URL
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `note-page-${currentIndex + 1}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (err) {
-    console.error(err);
-  }
-};
+// const downloadImage = async () => {
+//   const file = files[currentIndex];
+//   try {
+//     const url = await storage.getFileDownload(file.id); // generates a signed URL
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `note-page-${currentIndex + 1}.png`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
 
 
 
