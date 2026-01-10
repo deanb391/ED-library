@@ -70,7 +70,7 @@ export default function CourseDetailsPage() {
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
-  const [modalImages, setModalImages] = useState<Post[]>([])
+  const [modalImages, setModalImages] = useState<{ id: string; url: string }[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -179,7 +179,7 @@ export default function CourseDetailsPage() {
             return (
               <div className='mb-5'>
                 <ImageMessages
-                images={post.images.map((f, key) => ({ id: key, url: f }))}
+                images={post.images.map((f, key) => ({ id: key, url: f.url }))}
                 message={post.description}
                 onPress={(index) =>{
                   setSelectedNoteIndex(index)
@@ -208,7 +208,7 @@ export default function CourseDetailsPage() {
             setModalImages([])
           }}
           initialIndex={selectedNoteIndex}
-          files={modalImages}
+          files={modalImages as any}
           onDelete={(url: string) => {
             setIsViewerOpen(false)
             setIsFileDeleteOpen(true)

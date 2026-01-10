@@ -5,7 +5,6 @@ import Image from "next/image";
 interface ImageMessage {
   id: string | number;
   url: string;
-  onPress: (index) => void
 }
 
 interface ImageMessagesProps {
