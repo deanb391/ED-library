@@ -65,7 +65,7 @@ export default function CourseDetailsPage() {
   const [isCourseDeleteOpen, setIsCourseDeleteOpen] = useState(false);
   const [isFileDeleteOpen, setIsFileDeleteOpen] = useState(false);
   const [deleteUrl, setDeleteUrl] = useState('')
-  const [posts, setPosts] = useState<any>();
+  const [posts, setPosts] = useState<Post[]>([]);
 const [cursor, setCursor] = useState<string | null>(null);
 const [loadingPosts, setLoadingPosts] = useState(false);
 const [hasMore, setHasMore] = useState(true);
