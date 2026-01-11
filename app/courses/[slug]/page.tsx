@@ -215,7 +215,7 @@ const [hasMore, setHasMore] = useState(true);
         </div> */}
 
         {posts.map((post, key) => (
-          <div key={post.$id} className="mb-5">
+          <div key={post.id} className="mb-5">
             <ImageMessages
               images={post.images}
               message={post.description}

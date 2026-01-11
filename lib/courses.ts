@@ -92,14 +92,22 @@ export async function fetchCourses(): Promise<Course[]> {
   }
 }
 
+
+
+interface Post {
+  id: string;
+  images: string[];
+  description?: string;
+}
+
 export async function fetchPosts(
-  course_id: string,
+  courseId: string,
   limit = 5,
   cursor?: string
-) {
+): Promise<{ posts: Post[]; lastId: string | null }> {
   try {
     const queries = [
-      Query.equal("courses", course_id),
+      Query.equal("courses", courseId),
       Query.orderDesc("$createdAt"),
       Query.limit(limit),
     ];
@@ -114,15 +122,24 @@ export async function fetchPosts(
       queries
     );
 
-    return {
-      posts: response.documents,
-      lastId: response.documents.at(-1)?.$id || null,
-    };
+    const posts: Post[] = response.documents.map(doc => ({
+      id: doc.$id,
+      images: doc.images ?? [],
+      description: doc.description ?? "",
+    }));
+
+    const lastId =
+      response.documents.length > 0
+        ? response.documents[response.documents.length - 1].$id
+        : null;
+
+    return { posts, lastId };
   } catch (err) {
     console.error("Failed to fetch posts", err);
     return { posts: [], lastId: null };
   }
 }
+
 
 
 
