@@ -1,21 +1,22 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 
-interface ImageMessage {
-  id: string | number;
-  url: string;
-}
-
 interface ImageMessagesProps {
-  images: string [];
+  images: string[];
   message?: string;
-  onPress: (index: number) => void
+  onPress: (index: number) => void;
 }
 
-export default function ImageMessages({ images, message, onPress }: ImageMessagesProps) {
+export default function ImageMessages({
+  images,
+  message,
+  onPress,
+}: ImageMessagesProps) {
   const previewImages = images.slice(0, 4);
   const extraCount = images.length - 4;
+
+  const [loaded, setLoaded] = useState<Record<number, boolean>>({});
 
   const gridClass =
     previewImages.length === 1
@@ -26,19 +27,30 @@ export default function ImageMessages({ images, message, onPress }: ImageMessage
 
   return (
     <div className="max-w-[360px] rounded-2xl bg-blue-500 p-1">
-      {/* Images */}
       <div className={`grid ${gridClass} gap-1 overflow-hidden rounded-xl`}>
         {previewImages.map((img, i) => (
-          <div 
+          <div
+            key={i}
             onClick={() => onPress(i)}
-            key={i} className="relative aspect-square overflow-hidden"
-    >
+            className="relative aspect-square overflow-hidden bg-blue-400"
+          >
+            {/* Loading overlay */}
+            {!loaded[i] && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
+            )}
 
             <Image
               src={img}
               alt=""
               fill
-              className="object-cover"
+              className={`object-cover transition-opacity duration-300 ${
+                loaded[i] ? "opacity-100" : "opacity-0"
+              }`}
+              onLoadingComplete={() =>
+                setLoaded((prev) => ({ ...prev, [i]: true }))
+              }
             />
 
             {i === 3 && extraCount > 0 && (
@@ -50,11 +62,8 @@ export default function ImageMessages({ images, message, onPress }: ImageMessage
         ))}
       </div>
 
-      {/* Caption */}
       {message && (
-        <p className="px-2 py-1 text-sm text-white">
-          {message}
-        </p>
+        <p className="px-2 py-1 text-sm text-white">{message}</p>
       )}
     </div>
   );

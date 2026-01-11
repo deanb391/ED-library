@@ -55,6 +55,8 @@ export default function NoteViewerModal({
   const [zoom, setZoom] = useState(0.5);
   const [rotation, setRotation] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true);
+
   
   // Swipe State
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -73,6 +75,11 @@ export default function NoteViewerModal({
     }
     getUser()
   }, [isOpen, initialIndex]);
+
+  useEffect(() => {
+    setImageLoading(true);
+  }, [currentIndex]);
+
 
   // Handle Keyboard Navigation
   useEffect(() => {
@@ -242,25 +249,36 @@ const prevImage = () => {
 
 
         {/* Image Display */}
-       <div className="relative flex justify-center items-center w-full h-full overflow-auto">
-        {files[currentIndex] ? (
-          <Image
-            src={files[currentIndex]}
-            alt={`Page ${currentIndex + 1}`}
-            width={600} 
-            height={800} 
-            className="object-contain shadow-2xl transition-transform duration-200"
-            draggable={false}
-            style={{
-              transform: `scale(${zoom}) rotate(${rotation}deg)`,
-              transformOrigin: 'center center'
-            }}
-            priority
-          />
-        ) : (
-          <p className="text-white">Image not available</p>
-        )}
-      </div>
+        <div className="relative flex justify-center items-center w-full h-full overflow-auto">
+          {/* Loading Indicator */}
+          {imageLoading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0F1115]">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-600 border-t-blue-500" />
+            </div>
+          )}
+
+          {files[currentIndex] ? (
+            <Image
+              src={files[currentIndex]}
+              alt={`Page ${currentIndex + 1}`}
+              width={600}
+              height={800}
+              className={`object-contain shadow-2xl transition-transform duration-200 ${
+                imageLoading ? "opacity-0" : "opacity-100"
+              }`}
+              draggable={false}
+              style={{
+                transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                transformOrigin: "center center",
+              }}
+              onLoadingComplete={() => setImageLoading(false)}
+              priority
+            />
+          ) : (
+            <p className="text-white">Image not available</p>
+          )}
+        </div>
+
 
 
 

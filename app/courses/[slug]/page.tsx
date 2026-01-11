@@ -65,7 +65,10 @@ export default function CourseDetailsPage() {
   const [isCourseDeleteOpen, setIsCourseDeleteOpen] = useState(false);
   const [isFileDeleteOpen, setIsFileDeleteOpen] = useState(false);
   const [deleteUrl, setDeleteUrl] = useState('')
-  const [posts, setPosts] = useState<any>()
+  const [posts, setPosts] = useState<any>();
+const [cursor, setCursor] = useState<string | null>(null);
+const [loadingPosts, setLoadingPosts] = useState(false);
+const [hasMore, setHasMore] = useState(true);
 
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -74,21 +77,58 @@ export default function CourseDetailsPage() {
   const router = useRouter()
 
   useEffect(() => {
+    const init = async () => {
+      const doc = await getCurrentUser();
+      if (doc) setIsAdmin(true);
 
-    const getUser = async () => {
-      const doc = await getCurrentUser()
-      if (doc) setIsAdmin(true)
+      const courseDoc = await fetchCourseById(courseId);
+      setCourse(courseDoc);
 
-      const [course_doc, posts_doc] = await Promise.all([
-        fetchCourseById(courseId),
-        fetchPosts(courseId)
-      ])
-      setCourse(course_doc);
-      setPosts(posts_doc);
-      setLoading(false)
-    }
-    getUser()
+      const { posts: firstPosts, lastId } = await fetchPosts(courseId);
+      setPosts(firstPosts);
+      setCursor(lastId);
+      setHasMore(firstPosts.length === 5);
+
+      setLoading(false);
+    };
+
+    init();
   }, [courseId]);
+
+  const loadMorePosts = async () => {
+    if (!hasMore || loadingPosts) return;
+
+    setLoadingPosts(true);
+
+    const { posts: newPosts, lastId } = await fetchPosts(
+      courseId,
+      5,
+      cursor || undefined
+    );
+
+    setPosts(prev => [...prev, ...newPosts]);
+    setCursor(lastId);
+    setHasMore(newPosts.length === 5);
+
+    setLoadingPosts(false);
+  };
+
+  useEffect(() => {
+  const onScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 200
+      ) {
+        loadMorePosts();
+      }
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [cursor, hasMore, loadingPosts]);
+
+
+
 
    if (loading) {
     return (
@@ -174,32 +214,26 @@ export default function CourseDetailsPage() {
 
         </div> */}
 
-        {
-          posts.map((post: Post, key: number) => {
-            return (
-              <div className='mb-5'>
-                <ImageMessages
-                images={post.images}
-                message={post.description}
-                onPress={(index) =>{
-                  setSelectedNoteIndex(index)
-                  setModalImages(post.images)
-                  setIsViewerOpen(true)
-                }}
-              />
-              </div>
-              
-            )
-          })
-        }
+        {posts.map((post, key) => (
+          <div key={post.$id} className="mb-5">
+            <ImageMessages
+              images={post.images}
+              message={post.description}
+              onPress={(index) => {
+                setSelectedNoteIndex(index);
+                setModalImages(post.images);
+                setIsViewerOpen(true);
+              }}
+            />
+          </div>
+        ))}
 
-        {/* Pagination Button */}
-        <div className="mt-12 flex justify-center">
-            <button className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-full text-sm font-bold text-gray-800 shadow-sm transition-all">
-              Show more notes
-              <ChevronDown size={16} />
-            </button>
-        </div>
+
+        {loadingPosts && (
+          <div className="flex justify-center py-6">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          </div>
+        )}
 
         <NoteViewerModal
           isOpen={isViewerOpen}

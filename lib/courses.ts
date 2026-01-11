@@ -92,27 +92,82 @@ export async function fetchCourses(): Promise<Course[]> {
   }
 }
 
-export async function fetchPosts(course_id: string) {
+export async function fetchPosts(
+  course_id: string,
+  limit = 5,
+  cursor?: string
+) {
   try {
+    const queries = [
+      Query.equal("courses", course_id),
+      Query.orderDesc("$createdAt"),
+      Query.limit(limit),
+    ];
+
+    if (cursor) {
+      queries.push(Query.cursorAfter(cursor));
+    }
+
     const response = await databases.listDocuments(
       DATABASE_ID,
       POST_COLLECTION,
-      [Query.equal("courses", course_id), Query.orderDesc("$createdAt")]
+      queries
     );
 
-    return response.documents
+    return {
+      posts: response.documents,
+      lastId: response.documents.at(-1)?.$id || null,
+    };
   } catch (err) {
     console.error("Failed to fetch posts", err);
-    return [];
+    return { posts: [], lastId: null };
   }
 }
 
 
+
+async function compressImage(
+  file: File,
+  maxWidth = 1600,
+  quality = 0.75
+): Promise<File> {
+  const imageBitmap = await createImageBitmap(file);
+
+  const scale = Math.min(1, maxWidth / imageBitmap.width);
+  const width = imageBitmap.width * scale;
+  const height = imageBitmap.height * scale;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas failed");
+
+  ctx.drawImage(imageBitmap, 0, 0, width, height);
+
+  const blob: Blob = await new Promise((resolve) =>
+    canvas.toBlob(
+      (b) => resolve(b as Blob),
+      "image/jpeg",
+      quality
+    )
+  );
+
+  return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+    type: "image/jpeg",
+  });
+}
+
+
 export async function uploadImage(file: File) {
+
+  const compressed = await compressImage(file);
+
   const uploaded = await storage.createFile(
     BUCKET_ID,
     ID.unique(),
-    file
+    compressed
   );
 
   return buildFileViewUrl(BUCKET_ID, uploaded.$id);

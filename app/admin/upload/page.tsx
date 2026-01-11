@@ -126,7 +126,10 @@ const handleFiles = (incoming: FileList | null) => {
     return;
   }
 
-  setFiles((prev) => [...prev, ...incomingFiles]);
+  const normalizedIncoming = [...incomingFiles].reverse();
+  // const nomr = [...normalizedIncoming].reverse()
+
+  setFiles((prev) => [...prev, ...normalizedIncoming]);
 };
 
   // Drag & Drop Handlers
@@ -146,9 +149,18 @@ const handleFiles = (incoming: FileList | null) => {
     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
     <p className="text-gray-700 text-sm">Loading, please wait...</p>
   </div>
-);
+);}
 
-  }
+    if (isUploading
+    ) {
+    return (
+  <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+    <p className="text-gray-700 text-sm">Uploading, please wait...</p>
+  </div>
+);}
+
+  
 
     if (!isAdmin) {
     return (
@@ -240,6 +252,9 @@ const handleFiles = (incoming: FileList | null) => {
                     key={index}
                     className="relative w-28 h-36 flex-shrink-0 rounded-lg overflow-hidden border"
                   >
+                    <p>
+                      {index}
+                    </p>
                     <img
                       src={URL.createObjectURL(file)}
                       alt={file.name}
