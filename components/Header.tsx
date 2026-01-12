@@ -5,19 +5,20 @@ import Link from 'next/link';
 import { BookOpen, Plus } from 'lucide-react';
 import { getCurrentUser } from '@/lib/appwrite';
 import Image from "next/image";
+import { useUser } from '@/context/UserContext';
 
 export default function Header() {
-    const [user, setUser] = useState<any>(null);
+  const {user,loading} = useUser()
 
-    
-      useEffect(() =>{
-        const getUser = async () => {
-          const doc = await getCurrentUser()
-          console.log("User")
-          if (doc) setUser(doc)
-        }
-      getUser()
-      }, [])
+  function HeaderSkeleton() {
+  return (
+    <div className="flex items-center gap-3 animate-pulse">
+
+      <div className="h-9 w-20 rounded-lg bg-gray-200" />
+    </div>
+  );
+}
+
       
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
@@ -39,40 +40,56 @@ export default function Header() {
       </div>
 
       {/* Right Actions */}
-      {
-        user && (
-            <div className="flex items-center gap-3">
-                <Link href="/admin/create-course">
-                <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-colors">
+{loading ? (
+  <HeaderSkeleton />
+) : (
+  <>
+    {user?.isAdmin && (
+      <div className="flex items-center gap-3">
+        <Link href="/admin/create-course">
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-colors">
+            Create Course
+          </button>
+        </Link>
 
-  Create Course
-</button>
-
-                </Link>
-
-                <Link href="/admin/upload">
+        <Link href="/admin/upload">
           <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
             Upload
           </button>
         </Link>
-                
-                
-{/*                 
-                <div className="w-9 h-9 rounded-full bg-orange-100 border border-orange-200 overflow-hidden relative">
-                
+      </div>
+    )}
 
-                <Image
-                src="/assets/images/admin-profile.jpg"
-                alt="User"
-                width={200}
-                height={200}
-                className="object-cover"
-                />
+    {user?.isAdmin === false && (
+      <div className="w-9 h-9 rounded-full bg-orange-100 border border-orange-200 overflow-hidden relative">
+        <Image
+          src={user.avatar}
+          alt="User"
+          width={200}
+          height={200}
+          className="object-cover"
+        />
+      </div>
+    )}
 
-                </div> */}
-            </div>
-        )
-      }
+    {user === null && (
+      <div className="flex items-center gap-3">
+        <Link href="/signin">
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-colors">
+            Sign in
+          </button>
+        </Link>
+
+        <Link href="/signup">
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            Sign Up
+          </button>
+        </Link>
+      </div>
+    )}
+  </>
+)}
+
     </nav>
   );
 }

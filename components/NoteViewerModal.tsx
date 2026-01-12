@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import { getCurrentUser, storage } from '@/lib/appwrite';
 import { buildDownloadUrlFromView } from '@/lib/courses';
+import { useUser } from '@/context/UserContext';
 
 
 // --- Dummy Data for the Viewer ---
@@ -56,6 +57,7 @@ export default function NoteViewerModal({
   const [rotation, setRotation] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false)
   const [imageLoading, setImageLoading] = useState(true);
+  const {user} = useUser()
 
   
   // Swipe State
@@ -70,8 +72,7 @@ export default function NoteViewerModal({
       setRotation(0);
     }
     const getUser = async () => {
-      const doc = await getCurrentUser()
-      if (doc) setIsAdmin(true)
+      if (user?.isAdmin) setIsAdmin(true)
     }
     getUser()
   }, [isOpen, initialIndex]);

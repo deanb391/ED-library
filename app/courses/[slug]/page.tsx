@@ -21,6 +21,7 @@ import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
 import { useRouter } from 'next/navigation';
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';
 import ImageMessages from '@/components/ImageMessage';
+import { useUser } from '@/context/UserContext';
 
 interface Post {
   id: string;
@@ -74,12 +75,13 @@ const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
   const [modalImages, setModalImages] = useState<string []>([])
-  const router = useRouter()
+  const router = useRouter();
+  const {user} = useUser()
 
   useEffect(() => {
     const init = async () => {
-      const doc = await getCurrentUser();
-      if (doc) setIsAdmin(true);
+
+      if (user?.isAdmin) setIsAdmin(true);
 
       const courseDoc = await fetchCourseById(courseId);
       setCourse(courseDoc);

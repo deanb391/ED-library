@@ -18,6 +18,7 @@ import { appendFilesToCourse, createPost, fetchCourses, uploadImage } from '@/li
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
+import { useUser } from '@/context/UserContext';
 
 // --- Dummy Data ---
 const PENDING_FILES = [
@@ -73,13 +74,13 @@ export default function UploadPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState('');
+  const {user} = useUser();
 
   useEffect(() => {
       fetchCourses().then(setCourses);
       const getUser = async () => {
-        const doc = await getCurrentUser()
-        if (doc) setIsAdmin(true);
+        if (user?.isAdmin) setIsAdmin(true);
         setLoading(false)
       }
     getUser();

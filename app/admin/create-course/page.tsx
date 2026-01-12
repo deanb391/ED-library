@@ -6,6 +6,7 @@ import Link from "next/link";
 import { uploadThumbnail, createCourse } from "@/lib/courses";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/appwrite";
+import { useUser } from "@/context/UserContext";
 
 
 export default function CreateCoursePage() {
@@ -17,12 +18,12 @@ export default function CreateCoursePage() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
+  const {user} = useUser()
 
   useEffect(() => {
         const getUser = async () => {
-          const doc = await getCurrentUser()
-          if (doc) setIsAdmin(true);
+          if (user?.isAdmin) setIsAdmin(true);
           setLoading(false);
         }
       getUser();

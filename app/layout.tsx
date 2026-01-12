@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import Footer from '@/components/Footer';
 import TrackPageView from "@/components/TrackPageView";
+import { UserProvider } from "@/context/UserContext";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -20,16 +21,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    <UserProvider>
     <html lang="en">
       <body className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}>
         <Header />
         <main className="flex-grow w-full">
           <GoogleAnalytics />
           <TrackPageView />
-          {children}
+
+            {children}
+
+          
         </main>
         <Footer />
       </body>
     </html>
+    </UserProvider>
   );
 }
