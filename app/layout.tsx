@@ -3,7 +3,9 @@ import "./globals.css";
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Header from '@/components/Header';
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import Footer from '@/components/Footer';
+import TrackPageView from "@/components/TrackPageView";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,6 +24,8 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}>
         <Header />
         <main className="flex-grow w-full">
+          <GoogleAnalytics />
+          <TrackPageView />
           {children}
         </main>
         <Footer />
