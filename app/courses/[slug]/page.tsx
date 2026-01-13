@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
-import { deleteCourse, deleteFileFromCourse, fetchCourseById, fetchPosts } from '@/lib/courses';
+import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts } from '@/lib/courses';
 import Image from 'next/image';
 import { getCurrentUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
@@ -22,6 +22,10 @@ import { useRouter } from 'next/navigation';
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';
 import ImageMessages from '@/components/ImageMessage';
 import { useUser } from '@/context/UserContext';
+import EditPostModal from '@/components/EditPostModal';
+import PostActionModal from '@/components/PostActionModal';
+import ConfirmPostDelete from '@/components/ConfirmPostDelete';
+import EditCourseModal from '@/components/EditCourseModal';
 
 interface Post {
   id: string;
@@ -64,17 +68,26 @@ export default function CourseDetailsPage() {
   const params = useParams();
   const courseId = params.slug as string;
   const [isCourseDeleteOpen, setIsCourseDeleteOpen] = useState(false);
+  const [isPostDeleteOpen, setIsPostDeleteOpen] = useState(false);
   const [isFileDeleteOpen, setIsFileDeleteOpen] = useState(false);
   const [deleteUrl, setDeleteUrl] = useState('')
   const [posts, setPosts] = useState<Post[]>([]);
 const [cursor, setCursor] = useState<string | null>(null);
 const [loadingPosts, setLoadingPosts] = useState(false);
 const [hasMore, setHasMore] = useState(true);
+  const [postId, setPostId] = useState("")
 
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
   const [modalImages, setModalImages] = useState<string []>([])
+  const [activePost, setActivePost] = useState<Post | null>(null);
+const [showActions, setShowActions] = useState(false);
+const [showEdit, setShowEdit] = useState(false);
+const [savingEdit, setSavingEdit] = useState(false);
+const [showEditCourse, setShowEditCourse] = useState(false);
+
+
   const router = useRouter();
   const {user} = useUser()
 
@@ -130,6 +143,24 @@ const [hasMore, setHasMore] = useState(true);
   }, [cursor, hasMore, loadingPosts]);
 
 
+  const handleSaveEdit = async (value: string) => {
+    if (!activePost) return;
+
+    try {
+      setSavingEdit(true);
+      await editPost(activePost.id, { description: value });
+
+      setPosts(prev =>
+        prev.map(p =>
+          p.id === activePost.id ? { ...p, description: value } : p
+        )
+      );
+
+      setShowEdit(false);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
 
    if (loading) {
@@ -166,9 +197,11 @@ const [hasMore, setHasMore] = useState(true);
 
           {/* Action Buttons */}
           {
-            isAdmin && (
+            (isAdmin && course?.user === user?.$id) && (
               <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button 
+            onClick={() => setShowEditCourse(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               <Pencil size={16} />
               Edit Course
             </button>
@@ -219,12 +252,22 @@ const [hasMore, setHasMore] = useState(true);
         {posts.map((post, key) => (
           <div key={post.id} className="mb-5">
             <ImageMessages
+              id={post.id}
               images={post.images}
               message={post.description}
               onPress={(index) => {
                 setSelectedNoteIndex(index);
                 setModalImages(post.images);
                 setIsViewerOpen(true);
+                setPostId(post.id)
+              }}
+              onLongPress={(id) => {
+                if (!user?.isAdmin) return;
+                const found = posts.find(p => p.id === id);
+                if (!found) return;
+                setActivePost(found);
+                setShowActions(true);
+                setPostId(post.id)
               }}
             />
           </div>
@@ -256,7 +299,7 @@ const [hasMore, setHasMore] = useState(true);
           isOpen={isFileDeleteOpen}
           onClose={() => setIsFileDeleteOpen(false)}
           onConfirm={async () => {
-            await deleteFileFromCourse(courseId, deleteUrl);
+            await deleteFileFromPost(postId, deleteUrl);
             setIsFileDeleteOpen(false);
             router.replace(`/`)
           }}
@@ -273,6 +316,57 @@ const [hasMore, setHasMore] = useState(true);
           }}
           courseTitle={course.title}
         />
+
+          <ConfirmPostDelete 
+            isOpen={isPostDeleteOpen} 
+            onClose={() => setIsPostDeleteOpen(false)}
+            onConfirm={async () => {
+              await deletePost(postId);
+              setIsPostDeleteOpen(false);
+              router.replace("/")
+            }}
+            courseTitle={course.title}
+          />
+
+        <PostActionModal
+  isOpen={showActions}
+  onClose={() => setShowActions(false)}
+  onEdit={() => {
+    setShowActions(false);
+    setShowEdit(true);
+  }}
+  onDelete={() => {
+    setShowActions(false);
+    setIsPostDeleteOpen(true);
+  }}
+/>
+
+<EditPostModal
+  isOpen={showEdit}
+  initialValue={activePost?.description}
+  loading={savingEdit}
+  onClose={() => setShowEdit(false)}
+  onSave={handleSaveEdit}
+/>
+
+<EditCourseModal
+  isOpen={showEditCourse}
+  onClose={() => setShowEditCourse(false)}
+  course={{
+    id: course.$id,
+    title: course.title,
+    code: course.code,
+    description: course.description,
+    lecturer: course.lecturer,
+    thumbnailId: course.thumbnailId,
+    thumbnailUrl: course.thumbnailUrl,
+  }}
+  onUpdated={(updated) =>
+    setCourse((prev) => ({ ...prev, ...updated }))
+  }
+/>
+
+
 
       </main>
     </div>

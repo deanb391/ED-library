@@ -14,7 +14,7 @@ import {
   Lightbulb, 
   GraduationCap 
 } from 'lucide-react';
-import { appendFilesToCourse, createPost, fetchCourses, uploadImage } from '@/lib/courses';
+import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/courses';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
@@ -78,13 +78,13 @@ export default function UploadPage() {
   const {user} = useUser();
 
   useEffect(() => {
-      fetchCourses().then(setCourses);
+      fetchCoursesByAdmin(user?.$id).then(setCourses);
       const getUser = async () => {
         if (user?.isAdmin) setIsAdmin(true);
         setLoading(false)
       }
     getUser();
-    }, []);
+    }, [user]);
 
   const handleUpload = async () => {
   if (!selectedCourse || files.length === 0) return;

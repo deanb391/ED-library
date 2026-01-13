@@ -53,6 +53,7 @@ export async function createCourse(data: {
   lecturer?: string;
   thumbnailId: string;
   thumbnailUrl: string;
+  user: string,
 }) {
   return databases.createDocument(
     DATABASE_ID,
@@ -74,6 +75,30 @@ export async function fetchCourses(): Promise<Course[]> {
       DATABASE_ID,
       COLLECTION_ID,
       [Query.orderDesc("$updatedAt"), Query.limit(15)]
+    );
+
+    return response.documents.map((doc: any) => ({
+      id: doc.$id,
+      title: doc.title,
+      code: doc.code,
+      description: doc.description,
+      lecturer: doc.lecturer,
+      thumbnailId: doc.thumbnailId,
+      thumbnailUrl: doc.thumbnailUrl,
+      files: doc.files || [],
+    }));
+  } catch (err) {
+    console.error("Failed to fetch courses", err);
+    return [];
+  }
+}
+
+export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
+  try {
+    const response = await databases.listDocuments(
+      DATABASE_ID,
+      COLLECTION_ID,
+      [Query.orderDesc("$updatedAt"), Query.equal("user", userId)]
     );
 
     return response.documents.map((doc: any) => ({
@@ -241,6 +266,19 @@ export async function createPost(
 
 }
 
+export async function editPost(
+  postId: string,
+  data: Partial<{
+    description: string
+  }>
+) {
+  try {
+    return await databases.updateDocument(DATABASE_ID, POST_COLLECTION, postId, data);
+  } catch (err) {
+    console.error("Failed to update post", err);
+    throw err;
+  }
+}
 
 export async function fetchCourseById(courseId: string) {
   const course = await databases.getDocument(
@@ -292,7 +330,16 @@ export async function deleteCourse(courseId: string) {
 }
 
 
-export async function deleteFileFromCourse(courseId: string, fileUrl: string) {
+export async function deletePost(postId: string) {
+  try {
+    return await databases.deleteDocument(DATABASE_ID, POST_COLLECTION, postId);
+  } catch (err) {
+    console.error("Failed to delete post", err);
+    alert("Failed To Delete Post")
+  }
+}
+
+export async function deleteFileFromPost(postId: string, fileUrl: string) {
   try {
     // Extract file ID from the URL
     const match = fileUrl.match(/files\/([a-zA-Z0-9]+)\/view/);
@@ -303,15 +350,15 @@ export async function deleteFileFromCourse(courseId: string, fileUrl: string) {
     await storage.deleteFile(BUCKET_ID, fileId);
 
     // Get current course files
-    const course = await databases.getDocument(DATABASE_ID, POST_COLLECTION, courseId);
+    const course = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
     const updatedFiles = (course.images || []).filter((url: string) => url !== fileUrl);
 
     // Update course document
-    await databases.updateDocument(DATABASE_ID, POST_COLLECTION, courseId, { images: updatedFiles });
+    await databases.updateDocument(DATABASE_ID, POST_COLLECTION, postId, { images: updatedFiles });
 
     return true;
   } catch (err) {
-    console.error("Failed to delete file from course", err);
+    console.error("Failed to delete file from post", err);
     throw err;
   }
 }

@@ -45,6 +45,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       lecturer: lecturer || undefined,
       thumbnailId: uploaded.fileId,
       thumbnailUrl: uploaded.url,
+      user: user?.$id
     });
 
     alert("Course created successfully");
