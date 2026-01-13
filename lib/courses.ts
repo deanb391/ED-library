@@ -69,9 +69,27 @@ export function buildDownloadUrlFromView(viewUrl: string) {
   return viewUrl.replace("/view", "/download").split("&mode=admin")[0];
 }
 
-export async function fetchCourses(): Promise<Course[]> {
+export async function fetchCourses(user?: any): Promise<Course[]> {
   try {
-    const response = await databases.listDocuments(
+    if(user ) {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.orderDesc("$updatedAt"), Query.limit(15), Query.equal("department", user?.department), Query.equal('level', user?.level)]
+      );
+
+      return response.documents.map((doc: any) => ({
+        id: doc.$id,
+        title: doc.title,
+        code: doc.code,
+        description: doc.description,
+        lecturer: doc.lecturer,
+        thumbnailId: doc.thumbnailId,
+        thumbnailUrl: doc.thumbnailUrl,
+        files: doc.files || [],
+      }));
+    } else {
+       const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION_ID,
       [Query.orderDesc("$updatedAt"), Query.limit(15)]
@@ -87,6 +105,7 @@ export async function fetchCourses(): Promise<Course[]> {
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
     }));
+    }
   } catch (err) {
     console.error("Failed to fetch courses", err);
     return [];
@@ -293,10 +312,17 @@ export async function fetchCourseById(courseId: string) {
     previewUrl: url,
   }));
 
-  return {
-    ...course,
-    files,
-  };
+  return ({
+      id: course.$id,
+      title: course.title,
+      code: course.code,
+      description: course.description,
+      lecturer: course.lecturer,
+      thumbnailId: course.thumbnailId,
+      thumbnailUrl: course.thumbnailUrl,
+      files: course.files || [],
+      user: course.user
+    })
 }
 
 export async function editCourse(

@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { getCurrentUser } from '@/lib/appwrite';
 import { Course, fetchCourses, searchCourses } from '@/lib/courses';
+import { useUser } from '@/context/UserContext';
 
 // --- Dummy Data Configuration ---
 const DUMMY_COURSES = [
@@ -88,9 +89,10 @@ export default function EDLibraryHome() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const {user} = useUser()
 
   useEffect(() => {
-    fetchCourses().then((data) => {
+    fetchCourses(user).then((data) => {
       setCourses(data);
       setLoading(false);
     });

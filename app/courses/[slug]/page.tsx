@@ -33,6 +33,18 @@ interface Post {
   description?: string;
 }
 
+export type Course = {
+  id: string;
+  title: string;
+  code: string;
+  description: string;
+  lecturer?: string;
+  thumbnailId: string;
+  thumbnailUrl: string;
+  files?: string[];
+  user?: any
+};
+
 
 // --- Dummy Data ---
 const NOTES_DATA = [
@@ -77,7 +89,7 @@ const [loadingPosts, setLoadingPosts] = useState(false);
 const [hasMore, setHasMore] = useState(true);
   const [postId, setPostId] = useState("")
 
-  const [course, setCourse] = useState<any>(null);
+  const [course, setCourse] = useState<Course| null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
   const [modalImages, setModalImages] = useState<string []>([])
@@ -185,13 +197,13 @@ const [showEditCourse, setShowEditCourse] = useState(false);
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
-              {course.title}
+              {course?.title}
             </h1>
             <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
               <User size={16} />
-              <span>{course.lecturer}</span>
+              <span>{course?.lecturer}</span>
               <span className="mx-1">•</span>
-              <span>{course.code}</span>
+              <span>{course?.code}</span>
             </div>
           </div>
 
@@ -314,7 +326,7 @@ const [showEditCourse, setShowEditCourse] = useState(false);
             setIsCourseDeleteOpen(false);
             router.replace("/")
           }}
-          courseTitle={course.title}
+          courseTitle={course?.title}
         />
 
           <ConfirmPostDelete 
@@ -325,7 +337,7 @@ const [showEditCourse, setShowEditCourse] = useState(false);
               setIsPostDeleteOpen(false);
               router.replace("/")
             }}
-            courseTitle={course.title}
+            courseTitle={course?.title}
           />
 
         <PostActionModal
@@ -349,22 +361,24 @@ const [showEditCourse, setShowEditCourse] = useState(false);
   onSave={handleSaveEdit}
 />
 
-<EditCourseModal
-  isOpen={showEditCourse}
-  onClose={() => setShowEditCourse(false)}
-  course={{
-    id: course.$id,
-    title: course.title,
-    code: course.code,
-    description: course.description,
-    lecturer: course.lecturer,
-    thumbnailId: course.thumbnailId,
-    thumbnailUrl: course.thumbnailUrl,
-  }}
-  onUpdated={(updated) =>
-    setCourse((prev) => ({ ...prev, ...updated }))
-  }
-/>
+{course && (
+  <EditCourseModal
+    isOpen={showEditCourse}
+    onClose={() => setShowEditCourse(false)}
+    course={{
+      id: course.id,
+      title: course.title,
+      code: course.code,
+      description: course.description,
+      lecturer: course.lecturer,
+      thumbnailId: course.thumbnailId,
+      thumbnailUrl: course.thumbnailUrl,
+    }}
+    onUpdated={(updated) =>
+      setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)
+    }
+  />
+)}
 
 
 
