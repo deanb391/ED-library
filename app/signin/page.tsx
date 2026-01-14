@@ -10,7 +10,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { googleSignIn, signIn } from "@/lib/appwrite";
+import {  signIn } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
 
 export default function AdminLoginPage() {

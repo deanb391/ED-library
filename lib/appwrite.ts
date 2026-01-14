@@ -134,25 +134,25 @@ export async function signIn(email: string, password: string) {
 }
 
 
-export const googleSignIn = async () => {
-  try {
-    const redirectUrl = "https://cca59d659739.ngrok-free.app";
+// export const googleSignIn = async () => {
+//   try {
+//     const redirectUrl = "https://cca59d659739.ngrok-free.app";
 
-    const response = await account.createOAuth2Token(
-      OAuthProvider.Google,
-      redirectUrl,
-      redirectUrl
-    );
+//     const response = await account.createOAuth2Token(
+//       OAuthProvider.Google,
+//       redirectUrl,
+//       redirectUrl
+//     );
 
-    // Appwrite gives you a URL
-    const authUrl = response.toString();
+//     // Appwrite gives you a URL
+//     const authUrl = response.toString();
 
-    // Redirect the browser
-    window.location.href = authUrl;
+//     // Redirect the browser
+//     window.location.href = authUrl;
 
-  } catch (error) {
-    console.error("Error during Google sign-in:", error);
-    throw error;
-  }
-};
+//   } catch (error) {
+//     console.error("Error during Google sign-in:", error);
+//     throw error;
+//   }
+// };
 
