@@ -144,6 +144,11 @@ export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
+      user: doc.user,
+      isOnGoing: doc.isOnGoing,
+      session: doc.session,
+      level: doc.level,
+      department: doc.department
     }));
   } catch (err) {
     console.error("Failed to fetch courses", err);
