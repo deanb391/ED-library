@@ -20,6 +20,28 @@ export default function CreateCoursePage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true);
   const {user} = useUser()
+  const [level, setLevel] = useState("");
+  const [session, setSession] = useState("")
+    const [department, setDepartment] = useState("");
+
+        const LEVELS = [100, 200, 300, 400, 500, 600];
+
+const DEPARTMENTS = [
+  "Mechanical Engineering",
+  "Electrical Engineering",
+  "Civil Engineering",
+  "Computer Engineering",
+  "Chemical Engineering",
+  "Petroleum Engineering",
+  "Agricultural Engineering",
+  "Marine Engineering",
+];
+
+const sessions = [
+  "2023/2024",
+  "2024/2025",
+  "2025/2026"
+]
 
   useEffect(() => {
         const getUser = async () => {
@@ -33,6 +55,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!thumbnail) return;
 
+  const lvl = Number(level)
   setIsLoading(true);
 
   try {
@@ -45,7 +68,11 @@ const handleSubmit = async (e: React.FormEvent) => {
       lecturer: lecturer || undefined,
       thumbnailId: uploaded.fileId,
       thumbnailUrl: uploaded.url,
-      user: user?.$id
+      user: user?.$id,
+      department: department,
+      level: lvl,
+      session: session,
+      isOnGoing: false
     });
 
     alert("Course created successfully");
@@ -148,6 +175,73 @@ const handleSubmit = async (e: React.FormEvent) => {
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
+
+          {/* Session */}
+
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-gray-700 ml-1">
+                Session
+            </label>
+            <select
+                required
+                value={session}
+                onChange={(e) => setSession(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+            >
+                <option value="" disabled>
+                Select Session
+                </option>
+                {sessions.map((ses) => (
+                <option key={ses} value={ses}>
+                    {ses}
+                </option>
+                ))}
+            </select>
+            </div>
+
+          {/* Level */}
+            <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-gray-700 ml-1">
+                Level
+            </label>
+            <select
+                required
+                value={level}
+                onChange={(e) => setLevel(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+            >
+                <option value="" disabled>
+                Select level
+                </option>
+                {LEVELS.map((lvl) => (
+                <option key={lvl} value={lvl}>
+                    {lvl}
+                </option>
+                ))}
+            </select>
+            </div>
+
+                    {/* Department */}
+<div className="space-y-1.5">
+  <label className="block text-xs font-bold text-gray-700 ml-1">
+    Department
+  </label>
+  <select
+    required
+    value={department}
+    onChange={(e) => setDepartment(e.target.value)}
+    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+  >
+    <option value="" disabled>
+      Select department
+    </option>
+    {DEPARTMENTS.map((dept) => (
+      <option key={dept} value={dept}>
+        {dept}
+      </option>
+    ))}
+  </select>
+</div>
 
           {/* Lecturer */}
           <div>

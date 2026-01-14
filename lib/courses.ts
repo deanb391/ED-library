@@ -19,6 +19,10 @@ export type Course = {
   thumbnailId: string;
   thumbnailUrl: string;
   files?: string[];
+  isOnGoing: Boolean,
+  session: string,
+  level: Number,
+  department: string
 };
 
 
@@ -54,6 +58,10 @@ export async function createCourse(data: {
   thumbnailId: string;
   thumbnailUrl: string;
   user: string,
+  department: string,
+  level: Number,
+  session: string,
+  isOnGoing?: Boolean
 }) {
   return databases.createDocument(
     DATABASE_ID,
@@ -69,30 +77,32 @@ export function buildDownloadUrlFromView(viewUrl: string) {
   return viewUrl.replace("/view", "/download").split("&mode=admin")[0];
 }
 
-export async function fetchCourses(user?: any): Promise<Course[]> {
+export async function fetchCourses(
+  user?: any,
+  isOnGoing?: boolean
+): Promise<Course[]> {
   try {
-    if(user ) {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.orderDesc("$updatedAt"), Query.limit(15), Query.equal("department", user?.department), Query.equal('level', user?.level)]
-      );
+    const queries = [
+      Query.orderDesc("$updatedAt"),
+      Query.limit(15),
+    ];
 
-      return response.documents.map((doc: any) => ({
-        id: doc.$id,
-        title: doc.title,
-        code: doc.code,
-        description: doc.description,
-        lecturer: doc.lecturer,
-        thumbnailId: doc.thumbnailId,
-        thumbnailUrl: doc.thumbnailUrl,
-        files: doc.files || [],
-      }));
-    } else {
-       const response = await databases.listDocuments(
+    if (user?.department) {
+      queries.push(Query.equal("department", user.department));
+    }
+
+    if (user?.level) {
+      queries.push(Query.equal("level", user.level));
+    }
+
+    if (typeof isOnGoing === "boolean") {
+      queries.push(Query.equal("isOnGoing", isOnGoing));
+    }
+
+    const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION_ID,
-      [Query.orderDesc("$updatedAt"), Query.limit(15)]
+      queries
     );
 
     return response.documents.map((doc: any) => ({
@@ -104,13 +114,18 @@ export async function fetchCourses(user?: any): Promise<Course[]> {
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
+      isOnGoing: doc.isOnGoing,
+      session: doc.session,
+      department: doc.department,
+      level: doc.level,
     }));
-    }
   } catch (err) {
     console.error("Failed to fetch courses", err);
     return [];
   }
 }
+
+
 
 export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
   try {
@@ -183,6 +198,47 @@ export async function fetchPosts(
     return { posts: [], lastId: null };
   }
 }
+
+export async function fetchPostsAsc(
+  courseId: string,
+  limit = 10,
+  cursor?: string
+): Promise<{ posts: Post[]; lastId: string | null }> {
+  try {
+    const queries = [
+      Query.equal("courses", courseId),
+      Query.orderAsc("$createdAt"),
+      Query.limit(limit),
+    ];
+
+    if (cursor) {
+      queries.push(Query.cursorAfter(cursor));
+    }
+
+    const response = await databases.listDocuments(
+      DATABASE_ID,
+      POST_COLLECTION,
+      queries
+    );
+
+    const posts: Post[] = response.documents.map(doc => ({
+      id: doc.$id,
+      images: doc.images ?? [],
+      description: doc.description ?? "",
+    }));
+
+    const lastId =
+      response.documents.length > 0
+        ? response.documents[response.documents.length - 1].$id
+        : null;
+
+    return { posts, lastId };
+  } catch (err) {
+    console.error("Failed to fetch posts asc", err);
+    return { posts: [], lastId: null };
+  }
+}
+
 
 
 
@@ -321,7 +377,11 @@ export async function fetchCourseById(courseId: string) {
       thumbnailId: course.thumbnailId,
       thumbnailUrl: course.thumbnailUrl,
       files: course.files || [],
-      user: course.user
+      user: course.user,
+      isOnGoing: course.isOnGoing,
+      session: course.session,
+      department: course.department,
+      level: course.level
     })
 }
 
@@ -389,32 +449,39 @@ export async function deleteFileFromPost(postId: string, fileUrl: string) {
   }
 }
 
-export async function searchCourses(query: string): Promise<Course[]> {
+export async function searchCourses(
+  query: string,
+  user?: any
+): Promise<Course[]> {
   if (!query.trim()) return [];
 
   try {
+    const baseQueries = [
+      Query.orderDesc("$updatedAt"),
+      Query.limit(30),
+    ];
+
+    // if (user?.department) {
+    //   baseQueries.push(Query.equal("department", user.department));
+    // }
+
+    // if (user?.level) {
+    //   baseQueries.push(Query.equal("level", user.level));
+    // }
+
     const [titleResults, codeResults] = await Promise.all([
       databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
-        [
-          Query.search("title", query),
-          Query.orderDesc("$updatedAt"),
-          Query.limit(20)
-        ]
+        [Query.search("title", query), ...baseQueries]
       ),
       databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
-        [
-          Query.search("code", query),
-          Query.orderDesc("$updatedAt"),
-          Query.limit(20)
-        ]
-      )
+        [Query.search("code", query), ...baseQueries]
+      ),
     ]);
 
-    // Merge + deduplicate by ID
     const map = new Map<string, any>();
 
     [...titleResults.documents, ...codeResults.documents].forEach(doc => {
@@ -429,7 +496,11 @@ export async function searchCourses(query: string): Promise<Course[]> {
       lecturer: doc.lecturer,
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
-      files: doc.files || []
+      files: doc.files || [],
+      isOnGoing: doc.isOnGoing,
+      session: doc.session,
+      department: doc.department,
+      level: doc.level,
     }));
 
   } catch (err) {

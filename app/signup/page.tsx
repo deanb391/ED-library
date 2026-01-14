@@ -232,12 +232,12 @@ const DEPARTMENTS = [
 
         {/* Google Sign In */}
         <button
+          onClick={() => {router.push("/signin")}}
           type="button"
           className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all
           active:scale-[0.98]"
         >
-          <img src="/google.svg" alt="Google" className="w-5 h-5" />
-          Sign up with Google
+          Sign In
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import { useUser } from "@/context/UserContext";
 
 interface ImageMessagesProps {
   id: string,
@@ -8,6 +9,7 @@ interface ImageMessagesProps {
   message?: string;
   onPress: (index: number) => void;
   onLongPress?: (postId: string) => void;
+  course_user: string;
 }
 
 export default function ImageMessages({
@@ -15,17 +17,21 @@ export default function ImageMessages({
   images,
   message,
   onPress,
-  onLongPress
+  onLongPress,
+  course_user,
 }: ImageMessagesProps) {
   const previewImages = images.slice(0, 4);
   const extraCount = images.length - 4;
 
   const [loaded, setLoaded] = useState<Record<number, boolean>>({});
+  const {user } = useUser()
 
   let pressTimer: NodeJS.Timeout;
 
 const handleMouseDown = () => {
   if (!onLongPress) return;
+
+  if (user?.$id !== course_user) return;
   pressTimer = setTimeout(() => onLongPress(id), 500);
 };
 

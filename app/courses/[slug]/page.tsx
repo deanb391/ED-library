@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
-import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts } from '@/lib/courses';
+import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts, fetchPostsAsc } from '@/lib/courses';
 import Image from 'next/image';
 import { getCurrentUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
@@ -26,6 +26,7 @@ import EditPostModal from '@/components/EditPostModal';
 import PostActionModal from '@/components/PostActionModal';
 import ConfirmPostDelete from '@/components/ConfirmPostDelete';
 import EditCourseModal from '@/components/EditCourseModal';
+import PdfImageList from "@/components/PdfImageList"
 
 interface Post {
   id: string;
@@ -42,7 +43,11 @@ export type Course = {
   thumbnailId: string;
   thumbnailUrl: string;
   files?: string[];
-  user?: any
+  user?: any,
+  isOnGoing: Boolean,
+  session: string,
+  level: Number,
+  department: string
 };
 
 
@@ -98,29 +103,56 @@ const [showActions, setShowActions] = useState(false);
 const [showEdit, setShowEdit] = useState(false);
 const [savingEdit, setSavingEdit] = useState(false);
 const [showEditCourse, setShowEditCourse] = useState(false);
+const [pdfImages, setPdfImages] = useState<string[]>([]);
+const [pdfCursor, setPdfCursor] = useState<string | null>(null);
+const [loadingPdf, setLoadingPdf] = useState(false);
+const [hasMorePdf, setHasMorePdf] = useState(true);
+type ViewMode = "timeline" | "pdf";
+const [viewMode, setViewMode] = useState<ViewMode>("timeline");
+
+
 
 
   const router = useRouter();
   const {user} = useUser()
 
-  useEffect(() => {
-    const init = async () => {
-
-      if (user?.isAdmin) setIsAdmin(true);
-
-      const courseDoc = await fetchCourseById(courseId);
-      setCourse(courseDoc);
-
-      const { posts: firstPosts, lastId } = await fetchPosts(courseId);
+  const fetchTimeLine = async () => {
+    const { posts: firstPosts, lastId } = await fetchPosts(courseId);
       setPosts(firstPosts);
       setCursor(lastId);
       setHasMore(firstPosts.length === 5);
+  }
 
-      setLoading(false);
-    };
+  const fetchPDf = async () => {
+    const { posts, lastId } = await fetchPostsAsc(courseId, 10);
+      setPdfImages(posts.flatMap(p => p.images));
+      setPdfCursor(lastId);
+      setHasMorePdf(posts.length === 10);
+  }
 
-    init();
-  }, [courseId]);
+  useEffect(() => {
+  const init = async () => {
+    if (user?.isAdmin) setIsAdmin(true);
+
+    const courseDoc = await fetchCourseById(courseId);
+    setCourse(courseDoc);
+
+    const defaultView: ViewMode = courseDoc.isOnGoing ? "timeline" : "pdf";
+    setViewMode(defaultView);
+
+
+    if (courseDoc.isOnGoing) {
+      fetchTimeLine()
+    } else {
+      fetchPDf()
+    }
+
+    setLoading(false);
+  };
+
+  init();
+}, [courseId]);
+
 
   const loadMorePosts = async () => {
     if (!hasMore || loadingPosts) return;
@@ -140,19 +172,46 @@ const [showEditCourse, setShowEditCourse] = useState(false);
     setLoadingPosts(false);
   };
 
+  const loadMorePdf = async () => {
+  if (!hasMorePdf || loadingPdf) return;
+
+  setLoadingPdf(true);
+
+  const { posts, lastId } = await fetchPostsAsc(
+    courseId,
+    10,
+    pdfCursor || undefined
+  );
+
+  setPdfImages(prev => [
+    ...prev,
+    ...posts.flatMap(p => p.images),
+  ]);
+
+  setPdfCursor(lastId);
+  setHasMorePdf(posts.length === 10);
+  setLoadingPdf(false);
+};
+
+
   useEffect(() => {
   const onScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 200
-      ) {
+    if (
+      window.innerHeight + window.scrollY >=
+      document.body.offsetHeight - 200
+    ) {
+      if (viewMode === "timeline") {
         loadMorePosts();
+      } else {
+        loadMorePdf();
       }
-    };
+    }
+  };
 
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [cursor, hasMore, loadingPosts]);
+  window.addEventListener("scroll", onScroll);
+  return () => window.removeEventListener("scroll", onScroll);
+}, [course, cursor, pdfCursor, loadingPosts, loadingPdf]);
+
 
 
   const handleSaveEdit = async (value: string) => {
@@ -194,7 +253,7 @@ const [showEditCourse, setShowEditCourse] = useState(false);
         
 
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
               {course?.title}
@@ -205,6 +264,15 @@ const [showEditCourse, setShowEditCourse] = useState(false);
               <span className="mx-1">•</span>
               <span>{course?.code}</span>
             </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0 mt-3">
+          <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            {course?.department}
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+            Level {String(course?.level)}
+          </span>
+        </div>
           </div>
 
           {/* Action Buttons */}
@@ -227,6 +295,9 @@ const [showEditCourse, setShowEditCourse] = useState(false);
           }
         </div>
 
+                {/* Meta row */}
+        
+
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-8 overflow-x-auto">
           <div className="flex gap-8 min-w-max">
@@ -235,6 +306,37 @@ const [showEditCourse, setShowEditCourse] = useState(false);
             </button>
 
           </div>
+
+          <div className="flex items-center gap-2 mt-2 mb-2">
+  <button
+    onClick={() => {setViewMode("timeline");
+     posts.length === 0 && fetchTimeLine()
+    }}
+    className={`p-2 rounded-lg border transition ${
+      viewMode === "timeline"
+        ? "bg-blue-600 text-white border-blue-600"
+        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+    }`}
+    title="Timeline view"
+  >
+    <Hexagon size={18} />
+  </button>
+
+  <button
+    onClick={() => {setViewMode("pdf");
+      pdfImages.length === 0 && fetchPDf()
+    }}
+    className={`p-2 rounded-lg border transition ${
+      viewMode === "pdf"
+        ? "bg-blue-600 text-white border-blue-600"
+        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+    }`}
+    title="PDF view"
+  >
+    <FileText size={18} />
+  </button>
+</div>
+
         </div>
 
         {/* Notes Grid */}
@@ -261,29 +363,50 @@ const [showEditCourse, setShowEditCourse] = useState(false);
 
         </div> */}
 
-        {posts.map((post, key) => (
-          <div key={post.id} className="mb-5">
-            <ImageMessages
-              id={post.id}
-              images={post.images}
-              message={post.description}
-              onPress={(index) => {
-                setSelectedNoteIndex(index);
-                setModalImages(post.images);
-                setIsViewerOpen(true);
-                setPostId(post.id)
-              }}
-              onLongPress={(id) => {
-                if (!user?.isAdmin) return;
-                const found = posts.find(p => p.id === id);
-                if (!found) return;
-                setActivePost(found);
-                setShowActions(true);
-                setPostId(post.id)
-              }}
-            />
-          </div>
-        ))}
+{viewMode === "timeline" ? (
+  posts.map(post => (
+    <div key={post.id} className="mb-5">
+      <ImageMessages
+        id={post.id}
+        images={post.images}
+        message={post.description}
+        onPress={(index) => {
+          setSelectedNoteIndex(index);
+          setModalImages(post.images);
+          setIsViewerOpen(true);
+        }}
+        onLongPress={(id) => {
+          if (!user?.isAdmin) return;
+          const found = posts.find(p => p.id === id);
+          if (!found) return;
+          setActivePost(found);
+          setShowActions(true);
+          setPostId(post.id);
+        }}
+        course_user={course?.user}
+      />
+    </div>
+  ))
+) : (
+  <>
+    <PdfImageList
+      images={pdfImages}
+      onPress={(index) => {
+        setSelectedNoteIndex(index);
+        setModalImages(pdfImages);
+        setIsViewerOpen(true);
+      }}
+    />
+
+    {loadingPdf && (
+      <div className="flex justify-center py-6">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    )}
+  </>
+)}
+
+
 
 
         {loadingPosts && (
@@ -305,6 +428,7 @@ const [showEditCourse, setShowEditCourse] = useState(false);
             setIsFileDeleteOpen(true)
             setDeleteUrl(url)
           }}
+          course_user={course?.user}
         />
 
         <ConfirmFileDelete

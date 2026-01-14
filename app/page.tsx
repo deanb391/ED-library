@@ -86,36 +86,64 @@ const DUMMY_COURSES = [
 
 export default function EDLibraryHome() {
   
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ongoingCourses, setOngoingCourses] = useState<Course[]>([]);
+const [pastCourses, setPastCourses] = useState<Course[]>([]);
+
+  const [lloading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const {user} = useUser()
+  const {user, loading} = useUser()
 
   useEffect(() => {
-    fetchCourses(user).then((data) => {
-      setCourses(data);
-      setLoading(false);
-    });
-  }, []);
+  if (loading) return;
 
-  useEffect(() => {
+  async function loadCourses() {
+    setLoading(true);
+
+    const [ongoing, past] = await Promise.all([
+      fetchCourses(user, true),
+      fetchCourses(user, false),
+    ]);
+
+    setOngoingCourses(ongoing);
+    setPastCourses(past);
+    setLoading(false);
+  }
+
+  loadCourses();
+}, [loading, user]);
+
+
+useEffect(() => {
+  if (loading) return;
+
   const timeout = setTimeout(async () => {
     if (!query.trim()) {
-      const all = await fetchCourses();
-      setCourses(all);
+      const [ongoing, past] = await Promise.all([
+        fetchCourses(user, true),
+        fetchCourses(user, false),
+      ]);
+
+      setOngoingCourses(ongoing);
+      setPastCourses(past);
       return;
     }
 
     setLoading(true);
-    const results = await searchCourses(query);
-    setCourses(results);
+
+    const results = await searchCourses(query, user);
+
+    setOngoingCourses(results.filter(c => c.isOnGoing));
+    setPastCourses(results.filter(c => !c.isOnGoing));
+
     setLoading(false);
-  }, 1500); // debounce
+  }, 1000); // 1500ms is slow and annoying
 
   return () => clearTimeout(timeout);
-}, [query]);
+}, [query, user, loading]);
 
-  if (loading) {
+
+
+  if (lloading) {
  return (
     <div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-sans">
       <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center">
@@ -196,7 +224,7 @@ export default function EDLibraryHome() {
       <div className="w-full">
         <div className="flex justify-between items-end mb-6">
           <h2 className="text-lg md:text-2xl font-semibold text-gray-900">
-            Browse your courses
+            Ongoing Courses
           </h2>
           <a
             href="#"
@@ -207,49 +235,125 @@ export default function EDLibraryHome() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {courses.map((course) => (
-            <Link
-              key={course.id}
-              href={`/courses/${course.id}`}
-              className="group bg-white rounded-2xl border border-gray-200
-                         hover:border-gray-300 overflow-hidden
-                         flex flex-col
-                         transition
-    active:scale-[0.98]
-    active:bg-gray-50
-    hover:shadow-md
-    cursor-pointer
-                         "
-            >
-              {/* Thumbnail */}
-              <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
-                <Image
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                  width={400}
-                  height={240}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
+       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+  {ongoingCourses.map((course) => (
+    <Link
+      key={course.id}
+      href={`/courses/${course.id}`}
+      className="group bg-white rounded-2xl border border-gray-200
+                 hover:border-gray-300 overflow-hidden
+                 flex flex-col transition
+                 active:scale-[0.98]
+                 hover:shadow-md"
+    >
+      {/* Thumbnail */}
+      <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+        <Image
+          src={course.thumbnailUrl}
+          alt={course.title}
+          width={400}
+          height={240}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
 
-              {/* Content */}
-              <div className="p-4 flex flex-col gap-2 flex-grow">
-                <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wide `}>
-                  <span>{course.code}</span>
-                </div>
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-2 flex-grow">
 
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
-                  {course.title}
-                </h3>
-
-                <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-                  {course.description}
-                </p>
-              </div>
-            </Link>
-          ))}
+        {/* Course code + session */}
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <span>{course.code}</span>
+          <span className="text-gray-300">•</span>
+          <span>{course.session}</span>
         </div>
+
+
+        
+
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
+          {course.title}
+        </h3>
+
+        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+          {course.description}
+        </p>
+
+                {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0">
+          <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            {course.department}
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+            Level {String(course.level)}
+          </span>
+        </div>
+      </div>
+    </Link>
+  ))}
+</div>
+
+  <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mt-16 mb-6">
+  Past Courses
+</h2>
+
+<div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 opacity-90">
+  {pastCourses.map((course) => (
+    <Link
+      key={course.id}
+      href={`/courses/${course.id}`}
+      className="group bg-white rounded-2xl border border-gray-200
+                 hover:border-gray-300 overflow-hidden
+                 flex flex-col transition
+                 active:scale-[0.98]
+                 hover:shadow-md"
+    >
+      {/* Thumbnail */}
+      <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+        <Image
+          src={course.thumbnailUrl}
+          alt={course.title}
+          width={400}
+          height={240}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-2 flex-grow">
+
+        {/* Course code + session */}
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <span>{course.code}</span>
+          <span className="text-gray-300">•</span>
+          <span>{course.session}</span>
+        </div>
+
+
+        
+
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
+          {course.title}
+        </h3>
+
+        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+          {course.description}
+        </p>
+
+                {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0">
+          <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            {course.department}
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+            Level {String(course.level)}
+          </span>
+        </div>
+      </div>
+    </Link>
+  ))}
+</div>
+
+
 
         {/* Show More */}
         <div className="mt-12 flex justify-center">

@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import { getCurrentUser, storage } from '@/lib/appwrite';
 import { buildDownloadUrlFromView } from '@/lib/courses';
 import { useUser } from '@/context/UserContext';
@@ -38,6 +39,7 @@ interface NoteViewerProps {
   uploader?: string;
   date?: string;
   onDelete: (url: string) => void;
+  course_user: string;
 }
 
 
@@ -49,7 +51,8 @@ export default function NoteViewerModal({
   title = "Course Notes",
   uploader = "Unknown",
   date = "",
-  onDelete
+  onDelete,
+  course_user,
 }: NoteViewerProps) {
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -57,7 +60,11 @@ export default function NoteViewerModal({
   const [rotation, setRotation] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false)
   const [imageLoading, setImageLoading] = useState(true);
-  const {user} = useUser()
+  const {user} = useUser();
+  const router = useRouter();
+  const [showActions, setShowActions] = useState(false);
+
+  
 
   
   // Swipe State
@@ -188,7 +195,7 @@ const prevImage = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          { isAdmin && (
+          { isAdmin && course_user === user?.$id && (
             <button 
               onClick={() => { onDelete(files[currentIndex])}}
               className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-colors">
@@ -288,34 +295,109 @@ const prevImage = () => {
       </div>
 
       {/* --- Bottom Toolbar --- */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-1 bg-[#1E2126] border border-gray-700/50 p-1.5 rounded-xl shadow-2xl shadow-black/50">
-          
-          <TooltipButton icon={<ZoomOut size={18} />} onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} />
-          <TooltipButton icon={<ZoomIn size={18} />} onClick={() => setZoom(z => Math.min(3, z + 0.25))} />
-          
-          <div className="w-px h-6 bg-gray-700 mx-1" />
-          
-          <TooltipButton icon={<RotateCw size={18} />} onClick={() => setRotation(r => r + 90)} />
-          <TooltipButton icon={<Maximize size={18} />} onClick={() => setZoom(1)} />
+      {/* Action Panel */}
+<div
+  className={`
+    fixed bottom-6 left-6 z-50
+    origin-bottom-left
+    transition-all duration-300 ease-out
+    ${showActions
+      ? "scale-100 opacity-100 translate-y-0"
+      : "scale-75 opacity-0 pointer-events-none translate-y-4"}
+  `}
+>
+  <div className="
+    relative
+    bg-[#1E2126]/90 backdrop-blur-xl
+    border border-gray-700/50
+    rounded-2xl
+    p-3
+    shadow-2xl shadow-black/60
+    flex items-center gap-1
+  ">
 
-          <div className="w-px h-6 bg-gray-700 mx-1" />
+    {/* Collapse Button */}
+    <button
+      onClick={() => setShowActions(false)}
+      className="
+        absolute -top-2 -right-2
+        h-6 w-6 rounded-full
+        bg-gray-800 hover:bg-gray-700
+        flex items-center justify-center
+        text-gray-400 hover:text-white
+      "
+    >
+      <X size={12} />
+    </button>
 
-          <button
-              onClick={() => {
-                const url = buildDownloadUrlFromView(files[currentIndex]);
-                window.open(url, "_blank"); // triggers download in browser
-              }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors ml-1"
-            >
-              <Download size={16} />
-              <span className="hidden sm:inline">Download</span>
-            </button>
+    <TooltipButton
+      icon={<ZoomOut size={18} />}
+      onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
+    />
 
-        </div>
-      </div>
+    <TooltipButton
+      icon={<ZoomIn size={18} />}
+      onClick={() => setZoom(z => Math.min(3, z + 0.25))}
+    />
+
+    <div className="w-px h-6 bg-gray-700 mx-1" />
+
+    <TooltipButton
+      icon={<RotateCw size={18} />}
+      onClick={() => setRotation(r => r + 90)}
+    />
+
+    <TooltipButton
+      icon={<Maximize size={18} />}
+      onClick={() => setZoom(1)}
+    />
+
+    <div className="w-px h-6 bg-gray-700 mx-1" />
+
+    <button
+      onClick={() => {
+        if (user) {
+          const url = buildDownloadUrlFromView(files[currentIndex]);
+          window.open(url, "_blank");
+        } else {
+          router.push("/signup");
+        }
+      }}
+      className="
+        flex items-center gap-2
+        bg-blue-600 hover:bg-blue-500
+        text-white px-3 py-2
+        rounded-lg text-sm font-semibold
+        transition-colors
+      "
+    >
+      <Download size={16} />
+      <span className="hidden sm:inline">Download</span>
+    </button>
+
+  </div>
+</div>
+
 
       <TooltipButton icon={<Maximize size={18} />} onClick={toggleFullScreen} />
+
+      {/* Floating Action Toggle */}
+{!showActions && (
+  <button
+    onClick={() => setShowActions(true)}
+    className="
+      fixed bottom-6 left-6 z-50
+      h-14 w-14 rounded-full
+      bg-blue-600 hover:bg-blue-500
+      flex items-center justify-center
+      shadow-2xl shadow-black/40
+      transition-transform active:scale-95
+    "
+  >
+    <Maximize size={22} className="text-white" />
+  </button>
+)}
+
 
     </div>
   );

@@ -1,5 +1,7 @@
 // src/lib/appwrite.ts
-import { Client, Account, Storage, Databases, ID, Avatars } from "appwrite";
+import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from "appwrite";
+// @ts-ignore: 'expo-web-browser' may not be installed in this environment
+import * as WebBrowser from 'expo-web-browser';
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
@@ -130,3 +132,27 @@ export async function signIn(email: string, password: string) {
     throw error;
   }
 }
+
+
+export const googleSignIn = async () => {
+  try {
+    const redirectUrl = "https://cca59d659739.ngrok-free.app";
+
+    const response = await account.createOAuth2Token(
+      OAuthProvider.Google,
+      redirectUrl,
+      redirectUrl
+    );
+
+    // Appwrite gives you a URL
+    const authUrl = response.toString();
+
+    // Redirect the browser
+    window.location.href = authUrl;
+
+  } catch (error) {
+    console.error("Error during Google sign-in:", error);
+    throw error;
+  }
+};
+

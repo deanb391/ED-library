@@ -10,7 +10,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/appwrite";
+import { googleSignIn, signIn } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
 
 export default function AdminLoginPage() {
@@ -116,6 +116,23 @@ export default function AdminLoginPage() {
               </>
             )}
           </button>
+
+                  {/* Divider */}
+        <div className="my-8 flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-xs text-gray-400 font-medium">OR</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        {/* Google Sign In */}
+        <button
+          onClick={() => { router.push("/signup")}}
+          type="button"
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all
+          active:scale-[0.98]"
+        >
+          Sign up 
+        </button>
         </form>
       </div>
     </div>
