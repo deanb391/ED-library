@@ -374,6 +374,7 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
           setSelectedNoteIndex(index);
           setModalImages(post.images);
           setIsViewerOpen(true);
+          setPostId(post.id)
         }}
         onLongPress={(id) => {
           if (!user?.isAdmin) return;
@@ -429,6 +430,7 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
             setDeleteUrl(url)
           }}
           course_user={course?.user}
+          viewMode={viewMode}
         />
 
         <ConfirmFileDelete

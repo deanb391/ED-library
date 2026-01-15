@@ -40,6 +40,7 @@ interface NoteViewerProps {
   date?: string;
   onDelete: (url: string) => void;
   course_user: string;
+  viewMode: string;
 }
 
 
@@ -53,6 +54,7 @@ export default function NoteViewerModal({
   date = "",
   onDelete,
   course_user,
+  viewMode,
 }: NoteViewerProps) {
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -195,7 +197,7 @@ const prevImage = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          { isAdmin && course_user === user?.$id && (
+          { isAdmin && course_user === user?.$id && viewMode == "timeline" && (
             <button 
               onClick={() => { onDelete(files[currentIndex])}}
               className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-colors">
