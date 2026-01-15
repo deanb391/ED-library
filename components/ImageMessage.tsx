@@ -1,22 +1,44 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import { useUser } from "@/context/UserContext";
 
 interface ImageMessagesProps {
+  id: string,
   images: string[];
   message?: string;
   onPress: (index: number) => void;
+  onLongPress?: (postId: string) => void;
+  course_user: string;
 }
 
 export default function ImageMessages({
+  id,
   images,
   message,
   onPress,
+  onLongPress,
+  course_user,
 }: ImageMessagesProps) {
   const previewImages = images.slice(0, 4);
   const extraCount = images.length - 4;
 
   const [loaded, setLoaded] = useState<Record<number, boolean>>({});
+  const {user } = useUser()
+
+  let pressTimer: NodeJS.Timeout;
+
+const handleMouseDown = () => {
+  if (!onLongPress) return;
+
+  if (user?.$id !== course_user) return;
+  pressTimer = setTimeout(() => onLongPress(id), 500);
+};
+
+const handleMouseUp = () => {
+  clearTimeout(pressTimer);
+};
+
 
   const gridClass =
     previewImages.length === 1
@@ -32,8 +54,13 @@ export default function ImageMessages({
           <div
             key={i}
             onClick={() => onPress(i)}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onTouchStart={handleMouseDown}
+            onTouchEnd={handleMouseUp}
             className="relative aspect-square overflow-hidden bg-blue-400"
           >
+
             {/* Loading overlay */}
             {!loaded[i] && (
               <div className="absolute inset-0 flex items-center justify-center">

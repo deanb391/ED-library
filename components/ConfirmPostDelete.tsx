@@ -3,7 +3,7 @@
 import React from "react";
 import { X, Trash2 } from "lucide-react";
 
-interface ConfirmCourseDeleteProps {
+interface ConfirmPostDeleteProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -15,14 +15,14 @@ export default function ConfirmCourseDelete({
   onClose,
   onConfirm,
   courseTitle = "this course",
-}: ConfirmCourseDeleteProps) {
+}: ConfirmPostDeleteProps) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-[#15171B] text-white rounded-xl shadow-2xl w-80 p-6 flex flex-col gap-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold">Delete Course</h3>
+          <h3 className="text-lg font-bold">Delete Post</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <X size={20} />
           </button>

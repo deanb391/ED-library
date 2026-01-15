@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { GraduationCap, ArrowRight, Lock, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signIn } from '@/lib/appwrite';
+import { useUser } from '@/context/UserContext';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const {refreshUser} = useUser()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +20,7 @@ export default function AdminLoginPage() {
 
     setIsLoading(false);
     await signIn(email, password)
+    refreshUser();
     router.push('/'); 
 
   };

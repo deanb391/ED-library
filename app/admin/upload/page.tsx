@@ -14,10 +14,11 @@ import {
   Lightbulb, 
   GraduationCap 
 } from 'lucide-react';
-import { appendFilesToCourse, createPost, fetchCourses, uploadImage } from '@/lib/courses';
+import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/courses';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
+import { useUser } from '@/context/UserContext';
 
 // --- Dummy Data ---
 const PENDING_FILES = [
@@ -73,17 +74,17 @@ export default function UploadPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState('');
+  const {user} = useUser();
 
   useEffect(() => {
-      fetchCourses().then(setCourses);
+      fetchCoursesByAdmin(user?.$id).then(setCourses);
       const getUser = async () => {
-        const doc = await getCurrentUser()
-        if (doc) setIsAdmin(true);
+        if (user?.isAdmin) setIsAdmin(true);
         setLoading(false)
       }
     getUser();
-    }, []);
+    }, [user]);
 
   const handleUpload = async () => {
   if (!selectedCourse || files.length === 0) return;
