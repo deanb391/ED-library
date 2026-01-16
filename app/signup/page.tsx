@@ -95,7 +95,7 @@ const DEPARTMENTS = [
             icon={<User size={16} />}
             value={username}
             onChange={setUsername}
-            placeholder="john_doe"
+            placeholder="john doe"
           />
 
           {/* Email */}
@@ -105,7 +105,7 @@ const DEPARTMENTS = [
             icon={<Mail size={16} />}
             value={email}
             onChange={setEmail}
-            placeholder="example@gmail.com"
+            placeholder="johndoe@gmail.com"
           />
 
           {/* Level */}

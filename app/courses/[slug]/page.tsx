@@ -371,11 +371,13 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
         images={post.images}
         message={post.description}
         onPress={(index) => {
-          setSelectedNoteIndex(index);
+          if (user) {setSelectedNoteIndex(index);
           setModalImages(post.images);
           setIsViewerOpen(true);
           setPostId(post.id)
-        }}
+        } else {
+          router.push("/signup")
+        }}}
         onLongPress={(id) => {
           if (!user?.isAdmin) return;
           const found = posts.find(p => p.id === id);
@@ -392,11 +394,13 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
   <>
     <PdfImageList
       images={pdfImages}
-      onPress={(index) => {
+      onPress={(index) => { if (user) {
         setSelectedNoteIndex(index);
         setModalImages(pdfImages);
         setIsViewerOpen(true);
-      }}
+      } else {
+        router.push("/signup")
+      }}}
     />
 
     {loadingPdf && (
