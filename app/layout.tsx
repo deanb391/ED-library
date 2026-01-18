@@ -22,7 +22,13 @@ export default function RootLayout({
 }) {
   return (
     <UserProvider>
-    <html lang="en">
+    <html lang="en"> 
+      <head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904837010680652"
+          crossOrigin="anonymous">
+
+     </script>
+      </head>
       <body className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}>
         <Header />
         <main className="flex-grow w-full">
