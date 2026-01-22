@@ -203,9 +203,11 @@ const handleFiles = (incoming: FileList | null) => {
         </div>
 
         {/* --- Ad Banner --- */}
+{/*
 <div className="mb-6">
   <NativeBanner /> {/* Your banner component */}
 </div>
+*/}
 
         {/* --- Main Layout Grid --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
