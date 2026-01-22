@@ -293,7 +293,9 @@ useEffect(() => {
   ))}
 </div>
 
+{/*
 <NativeBanner />
+*/}
 
   <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mt-16 mb-6">
   Past Courses

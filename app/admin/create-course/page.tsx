@@ -131,9 +131,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         </p>
 
         {/* --- Ad Banner --- */}
+{/*
 <div className="mb-6">
   <NativeBanner /> {/* Your banner component */}
 </div>
+*/}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Title */}
