@@ -297,8 +297,10 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
         </div>
 
                 {/* Meta row */}
+{/*
 
         <NativeBanner />
+*/}
         
 
         {/* Tabs */}
