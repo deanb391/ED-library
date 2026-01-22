@@ -253,9 +253,11 @@ const handleFiles = (incoming: FileList | null) => {
 
           </div>
           {/* --- Ad Banner --- */}
+{/*
   <div className="my-6">
     <NativeBanner />
   </div>
+*/}
 
           {files.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-4 overflow-x-auto">
@@ -396,10 +398,11 @@ const handleFiles = (incoming: FileList | null) => {
                 </button>
 
                 {/* --- Ad Banner --- */}
+{/*
   <div className="mt-6">
     <NativeBanner />
   </div>
-
+*/}
                 <p className="text-[10px] text-gray-400 text-center leading-tight">
                   By uploading, you agree to our Terms of Service and Honor Code.
                 </p>
