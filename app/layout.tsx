@@ -33,11 +33,12 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
 
-          {/* Adsterra */}
+          {/* Adsterra 
           <Script
             src="https://pl28536403.effectivegatecpm.com/5d/f2/b5/5df2b541a3eac4751ebd6c025764badb.js"
             strategy="afterInteractive"
           />
+*/}
         </head>
 
         <body
