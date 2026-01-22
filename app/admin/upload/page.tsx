@@ -205,7 +205,7 @@ const handleFiles = (incoming: FileList | null) => {
         {/* --- Ad Banner --- */}
 {/*
 <div className="mb-6">
-  <NativeBanner /> {/* Your banner component */}
+  <NativeBanner />
 </div>
 */}
 
