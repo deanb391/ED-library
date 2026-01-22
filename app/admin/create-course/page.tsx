@@ -133,7 +133,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         {/* --- Ad Banner --- */}
 {/*
 <div className="mb-6">
-  <NativeBanner /> {/* Your banner component */}
+  <NativeBanner /> 
 </div>
 */}
 
