@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
+import NativeBanner from '@/components/ads/NativeBanner';
 
 // --- Dummy Data ---
 const PENDING_FILES = [
@@ -201,6 +202,11 @@ const handleFiles = (incoming: FileList | null) => {
           </div>
         </div>
 
+        {/* --- Ad Banner --- */}
+<div className="mb-6">
+  <NativeBanner /> {/* Your banner component */}
+</div>
+
         {/* --- Main Layout Grid --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
@@ -244,6 +250,10 @@ const handleFiles = (incoming: FileList | null) => {
             </div>
 
           </div>
+          {/* --- Ad Banner --- */}
+  <div className="my-6">
+    <NativeBanner />
+  </div>
 
           {files.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-4 overflow-x-auto">
@@ -382,6 +392,11 @@ const handleFiles = (incoming: FileList | null) => {
                 >
                   {isUploading ? "Uploading..." : "Upload All Files"}
                 </button>
+
+                {/* --- Ad Banner --- */}
+  <div className="mt-6">
+    <NativeBanner />
+  </div>
 
                 <p className="text-[10px] text-gray-400 text-center leading-tight">
                   By uploading, you agree to our Terms of Service and Honor Code.

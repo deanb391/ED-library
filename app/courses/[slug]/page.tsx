@@ -27,6 +27,7 @@ import PostActionModal from '@/components/PostActionModal';
 import ConfirmPostDelete from '@/components/ConfirmPostDelete';
 import EditCourseModal from '@/components/EditCourseModal';
 import PdfImageList from "@/components/PdfImageList"
+import NativeBanner from '@/components/ads/NativeBanner';
 
 interface Post {
   id: string;
@@ -296,6 +297,8 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
         </div>
 
                 {/* Meta row */}
+
+        <NativeBanner />
         
 
         {/* Tabs */}

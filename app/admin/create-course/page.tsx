@@ -7,6 +7,7 @@ import { uploadThumbnail, createCourse } from "@/lib/courses";
 import { useRouter } from "next/navigation";
 import { getCurrentUser } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
+import NativeBanner from "@/components/ads/NativeBanner";
 
 
 export default function CreateCoursePage() {
@@ -128,6 +129,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         <p className="text-sm text-gray-500 text-center mt-1 mb-8">
           Add a course to your library
         </p>
+
+        {/* --- Ad Banner --- */}
+<div className="mb-6">
+  <NativeBanner /> {/* Your banner component */}
+</div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Title */}
