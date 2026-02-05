@@ -1,146 +1,347 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, ChevronDown, BookOpen, Atom, Globe, FlaskConical, Calculator, Terminal, TrendingUp, Users } from 'lucide-react';
+import { Search, Plus, ChevronDown, BookOpen, Atom, Globe, FlaskConical, Calculator, Terminal, TrendingUp, Users, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from "next/link";
 
 import { getCurrentUser } from '@/lib/appwrite';
-import { Course, fetchCourses, searchCourses } from '@/lib/courses';
+import { advancedSearchCourses, Course, fetchCourses, fetchCoursesForUser, fetchRecentCourses, searchCourses } from '@/lib/courses';
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
+import { useRouter } from 'next/navigation';
 
 // --- Dummy Data Configuration ---
-const DUMMY_COURSES = [
-  {
-    id: 1,
-    code: 'MATH501',
-    title: 'Advanced Mathematics',
-    description: 'Calculus, Linear Algebra, and complex numbers deep dive.',
-    image: '/api/placeholder/400/250', // Replace with actual asset
-    color: 'text-blue-600',
-    icon: <Calculator size={16} />
-  },
-  {
-    id: 2,
-    code: 'CS301',
-    title: 'Computer Science',
-    description: 'Foundations of algorithms and data structures.',
-    image: '/api/placeholder/400/250',
-    color: 'text-purple-600',
-    icon: <Terminal size={16} />
-  },
-  {
-    id: 3,
-    code: 'HIST202',
-    title: 'World History',
-    description: 'From the industrial revolution to modern geopolitics.',
-    image: '/api/placeholder/400/250',
-    color: 'text-orange-600',
-    icon: <Globe size={16} />
-  },
-  {
-    id: 4,
-    code: 'CHEM401',
-    title: 'Organic Chemistry',
-    description: 'Molecular structures and chemical reactions.',
-    image: '/api/placeholder/400/250',
-    color: 'text-teal-600',
-    icon: <FlaskConical size={16} />
-  },
-  {
-    id: 5,
-    code: 'ENG105',
-    title: 'English Literature',
-    description: 'Classic and contemporary works analysis.',
-    image: '/api/placeholder/400/250',
-    color: 'text-indigo-600',
-    icon: <BookOpen size={16} />
-  },
-  {
-    id: 6,
-    code: 'ECON201',
-    title: 'Macroeconomics',
-    description: 'Analysis of global markets and fiscal policies.',
-    image: '/api/placeholder/400/250',
-    color: 'text-green-600',
-    icon: <TrendingUp size={16} />
-  },
-  {
-    id: 7,
-    code: 'PHYS202',
-    title: 'Physics II',
-    description: 'Electromagnetism and quantum mechanics basics.',
-    image: '/api/placeholder/400/250',
-    color: 'text-sky-600',
-    icon: <Atom size={16} />
-  },
-  {
-    id: 8,
-    code: 'SOC101',
-    title: 'Sociology',
-    description: 'The study of social life, change, and causes.',
-    image: '/api/placeholder/400/250',
-    color: 'text-pink-600',
-    icon: <Users size={16} />
-  },
+function CourseSection({
+  title,
+  courses,
+}: {
+  title: string;
+  courses: Course[];
+}) {
+  if (!courses.length) return null;
+
+  return (
+    <section className="mb-12">
+      <div className="flex justify-between items-end mb-6">
+        <h2 className="text-lg md:text-2xl font-semibold text-gray-900">
+          {title}
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {courses.map(course => (
+          <Link
+      key={course.id}
+      href={`/courses/${course.id}`}
+      className="group bg-white rounded-2xl border border-gray-200
+                 hover:border-gray-300 overflow-hidden
+                 flex flex-col transition
+                 active:scale-[0.98]
+                 hover:shadow-md"
+    >
+      {/* Thumbnail */}
+      <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+        <Image
+          src={course.thumbnailUrl}
+          alt={course.title}
+          width={400}
+          height={240}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col gap-2 flex-grow">
+
+        {/* Course code + session */}
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <span>{course.code}</span>
+          <span className="text-gray-300">•</span>
+          <span>{course.session}</span>
+        </div>
+
+
+        
+
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
+          {course.title}
+        </h3>
+
+        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+          {course.description}
+        </p>
+
+                {/* Meta row */}
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0">
+          <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            {course.department}
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+            Level {String(course.level)}
+          </span>
+        </div>
+      </div>
+    </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CourseSearch({
+  user,
+  onResults,
+   onLoading,
+  onCancelAll,
+}: {
+  user: any;
+  onResults: (results: Course[] | null) => void;
+  onLoading: (v: boolean) => void;
+  onCancelAll: () => void;
+
+}) {
+          const LEVELS = [100, 200, 300, 400, 500, 600];
+
+const DEPARTMENTS = [
+  "Mechanical Engineering",
+  "Electrical Engineering",
+  "Civil Engineering",
+  "Computer Engineering",
+  "Chemical Engineering",
+  "Petroleum Engineering",
+  "Agricultural Engineering",
+  "Marine Engineering",
 ];
+
+const sessions = [
+  "2023/2024",
+  "2024/2025",
+  "2025/2026"
+]
+  const [query, setQuery] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const [filters, setFilters] = useState({
+    department: "",
+    level: "",
+    session: "",
+  });
+
+    const cancelEverything = () => {
+    setQuery("");
+    setShowAdvanced(false);
+    setFilters({ department: "", level: "", session: "" });
+    onCancelAll();
+  };
+
+  // Debounced text search
+  useEffect(() => {
+    if (!query.trim()) {
+      onResults(null);
+      return;
+    }
+    
+
+    const t = setTimeout(async () => {
+      onLoading(true);
+      const res = await searchCourses(query, user);
+      onResults(res);
+      onLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(t);
+  }, [query, user]);
+
+  return (
+    <div className="text-center w-full max-w-3xl mb-14">
+      <h1 className="text-4xl md:text-5xl font-semibold mb-3">
+        What are you learning today?
+      </h1>
+
+      <div className="relative w-full max-w-xl mx-auto">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search courses or codes..."
+          className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200"
+        />
+
+        {query && (
+          <button
+            onClick={cancelEverything}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X size={18} />
+          </button>
+        )}
+      </div>
+
+      <button
+        onClick={() => setShowAdvanced(v => !v)}
+        className="mt-3 text-sm font-medium text-gray-600 flex items-center gap-1 mx-auto"
+      >
+        Advanced search
+        <ChevronDown
+          size={16}
+          className={`transition ${showAdvanced ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {showAdvanced && (
+  <div className="mt-4 bg-white rounded-xl p-4 grid sm:grid-cols-3 gap-3">
+    {/* Department */}
+    <select
+      value={filters.department}
+      onChange={(e) =>
+        setFilters((f) => ({ ...f, department: e.target.value }))
+      }
+      className="border border-blue-400 rounded-lg px-3 py-2 text-sm"
+    >
+      <option value="">Department</option>
+      {DEPARTMENTS.map((dept) => (
+        <option key={dept} value={dept}>
+          {dept}
+        </option>
+      ))}
+    </select>
+
+    {/* Level */}
+    <select
+      value={filters.level}
+      onChange={(e) =>
+        setFilters((f) => ({ ...f, level: e.target.value }))
+      }
+      className="border border-blue-400 rounded-lg px-3 py-2 text-sm"
+    >
+      <option value="">Level</option>
+      {LEVELS.map((level) => (
+        <option key={level} value={level}>
+          {level}
+        </option>
+      ))}
+    </select>
+
+    {/* Session */}
+    <select
+      value={filters.session}
+      onChange={(e) =>
+        setFilters((f) => ({ ...f, session: e.target.value }))
+      }
+      className="border border-blue-400 rounded-lg px-3 py-2 text-sm"
+    >
+      <option value="">Session</option>
+      {sessions.map((session) => (
+        <option key={session} value={session}>
+          {session}
+        </option>
+      ))}
+    </select>
+
+    {/* Search */}
+    <button
+      className="sm:col-span-2 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium transition-all
+          active:scale-[0.98]"
+      onClick={async () => {
+        onLoading(true)
+        const res = await advancedSearchCourses(filters);
+        onResults(res);
+        onLoading(false)
+      }}
+    >
+      Search
+    </button>
+
+    <button
+            className="bg-gray-100 text-gray-700 py-2 rounded-lg transition-all
+          active:scale-[0.98]"
+            onClick={cancelEverything}
+          >
+            Cancel
+          </button>
+  </div>
+)}
+
+
+
+
+    </div>
+  );
+}
+
+
 
 export default function EDLibraryHome() {
   
-  const [ongoingCourses, setOngoingCourses] = useState<Course[]>([]);
-const [pastCourses, setPastCourses] = useState<Course[]>([]);
+  const [forYouCourses, setForYouCourses] = useState<Course[]>([]);
+  const [results, setResults] = useState<Course[] | null>(null);
+const [otherCourses, setOtherCourses] = useState<Course[]>([]);
+const [recentCourses, setRecentCourses] = useState<Course[]>([]);
+const [showAdvanced, setShowAdvanced] = useState(false);
+const [searchLoading, setSearchLoading] = useState(false);
+const [filters, setFilters] = useState({
+  department: "",
+  level: "",
+  session: "",
+});
+
 
   const [lloading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const {user, loading} = useUser()
-
-  useEffect(() => {
-  if (loading) return;
-
-  async function loadCourses() {
-    setLoading(true);
-
-    const [ongoing, past] = await Promise.all([
-      fetchCourses(user, true),
-      fetchCourses(user, false),
-    ]);
-
-    setOngoingCourses(ongoing);
-    setPastCourses(past);
-    setLoading(false);
-  }
-
-  loadCourses();
-}, [loading, user]);
-
+  const {user, loading: userLoading} = useUser()
+  const router = useRouter()
 
 useEffect(() => {
-  if (loading) return;
+  if (userLoading) return;
 
-  const timeout = setTimeout(async () => {
-    if (!query.trim()) {
-      const [ongoing, past] = await Promise.all([
-        fetchCourses(user, true),
-        fetchCourses(user, false),
-      ]);
+  async function load() {
+    setLoading(true);
 
-      setOngoingCourses(ongoing);
-      setPastCourses(past);
+    if (!user) {
+      const recent = await fetchRecentCourses();
+      setRecentCourses(recent);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
-    const results = await searchCourses(query, user);
-
-    setOngoingCourses(results.filter(c => c.isOnGoing));
-    setPastCourses(results.filter(c => !c.isOnGoing));
-
+    const { forYou, others } = await fetchCoursesForUser(user);
+    setForYouCourses(forYou);
+    setOtherCourses(others);
     setLoading(false);
-  }, 1000); // 1500ms is slow and annoying
+  }
 
-  return () => clearTimeout(timeout);
-}, [query, user, loading]);
+  load();
+}, [userLoading, user]);
+
+
+
+// useEffect(() => {
+//   if (loading) return;
+
+//   const timeout = setTimeout(async () => {
+//     if (!query.trim()) {
+//       const [ongoing, past] = await Promise.all([
+//         fetchCourses(user, true),
+//         fetchCourses(user, false),
+//       ]);
+
+//       setOngoingCourses(ongoing);
+//       setPastCourses(past);
+//       return;
+//     }
+
+//     setLoading(true);
+
+//     const results = await searchCourses(query, user);
+
+//     setOngoingCourses(results.filter(c => c.isOnGoing));
+//     setPastCourses(results.filter(c => !c.isOnGoing));
+
+//     setLoading(false);
+//   }, 1000); // 1500ms is slow and annoying
+
+//   return () => clearTimeout(timeout);
+// }, [query, user, loading]);
 
 
 
@@ -198,165 +399,49 @@ useEffect(() => {
     <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center">
 
       {/* --- Hero Section --- */}
-      <div className="text-center w-full max-w-3xl mb-14">
-        <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 mb-3 tracking-tight">
-          What are you learning today?
-        </h1>
-        <p className="text-gray-500 text-base md:text-lg mb-8 max-w-xl mx-auto">
-          Made by students, for students.
-        </p>
 
-        {/* Search Bar */}
-        <div className="relative w-full max-w-xl mx-auto">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="text-gray-400" size={20} />
-          </div>
-          <input
-            type="text"
-            placeholder="Search courses or codes..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <CourseSearch
+            user={user}
+            onResults={setResults}
+            onLoading={setSearchLoading}
+            onCancelAll={() => {
+              setResults(null);
+              setSearchLoading(false);
+            }}
           />
-        </div>
-      </div>
+
+
 
       {/* --- Content Section --- */}
       <div className="w-full">
-        <div className="flex justify-between items-end mb-6">
-          <h2 className="text-lg md:text-2xl font-semibold text-gray-900">
-            Ongoing Courses
-          </h2>
-          <a
-            href="#"
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
-          >
-            View all
-          </a>
-        </div>
-
-        {/* Grid */}
-       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-  {ongoingCourses.map((course) => (
-    <Link
-      key={course.id}
-      href={`/courses/${course.id}`}
-      className="group bg-white rounded-2xl border border-gray-200
-                 hover:border-gray-300 overflow-hidden
-                 flex flex-col transition
-                 active:scale-[0.98]
-                 hover:shadow-md"
-    >
-      {/* Thumbnail */}
-      <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
-        <Image
-          src={course.thumbnailUrl}
-          alt={course.title}
-          width={400}
-          height={240}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col gap-2 flex-grow">
-
-        {/* Course code + session */}
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          <span>{course.code}</span>
-          <span className="text-gray-300">•</span>
-          <span>{course.session}</span>
-        </div>
 
 
-        
-
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
-          {course.title}
-        </h3>
-
-        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-          {course.description}
-        </p>
-
-                {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0">
-          <span className="px-2 py-0.5 rounded-full bg-gray-100">
-            {course.department}
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-            Level {String(course.level)}
-          </span>
-        </div>
-      </div>
-    </Link>
-  ))}
+<div className="w-full">
+  {searchLoading ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4" />
+              <p className="text-sm text-gray-600">
+                Searching courses…
+              </p>
+            </div>
+          ) : results ? (
+            <CourseSection title="Search results" courses={results} />
+          ) : user ? (
+            <>
+              <CourseSection title="For you" courses={forYouCourses} />
+              <CourseSection title="Others" courses={otherCourses} />
+            </>
+          ) : (
+            <CourseSection title="Recently updated" courses={recentCourses} />
+          )}
 </div>
+
 
 {/*
 <NativeBanner />
 */}
 
-  <h2 className="text-lg md:text-2xl font-semibold text-gray-900 mt-16 mb-6">
-  Past Courses
-</h2>
 
-<div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 opacity-90">
-  {pastCourses.map((course) => (
-    <Link
-      key={course.id}
-      href={`/courses/${course.id}`}
-      className="group bg-white rounded-2xl border border-gray-200
-                 hover:border-gray-300 overflow-hidden
-                 flex flex-col transition
-                 active:scale-[0.98]
-                 hover:shadow-md"
-    >
-      {/* Thumbnail */}
-      <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
-        <Image
-          src={course.thumbnailUrl}
-          alt={course.title}
-          width={400}
-          height={240}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col gap-2 flex-grow">
-
-        {/* Course code + session */}
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          <span>{course.code}</span>
-          <span className="text-gray-300">•</span>
-          <span>{course.session}</span>
-        </div>
-
-
-        
-
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
-          {course.title}
-        </h3>
-
-        <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
-          {course.description}
-        </p>
-
-                {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0">
-          <span className="px-2 py-0.5 rounded-full bg-gray-100">
-            {course.department}
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-            Level {String(course.level)}
-          </span>
-        </div>
-      </div>
-    </Link>
-  ))}
-</div>
 
 
 
@@ -365,7 +450,11 @@ useEffect(() => {
           <button className="flex items-center gap-2 px-6 py-3 bg-white
                              border border-gray-200 hover:bg-gray-50
                              rounded-full text-sm font-medium text-gray-700
-                             transition">
+                             transition"
+                             onClick={(e) => {
+                              router.push("/all_courses")
+                             }}
+                             >
             Show more courses
             <ChevronDown size={16} />
           </button>
