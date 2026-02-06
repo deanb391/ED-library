@@ -24,7 +24,8 @@ export default function Header() {
     <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
       <div className="flex items-center gap-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 transition-all
+          active:scale-[0.90]">
           <div className="bg-blue-600 text-white p-1 rounded-md">
             <BookOpen size={20} strokeWidth={2.5} />
           </div>
@@ -47,13 +48,15 @@ export default function Header() {
     {user?.isAdmin && (
       <div className="flex items-center gap-3">
         <Link href="/admin/create-course">
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-colors">
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-all
+          active:scale-[0.90]">
             Create Course
           </button>
         </Link>
 
         <Link href="/admin/upload">
-          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all
+          active:scale-[0.90]">
             Upload
           </button>
         </Link>
@@ -75,13 +78,15 @@ export default function Header() {
     {user === null && (
       <div className="flex items-center gap-3">
         <Link href="/signin">
-          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-colors">
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-small transition-all
+          active:scale-[0.90]">
             Sign in
           </button>
         </Link>
 
         <Link href="/signup">
-          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+          <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg  transition-all
+          active:scale-[0.90]">
             Sign Up
           </button>
         </Link>

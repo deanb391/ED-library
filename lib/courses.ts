@@ -71,10 +71,91 @@ export async function createCourse(data: {
   );
 }
 
+function mapCourse(doc: any): Course {
+  return {
+    id: doc.$id,
+    title: doc.title,
+    code: doc.code,
+    description: doc.description,
+    lecturer: doc.lecturer,
+    thumbnailId: doc.thumbnailId,
+    thumbnailUrl: doc.thumbnailUrl,
+    files: doc.files || [],
+    isOnGoing: doc.isOnGoing,
+    session: doc.session,
+    department: doc.department,
+    level: doc.level,
+  };
+}
 
 export function buildDownloadUrlFromView(viewUrl: string) {
   if (!viewUrl) return "";
   return viewUrl.replace("/view", "/download").split("&mode=admin")[0];
+}
+
+export async function advancedSearchCourses(filters: {
+  department?: string;
+  level?: string;
+  session?: string;
+}): Promise<Course[]> {
+  const queries = [
+    Query.orderDesc("$updatedAt"),
+    Query.limit(30),
+  ];
+
+  if (filters.department) {
+    queries.push(Query.equal("department", filters.department));
+  }
+
+  if (filters.level) {
+    queries.push(Query.equal("level", Number(filters.level)));
+  }
+
+  if (filters.session) {
+    queries.push(Query.equal("session", filters.session));
+  }
+
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COLLECTION_ID,
+    queries
+  );
+
+  return res.documents.map(mapCourse);
+}
+
+
+export async function fetchRecentCourses(): Promise<Course[]> {
+  return fetchCourses(undefined);
+}
+
+export async function fetchCoursesForUser(user: any): Promise<{
+  forYou: Course[];
+  others: Course[];
+}> {
+  const all = await databases.listDocuments(
+    DATABASE_ID,
+    COLLECTION_ID,
+    [Query.orderDesc("$updatedAt"), Query.limit(30)]
+  );
+
+  const forYou: Course[] = [];
+  const others: Course[] = [];
+
+  all.documents.forEach((doc: any) => {
+    const course = mapCourse(doc);
+
+    if (
+      course.department === user.department &&
+      course.level === user.level
+    ) {
+      forYou.push(course);
+    } else {
+      others.push(course);
+    }
+  });
+
+  return { forYou, others };
 }
 
 export async function fetchCourses(
@@ -474,7 +555,7 @@ export async function searchCourses(
     //   baseQueries.push(Query.equal("level", user.level));
     // }
 
-    const [titleResults, codeResults] = await Promise.all([
+    const [titleResults, codeResults, departmentResult] = await Promise.all([
       databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
@@ -485,11 +566,16 @@ export async function searchCourses(
         COLLECTION_ID,
         [Query.search("code", query), ...baseQueries]
       ),
+      databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.search("department", query), ...baseQueries]
+      ),
     ]);
 
     const map = new Map<string, any>();
 
-    [...titleResults.documents, ...codeResults.documents].forEach(doc => {
+    [...titleResults.documents, ...codeResults.documents, ...departmentResult.documents].forEach(doc => {
       map.set(doc.$id, doc);
     });
 
@@ -514,3 +600,30 @@ export async function searchCourses(
   }
 }
 
+
+
+export async function fetchCoursesByDepartment({
+  department,
+  limit = 5,
+  offset = 0,
+}: {
+  department: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COLLECTION_ID,
+    [
+      Query.equal("department", department),
+      Query.limit(limit),
+      Query.offset(offset),
+      Query.orderDesc("$createdAt"),
+    ]
+  );
+
+  return {
+    courses: res.documents,
+    total: res.total,
+  };
+}
