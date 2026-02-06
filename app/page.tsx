@@ -451,7 +451,7 @@ useEffect(() => {
                              border border-gray-200 hover:bg-gray-50
                              rounded-full text-sm font-medium text-gray-700
                              transition-all
-          active:scale-[0.98]"
+          active:scale-[0.90]"
                              onClick={(e) => {
                               router.push("/all_courses")
                              }}
