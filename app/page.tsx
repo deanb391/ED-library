@@ -153,7 +153,7 @@ const sessions = [
   }, [query, user]);
 
   return (
-    <div className="text-center w-full max-w-3xl mb-14">
+    <div className="text-center w-full max-w-3xl mb-12">
       <h1 className="text-4xl md:text-5xl font-semibold mb-3">
         What are you learning today?
       </h1>
@@ -396,7 +396,7 @@ useEffect(() => {
 
   return (
   <div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-sans">
-    <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center">
+    <main className="max-w-7xl mx-auto px-5 py-10 md:py-16 flex flex-col items-center">
 
       {/* --- Hero Section --- */}
 
@@ -450,7 +450,8 @@ useEffect(() => {
           <button className="flex items-center gap-2 px-6 py-3 bg-white
                              border border-gray-200 hover:bg-gray-50
                              rounded-full text-sm font-medium text-gray-700
-                             transition"
+                             transition-all
+          active:scale-[0.98]"
                              onClick={(e) => {
                               router.push("/all_courses")
                              }}

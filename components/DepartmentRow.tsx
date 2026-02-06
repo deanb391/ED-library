@@ -81,15 +81,22 @@ useEffect(() => {
         className={`flex gap-4 overflow-x-auto pb-${padding} pt-${padding} `}
       >
         {courses.map(course => (
-          <div key={course.$id} className="min-w-[260px] max-w-[260px]  min-h-80">
+          <div key={course.$id} className="sm:grid-cols-2">
             <Link
       href={`/courses/${course.$id}`}
       key={course.$id}
-      className="group bg-white rounded-2xl border border-gray-200
-                 hover:border-gray-300 overflow-hidden
-                 flex flex-col transition
-                 active:scale-[0.98]
-                 hover:shadow-md"
+      className="group
+    flex-none
+    w-45 h-80
+    sm:w-70 sm:h-70
+    bg-white rounded-2xl
+    border border-gray-200
+    hover:border-gray-300
+    overflow-hidden
+    flex flex-col
+    transition
+    active:scale-[0.98]
+    hover:shadow-md"
     >
       {/* Thumbnail */}
       <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
@@ -153,11 +160,11 @@ useEffect(() => {
           bg-white rounded-2xl border border-gray-200
           overflow-hidden animate-pulse
           flex flex-col
-          min-w-[260px]
+          min-w-45
         "
       >
         {/* Thumbnail */}
-        <div className="h-32 sm:h-36 bg-gray-200" />
+        <div className="h-50 sm:h-36 bg-gray-200" />
 
         {/* Content */}
         <div className="p-4 flex flex-col gap-2">
