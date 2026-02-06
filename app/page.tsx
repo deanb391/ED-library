@@ -26,6 +26,7 @@ function CourseSection({
         <h2 className="text-lg md:text-2xl font-semibold text-gray-900">
           {title}
         </h2>
+        <a href="/all_courses" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition" > View all </a>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
