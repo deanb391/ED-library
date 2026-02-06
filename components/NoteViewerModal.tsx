@@ -259,7 +259,7 @@ const prevImage = () => {
 
 
         {/* Image Display */}
-        <div className="relative flex justify-center items-center w-full h-full overflow-auto">
+        <div className="relative flex justify-center items-center w-full h-full overflow-hidden">
           {/* Loading Indicator */}
           {imageLoading && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0F1115]">
@@ -268,12 +268,25 @@ const prevImage = () => {
           )}
 
           {files[currentIndex] ? (
+            <div
+  className="
+    flex
+    items-center
+    justify-center
+    w-full
+    h-full
+    max-h-[calc(100vh-120px)]
+    md:max-h-[calc(100vh-160px)]
+  "
+>
             <Image
               src={files[currentIndex]}
               alt={`Page ${currentIndex + 1}`}
               width={600}
               height={800}
-              className={`object-contain shadow-2xl transition-transform duration-200 ${
+              className={`object-contain max-w-full
+  max-h-full
+  shadow-2xl transition-transform duration-200 ${
                 imageLoading ? "opacity-0" : "opacity-100"
               }`}
               draggable={false}
@@ -284,6 +297,7 @@ const prevImage = () => {
               onLoadingComplete={() => setImageLoading(false)}
               priority
             />
+            </div>
           ) : (
             <p className="text-white">Image not available</p>
           )}
