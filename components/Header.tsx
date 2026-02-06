@@ -35,8 +35,8 @@ export default function Header() {
         {/* Nav Links */}
         <div className="hidden md:flex gap-6 text-sm font-medium text-gray-600">
           <Link href="/" className="text-gray-900 hover:text-blue-600">Home</Link>
-          <Link href="/browse" className="hover:text-blue-600">Browse</Link>
-          <Link href="/about" className="hover:text-blue-600">About</Link>
+          <Link href="#" className="hover:text-blue-600">Browse</Link>
+          <Link href="#" className="hover:text-blue-600">About</Link>
         </div>
       </div>
 
