@@ -1,5 +1,7 @@
 import { ID, Query } from "appwrite";
 import { storage, databases } from "./appwrite";
+import { uploadToServer } from "./upload";
+
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COLLECTION_ID = "courses";
@@ -8,6 +10,7 @@ const BUCKET_ID = "69617f7300331ea02ff5";
 
 const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+
 
 
 export type Course = {
@@ -36,17 +39,20 @@ export function buildFileViewUrl(
 }
 
 export async function uploadThumbnail(file: File) {
-  const uploaded = await storage.createFile(
-    BUCKET_ID,
-    ID.unique(),
-    file
-  );
+  // const uploaded = await storage.createFile(
+  //   BUCKET_ID,
+  //   ID.unique(),
+  //   file
+  // );
 
- const url = buildFileViewUrl(BUCKET_ID, uploaded.$id);
+  // const buffer = Buffer.from(await file.arrayBuffer());
+  const url = await uploadToServer(file, "courses");
+
+//  const url = buildFileViewUrl(BUCKET_ID, uploaded.$id);
 
   return {
-    fileId: uploaded.$id,
-    url: url,
+    fileId: "",
+    url:`${url}`,
   };
 }
 
@@ -133,6 +139,10 @@ export async function fetchCoursesForUser(user: any): Promise<{
   forYou: Course[];
   others: Course[];
 }> {
+  
+
+
+
   const all = await databases.listDocuments(
     DATABASE_ID,
     COLLECTION_ID,
@@ -367,13 +377,16 @@ export async function uploadImage(file: File) {
 
   const compressed = await compressImage(file);
 
-  const uploaded = await storage.createFile(
-    BUCKET_ID,
-    ID.unique(),
-    compressed
-  );
+  // const uploaded = await storage.createFile(
+  //   BUCKET_ID,
+  //   ID.unique(),
+  //   compressed
+  // );
 
-  return buildFileViewUrl(BUCKET_ID, uploaded.$id);
+  const url = await uploadToServer(compressed, "posts");
+
+
+  return url;
 }
 
 
