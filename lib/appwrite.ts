@@ -1,7 +1,7 @@
 // src/lib/appwrite.ts
 import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from "appwrite";
 // @ts-ignore: 'expo-web-browser' may not be installed in this environment
-import * as WebBrowser from 'expo-web-browser';
+
 
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)

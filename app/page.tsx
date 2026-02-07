@@ -292,11 +292,14 @@ const [filters, setFilters] = useState({
   const {user, loading: userLoading} = useUser()
   const router = useRouter()
 
+  
+
 useEffect(() => {
   if (userLoading) return;
 
   async function load() {
     setLoading(true);
+
 
     if (!user) {
       const recent = await fetchRecentCourses();

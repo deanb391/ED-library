@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { getCurrentUser, storage } from '@/lib/appwrite';
 import { buildDownloadUrlFromView } from '@/lib/courses';
 import { useUser } from '@/context/UserContext';
+import { fetchDownloadUrl } from '@/lib/upload';
 
 
 // --- Dummy Data for the Viewer ---
@@ -146,6 +147,14 @@ const prevImage = () => {
       document.exitFullscreen();
     }
   };
+
+ function downloadFromUrl(url: string, filename?: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename || url.split("/").pop() || "download";
+  a.click();
+}
+
 
 // example import
 
@@ -345,7 +354,7 @@ const prevImage = () => {
     >
       <X size={12} />
     </button>
-
+{/* 
     <TooltipButton
       icon={<ZoomOut size={18} />}
       onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
@@ -354,9 +363,9 @@ const prevImage = () => {
     <TooltipButton
       icon={<ZoomIn size={18} />}
       onClick={() => setZoom(z => Math.min(3, z + 0.25))}
-    />
+    /> */}
 
-    <div className="w-px h-6 bg-gray-700 mx-1" />
+    {/* <div className="w-px h-6 bg-gray-700 mx-1" />
 
     <TooltipButton
       icon={<RotateCw size={18} />}
@@ -368,13 +377,18 @@ const prevImage = () => {
       onClick={() => setZoom(1)}
     />
 
-    <div className="w-px h-6 bg-gray-700 mx-1" />
+    <div className="w-px h-6 bg-gray-700 mx-1" /> */}
 
     <button
-      onClick={() => {
+      onClick={ async () => {
         if (user) {
-          const url = buildDownloadUrlFromView(files[currentIndex]);
-          window.open(url, "_blank");
+          const url = await fetchDownloadUrl(files[currentIndex]);
+          console.log(url)
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = url.split("/").pop() || "download";
+          a.click();
+          
         } else {
           router.push("/signup");
         }
