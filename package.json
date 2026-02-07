@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "node lib/save.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.985.0",
