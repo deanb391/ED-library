@@ -46,7 +46,7 @@ export async function uploadThumbnail(file: File) {
   // );
 
   // const buffer = Buffer.from(await file.arrayBuffer());
-  const url = await uploadToServer(file, "courses");
+  const url = await uploadToServer(file, "courses", "image");
 
 //  const url = buildFileViewUrl(BUCKET_ID, uploaded.$id);
 
@@ -383,7 +383,7 @@ export async function uploadImage(file: File) {
   //   compressed
   // );
 
-  const url = await uploadToServer(compressed, "posts");
+  const url = await uploadToServer(compressed, "posts", "image");
 
 
   return url;

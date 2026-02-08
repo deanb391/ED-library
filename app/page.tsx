@@ -9,6 +9,9 @@ import { advancedSearchCourses, Course, fetchCourses, fetchCoursesForUser, fetch
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 import { useRouter } from 'next/navigation';
+import RectangularAd from '@/components/RectangularAd';
+import { fetchRectangularAds } from '@/lib/ads';
+import BannerAd from '@/components/BannerAd';
 
 // --- Dummy Data Configuration ---
 function CourseSection({
@@ -270,6 +273,12 @@ const sessions = [
   );
 }
 
+export type AdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link?: string;
+};
 
 
 export default function EDLibraryHome() {
@@ -280,6 +289,18 @@ const [otherCourses, setOtherCourses] = useState<Course[]>([]);
 const [recentCourses, setRecentCourses] = useState<Course[]>([]);
 const [showAdvanced, setShowAdvanced] = useState(false);
 const [searchLoading, setSearchLoading] = useState(false);
+const [searchAds, setSearchAds] = useState<AdItem[]>([])
+const [topAds, setTopAds] = useState<AdItem[]>([])
+const [middleAds, setMiddleAds] = useState<AdItem[]>([])
+const [bannerAdOpen, setBannerAdOpen] = useState(false);
+const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
+
+// to open ad
+
+
+
+// render
+
 const [filters, setFilters] = useState({
   department: "",
   level: "",
@@ -289,9 +310,14 @@ const [filters, setFilters] = useState({
 
   const [lloading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const {user, loading: userLoading} = useUser()
+  const {user, loading: userLoading, homeBannerAds, showAdHome} = useUser()
   const router = useRouter()
 
+function pickRandom<T>(arr: T[]): T | null {
+  if (!arr.length) return null;
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index];
+}
   
 
 useEffect(() => {
@@ -299,6 +325,13 @@ useEffect(() => {
 
   async function load() {
     setLoading(true);
+    const value = showAdHome()
+    setBannerAdOpen(value)
+    setCurrentBanner(pickRandom(homeBannerAds))
+    const { searchAds, topAds, middleAds } = await fetchRectangularAds()
+    setSearchAds(searchAds);
+    setTopAds(topAds);
+    setMiddleAds(middleAds);
 
 
     if (!user) {
@@ -429,14 +462,40 @@ useEffect(() => {
               </p>
             </div>
           ) : results ? (
-            <CourseSection title="Search results" courses={results} />
+            <>
+            <RectangularAd
+                ads={searchAds}className='mb-5'
+  height={130}
+  />
+
+   <CourseSection title="Search results" courses={results} />
+  </>
+           
           ) : user ? (
             <>
+            <RectangularAd
+                ads={topAds}
+                className='mb-5'
+                height={130}
+              />
               <CourseSection title="For you" courses={forYouCourses} />
+
+              <RectangularAd
+                ads={middleAds}
+  className='mb-5'
+              />
+
               <CourseSection title="Others" courses={otherCourses} />
             </>
           ) : (
+            <>
+            <RectangularAd
+                ads={topAds}
+                className='mb-5'
+                height={130}
+              />
             <CourseSection title="Recently updated" courses={recentCourses} />
+            </>
           )}
 </div>
 
@@ -446,7 +505,13 @@ useEffect(() => {
 */}
 
 
-
+    {currentBanner && (
+  <BannerAd
+    ad={currentBanner}
+    isOpen={bannerAdOpen}
+    onClose={() => setBannerAdOpen(false)}
+  />
+)}
 
 
         {/* Show More */}
