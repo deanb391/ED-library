@@ -77,7 +77,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 left-3 z-20 p-2 rounded-full bg-white/80 hover:bg-white transition"
+          className="absolute top-3 left-3 z-20 p-2 rounded-full hover:bg-white transition"
         >
           <X size={22} color="red" />
         </button>
@@ -86,7 +86,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {ad.fileType === "video" && (
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 z-20 p-5 rounded-full bg-white/80 hover:bg-white transition"
+            className="absolute top-3 right-3 z-20 p-5 rounded-full  hover:bg-white transition"
           >
             {isMuted ? <VolumeX size={22} color="blue"/> : <Volume size={22} color="blue"/>}
           </button>
