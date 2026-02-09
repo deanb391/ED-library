@@ -3,7 +3,7 @@ import BannerAd from "@/components/BannerAd";
 import DepartmentRow from "@/components/DepartmentRow";
 import RectangularAd from "@/components/RectangularAd";
 import { useUser } from "@/context/UserContext";
-import { fetchRectangularAds } from "@/lib/ads";
+import { fetchMediumAds } from "@/lib/ads";
 import { useEffect, useState } from "react";
 
 const DEPARTMENTS = [
@@ -46,10 +46,10 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
   
     async function load() {
       setLoading(true);
-      const { searchAds, topAds, middleAds } = await fetchRectangularAds()
-      setSearchAds(searchAds);
-      setTopAds(topAds);
-      setMiddleAds(middleAds);
+      const { oneAds, twoAds, threeAds } = await fetchMediumAds()
+      setSearchAds(oneAds);
+      setTopAds(twoAds);
+      setMiddleAds(threeAds);
       
       const value = showAdAll()
       console.log(value)
@@ -73,7 +73,6 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       <RectangularAd
                 ads={topAds}
                 className='mb-5'
-                height={130}
               />
 
       {DEPARTMENTS.map((dept, index) => (
@@ -84,7 +83,6 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       <RectangularAd
         ads={middleAds}
         className="my-6"
-        height={150}
       />
     )}
     

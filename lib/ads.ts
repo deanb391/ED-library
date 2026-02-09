@@ -5,8 +5,9 @@ import { uploadToServer } from "./upload";
 export type Ad = {
   id: string;
   name: string;
-  squareImages: string[];
-  rectImages: string[];
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
   videos: string[];
   views: number;
   uniqueUsers: string[];
@@ -26,8 +27,9 @@ function mapAd(doc: any): Ad {
   return {
     id: doc.$id,
     name: doc.name,
-    squareImages: doc.squareImages || [],
-    rectImages: doc.rectImages || [],
+    smallImages: doc.smallImages || [],
+    mediumImages: doc.mediumImages || [],
+    largeImages: doc.largeImages || [],
     videos: doc.videos || [],
     views: doc.views ?? 0,
     uniqueUsers: doc.uniqueUsers || [],
@@ -51,8 +53,9 @@ export async function uploadAdVideo(file: File): Promise<string> {
 
 export async function createAd(data: {
   name: string;
-  squareImages: string[];
-  rectImages: string[];
+  smallImages: string[],
+  mediumImages: string[],
+  largeImages: string[],
   videos: string[];
   endTime: string;
   user: string;
@@ -65,8 +68,9 @@ export async function createAd(data: {
     ID.unique(),
     {
       name: data.name,
-      squareImages: data.squareImages,
-      rectImages: data.rectImages,
+      smallImages: data.smallImages,
+      mediumImages: data.mediumImages,
+      largeImages: data.largeImages,
       videos: data.videos,
       views: 0,
       uniqueUsers: [],
@@ -139,7 +143,7 @@ function shuffle<T>(array: T[]): T[] {
 }
 
 
-export async function fetchRectangularAds(): Promise<{
+export async function fetchSmallAds(): Promise<{
   searchAds: AdItem[];
   topAds: AdItem[];
   middleAds: AdItem[];
@@ -151,7 +155,7 @@ export async function fetchRectangularAds(): Promise<{
 
   for (const ad of activeAds) {
     // Rectangular images
-    for (const imageUrl of ad.rectImages) {
+    for (const imageUrl of ad.smallImages) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -195,6 +199,62 @@ export async function fetchRectangularAds(): Promise<{
 }
 
 
+export async function fetchMediumAds(): Promise<{
+  oneAds: AdItem[];
+  twoAds: AdItem[];
+  threeAds: AdItem[];
+}> {
+  const activeAds = await fetchActiveAds();
+
+  // Step 1: flatten all rectangular creatives
+  const formatted: AdItem[] = [];
+
+  for (const ad of activeAds) {
+    // Rectangular images
+    for (const imageUrl of ad.mediumImages) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: imageUrl,
+        fileType: "image",
+        link: ad.link,
+      });
+    }
+
+    // Videos can also be used in rectangular slots
+    for (const videoUrl of ad.videos) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: videoUrl,
+        fileType: "video",
+        link: ad.link,
+      });
+    }
+  }
+
+  // Nothing to work with? Return emptiness honestly.
+  if (formatted.length === 0) {
+    return {
+      oneAds: [],
+      twoAds: [],
+      threeAds: [],
+    };
+  }
+
+  // Step 2: shuffle once
+  const shuffled = shuffle(formatted);
+
+  // Step 3: slice safely
+  const pick = (items: AdItem[]) =>
+    items.slice(0, Math.min(6, items.length));
+
+  return {
+    oneAds: pick(shuffled),
+    twoAds: pick(shuffle(shuffled)),
+    threeAds: pick(shuffle(shuffled)),
+  };
+}
+
+
 export type BannerOrSquareAdItem = {
   id: string;
   fileUrl: string;
@@ -208,7 +268,7 @@ export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
   const formatted: BannerOrSquareAdItem[] = [];
 
   for (const ad of activeAds) {
-    for (const imageUrl of ad.squareImages) {
+    for (const imageUrl of ad.largeImages) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -286,8 +346,9 @@ export async function editAd(
   adId: string,
   data: Partial<{
     name: string;
-    squareImages: string[];
-    rectImages: string[];
+    smallImages: string[];
+    mediumImages: string[];
+    largeImages: string[];
     videos: string[];
     endTime: string;
     isExpired: boolean;

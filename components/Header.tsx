@@ -14,6 +14,7 @@ import {
   Info,
   Phone,
   LayoutGrid,
+  Home
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
@@ -90,7 +91,7 @@ export default function Header() {
                     menuOpen ? "rotate-45 scale-110 opacity-0" : "opacity-100"
                   )}
                 >
-                  <Menu size={25} color="blue" />
+                  <Menu size={25} style={{color: "rgb(37 99 255)"}} />
                 </span>
                 <span
                   className={clsx(
@@ -98,7 +99,7 @@ export default function Header() {
                     menuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-45"
                   )}
                 >
-                  <X size={25} color="blue"/>
+                  <X size={25} style={{color: "rgb(37 99 235)"}}/>
                 </span>
               </button>
 
@@ -110,9 +111,10 @@ export default function Header() {
                     ? "scale-100 opacity-100"
                     : "scale-95 opacity-0 pointer-events-none"
                 )}
-                style={{ width: 200 }}
+                style={{ width: 170 }}
               >
                 <div className="py-2 text-sm w-90">
+                  <MenuItem icon={Home} label="Home" href="/"  onSelect={closeMenu}/>
                   <MenuItem icon={User} label="Account" href="/account"  onSelect={closeMenu}/>
                   {user.isAdmin && (
                     <>

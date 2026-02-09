@@ -161,7 +161,10 @@ export async function fetchCoursesForUser(user: any): Promise<{
     ) {
       forYou.push(course);
     } else {
-      others.push(course);
+      if (others.length < 11) {
+        others.push(course);
+      }
+      
     }
   });
 

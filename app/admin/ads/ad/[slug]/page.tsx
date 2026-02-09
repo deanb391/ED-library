@@ -12,8 +12,9 @@ import { editAd, fetchAdById, uploadAdImage, uploadAdVideo } from "@/lib/ads";
 interface Ad {
   id: string;
   name: string;
-  squareImages: string[];
-  rectImages: string[];
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
   videos: string[];
   views: number;
   uniqueUsers: string[];
@@ -133,17 +134,36 @@ export default function AdDetailsPage() {
           </div>
 
           {/* Images */}
-          <Section title="Square Images">
-            {ad.squareImages?.length === 0 ? (
+          <Section title="2.5 x 1 Images">
+            {ad.smallImages?.length === 0 ? (
               <Empty text="No Square images attached" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {ad.squareImages.map((url, i) => (
+                {ad.smallImages.map((url, i) => (
                   <img
                     key={i}
                     src={url}
                     alt={`Ad image ${i + 1}`}
                     className="rounded-xl border object-cover aspect-square"
+                    style={{height: 100, width: 250}}
+                  />
+                ))}
+              </div>
+            )}
+          </Section>
+
+          <Section title="1.5 x 1 Images">
+            {ad.mediumImages?.length === 0 ? (
+              <Empty text="No Square images attached" />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {ad.mediumImages.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Ad image ${i + 1}`}
+                    className="rounded-xl border object-cover aspect-square"
+                    style={{height: 150, width: 225}}
                   />
                 ))}
               </div>
@@ -151,12 +171,12 @@ export default function AdDetailsPage() {
           </Section>
 
           {/* Images */}
-          <Section title="Rectangular Images">
-            {ad.rectImages?.length === 0 ? (
+          <Section title="Banner Images">
+            {ad.largeImages?.length === 0 ? (
               <Empty text="No Rectangular images attached" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {ad.rectImages.map((url, i) => (
+                {ad.largeImages.map((url, i) => (
                   <img
                     key={i}
                     src={url}
@@ -215,12 +235,14 @@ function EditAdModal({
   const [isExpired, setIsExpired] = useState(ad.isExpired);
   const [link, setLink] = useState(ad.link)
 
-  const [existingSquareImages, setExistingSquareImages] = useState<string[]>(ad.squareImages);
-  const [existingRectImages, setExistingRectImages] = useState<string[]>(ad.rectImages);
+  const [existingSmallImages, setExistingSmallImages] = useState<string[]>(ad.smallImages);
+  const [existingLargeImages, setExistingLargeImages] = useState<string[]>(ad.largeImages);
+  const [existingMediumImages, setExistingMediumImages] = useState<string[]>(ad.mediumImages);
   const [existingVideos, setExistingVideos] = useState<string[]>(ad.videos);
 
-  const [newSquareImages, setNewSquareImages] = useState<File[]>([]);
-  const [newRectImages, setNewRectImages] = useState<File[]>([]);
+  const [newSmallImages, setNewSmallImages] = useState<File[]>([]);
+  const [newMediumImages, setNewMediumImages] = useState<File[]>([]);
+  const [newLargeImages, setNewLargeImages] = useState<File[]>([]);
   const [newVideos, setNewVideos] = useState<File[]>([]);
   const [type, setType] = useState(ad.type);
 
@@ -244,28 +266,34 @@ function EditAdModal({
     setSaving(true);
 
     try {
-      const uploadedSquareImages = await Promise.all(
-        newSquareImages.map((f) => uploadAdImage(f))
+      const uploadedSmallImages = await Promise.all(
+        newSmallImages.map((f) => uploadAdImage(f))
       );
 
-      const uploadedRectImages = await Promise.all(
-        newRectImages.map((f) => uploadAdImage(f))
+      const uploadedMediumImages = await Promise.all(
+        newMediumImages.map((f) => uploadAdImage(f))
+      );
+
+      const uploadedLargeImages = await Promise.all(
+        newLargeImages.map((f) => uploadAdImage(f))
       );
 
       const uploadedVideos = await Promise.all(
         newVideos.map((f) => uploadAdVideo(f))
       );
 
-      const updatedSquareImages = [...existingSquareImages, ...uploadedSquareImages];
-      const updatedRectImages = [...existingRectImages, ...uploadedRectImages];
+      const updatedSmallImages = [...existingSmallImages, ...uploadedSmallImages];
+      const updatedMediumImages = [...existingMediumImages, ...uploadedMediumImages];
+      const updatedLargeImages = [...existingLargeImages, ...uploadedLargeImages];
       const updatedVideos = [...existingVideos, ...uploadedVideos];
 
       await editAd(ad.id, {
         name,
         endTime,
         isExpired,
-        squareImages: updatedSquareImages,
-        rectImages: updatedRectImages,
+        smallImages: updatedSmallImages,
+        mediumImages: updatedMediumImages,
+        largeImages: updatedLargeImages,
         videos: updatedVideos,
         type,
         link,
@@ -276,8 +304,9 @@ function EditAdModal({
         name,
         endTime,
         isExpired,
-        squareImages: updatedSquareImages,
-        rectImages: updatedRectImages,
+        smallImages: updatedSmallImages,
+        mediumImages: updatedMediumImages,
+        largeImages: updatedLargeImages,
         videos: updatedVideos,
         type,
         link
@@ -365,9 +394,9 @@ function EditAdModal({
             />
           </Field>
 
-          <Field label="Square Images">
+          <Field label="2.5 x 1 Images">
   <div className="flex gap-2 flex-wrap">
-    {existingSquareImages.map((url, i) => (
+    {existingSmallImages.map((url, i) => (
       <div key={i} className="relative w-20 h-20">
         <img
           src={url}
@@ -376,7 +405,7 @@ function EditAdModal({
         <button
           type="button"
           onClick={() =>
-            setExistingSquareImages(existingSquareImages.filter((_, x) => x !== i))
+            setExistingSmallImages(existingSmallImages.filter((_, x) => x !== i))
           }
           className="w-full mt-1 text-sm text-red-500 hover:underline "
         >
@@ -391,15 +420,47 @@ function EditAdModal({
     accept="image/*"
     multiple
     onChange={(e) =>
-      setNewSquareImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+      setNewSmallImages((prev) => [...prev, ...Array.from(e.target.files || [])])
     }
     className=" text-sm text-blue-600 mt-10"
   />
 </Field>
 
-         <Field label="Rectangular Images">
+         <Field label="1.5 x 1 Images">
   <div className="flex gap-2 flex-wrap">
-    {existingRectImages.map((url, i) => (
+    {existingMediumImages.map((url, i) => (
+      <div key={i} className="relative w-20 h-20">
+        <img
+          src={url}
+          className="w-full h-full object-cover rounded-lg border"
+        />
+        <button
+          type="button"
+          onClick={() =>
+            setExistingMediumImages(existingMediumImages.filter((_, x) => x !== i))
+          }
+          className="w-full mt-1 text-sm text-red-500 hover:underline "
+        >
+          Remove
+        </button>
+      </div>
+    ))}
+  </div>
+
+  <input
+    type="file"
+    accept="image/*"
+    multiple
+    onChange={(e) =>
+      setNewMediumImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+    }
+    className=" text-sm text-blue-600 mt-10"
+  />
+</Field>
+
+         <Field label="Banner Images">
+  <div className="flex gap-2 flex-wrap">
+    {existingLargeImages.map((url, i) => (
       <div key={i} className="relative w-80 h-20">
         <img
           src={url}
@@ -408,7 +469,7 @@ function EditAdModal({
         <button
           type="button"
           onClick={() =>
-            setExistingRectImages(existingRectImages.filter((_, x) => x !== i))
+            setExistingLargeImages(existingLargeImages.filter((_, x) => x !== i))
           }
           className="w-full mt-1 text-sm text-red-500 hover:underline "
         >
@@ -423,7 +484,7 @@ function EditAdModal({
     accept="image/*"
     multiple
     onChange={(e) =>
-      setNewRectImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+      setNewLargeImages((prev) => [...prev, ...Array.from(e.target.files || [])])
     }
     className=" text-sm text-blue-600 mt-10"
   />

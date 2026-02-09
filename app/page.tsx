@@ -10,7 +10,7 @@ import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 import { useRouter } from 'next/navigation';
 import RectangularAd from '@/components/RectangularAd';
-import { fetchRectangularAds } from '@/lib/ads';
+import { fetchSmallAds, fetchMediumAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
 
 // --- Dummy Data Configuration ---
@@ -289,9 +289,12 @@ const [otherCourses, setOtherCourses] = useState<Course[]>([]);
 const [recentCourses, setRecentCourses] = useState<Course[]>([]);
 const [showAdvanced, setShowAdvanced] = useState(false);
 const [searchLoading, setSearchLoading] = useState(false);
-const [searchAds, setSearchAds] = useState<AdItem[]>([])
-const [topAds, setTopAds] = useState<AdItem[]>([])
-const [middleAds, setMiddleAds] = useState<AdItem[]>([])
+const [smallSearchAds, setSmallSearchAds] = useState<AdItem[]>([])
+const [smallTopAds, setSmallTopAds] = useState<AdItem[]>([])
+const [smallMiddleAds, setSmallMiddleAds] = useState<AdItem[]>([])
+const [largeSearchAds, setLargeSearchAds] = useState<AdItem[]>([])
+const [largeTopAds, setLargeTopAds] = useState<AdItem[]>([])
+const [largeMiddleAds, setLargeMiddleAds] = useState<AdItem[]>([])
 const [bannerAdOpen, setBannerAdOpen] = useState(false);
 const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
 
@@ -328,10 +331,15 @@ useEffect(() => {
     const value = showAdHome()
     setBannerAdOpen(value)
     setCurrentBanner(pickRandom(homeBannerAds))
-    const { searchAds, topAds, middleAds } = await fetchRectangularAds()
-    setSearchAds(searchAds);
-    setTopAds(topAds);
-    setMiddleAds(middleAds);
+    const { searchAds, topAds, middleAds } = await fetchSmallAds()
+    setSmallSearchAds(searchAds);
+    setSmallTopAds(topAds);
+    setSmallMiddleAds(middleAds);
+
+    const { oneAds, twoAds, threeAds } = await fetchMediumAds()
+    setLargeSearchAds(oneAds);
+    setLargeTopAds(twoAds);
+    setLargeMiddleAds(threeAds);
 
 
     if (!user) {
@@ -464,7 +472,7 @@ useEffect(() => {
           ) : results ? (
             <>
             <RectangularAd
-                ads={searchAds}className='mb-5'
+                ads={smallSearchAds}className='mb-5'
   height={130}
   />
 
@@ -474,14 +482,14 @@ useEffect(() => {
           ) : user ? (
             <>
             <RectangularAd
-                ads={topAds}
+                ads={smallMiddleAds}
                 className='mb-5'
                 height={130}
               />
               <CourseSection title="For you" courses={forYouCourses} />
 
               <RectangularAd
-                ads={middleAds}
+                ads={largeSearchAds}
   className='mb-5'
               />
 
@@ -490,7 +498,7 @@ useEffect(() => {
           ) : (
             <>
             <RectangularAd
-                ads={topAds}
+                ads={smallTopAds}
                 className='mb-5'
                 height={130}
               />

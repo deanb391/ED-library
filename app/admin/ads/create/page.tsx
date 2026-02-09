@@ -20,6 +20,9 @@ export default function CreateAdPage() {
 
   const [name, setName] = useState("");
   const [squareImages, setSquareImages] = useState<File[]>([]);
+  const [smallImage, setSmallImage] = useState<File[]>([]);
+  const [mediumImage, setMediumImage] = useState<File[]>([]);
+  const [LargeImage, setLargeImage] = useState<File[]>([]);
   const [rectImages, setRectImages] =useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
   const [endTime, setEndTime] = useState("");
@@ -40,20 +43,28 @@ export default function CreateAdPage() {
     setLoading(false);
   }, [user]);
 
-  const handleSquareImageAdd = (files: FileList | null) => {
+  const handleSmallImageAdd = (files: FileList | null) => {
     if (!files) return;
 
     const incoming = Array.from(files);
-    const next = [...squareImages, ...incoming].slice(0, 3);
-    setSquareImages(next);
+    const next = [...smallImage, ...incoming].slice(0, 3);
+    setSmallImage(next);
   };
 
-  const handleRectImageAdd = (files: FileList | null) => {
+  const handleMediumImageAdd = (files: FileList | null) => {
     if (!files) return;
 
     const incoming = Array.from(files);
-    const next = [...rectImages, ...incoming].slice(0, 3);
-    setRectImages(next);
+    const next = [...mediumImage, ...incoming].slice(0, 3);
+    setMediumImage(next);
+  };
+
+  const handleLargeImageAdd = (files: FileList | null) => {
+    if (!files) return;
+
+    const incoming = Array.from(files);
+    const next = [...LargeImage, ...incoming].slice(0, 3);
+    setLargeImage(next);
   };
 
   const handleVideoAdd = (files: FileList | null) => {
@@ -64,12 +75,16 @@ export default function CreateAdPage() {
     setVideos(next);
   };
 
-  const removeSquareImage = (index: number) => {
-    setSquareImages(squareImages.filter((_, i) => i !== index));
+  const removeSmallImage = (index: number) => {
+    setSmallImage(squareImages.filter((_, i) => i !== index));
   };
 
-  const removeRectImage = (index: number) => {
-    setRectImages(rectImages.filter((_, i) => i !== index));
+  const removeMediumImage = (index: number) => {
+    setMediumImage(rectImages.filter((_, i) => i !== index));
+  };
+
+  const removeLargeImage = (index: number) => {
+    setLargeImage(rectImages.filter((_, i) => i !== index));
   };
 
   const removeVideo = (index: number) => {
@@ -92,16 +107,22 @@ export default function CreateAdPage() {
 
   try {
     // Upload images
-    const uploadedSquareImages: string[] = [];
-    for (const image of squareImages) {
+    const uploadedSmallImages: string[] = [];
+    for (const image of smallImage) {
       const url = await uploadAdImage(image);
-      uploadedSquareImages.push(url);
+      uploadedSmallImages.push(url);
     }
 
-    const uploadedRectImages: string[] = [];
-    for (const image of rectImages) {
+    const uploadedMediumImages: string[] = [];
+    for (const image of mediumImage) {
       const url = await uploadAdImage(image);
-      uploadedRectImages.push(url);
+      uploadedMediumImages.push(url);
+    }
+
+    const uploadedLargeImages: string[] = [];
+    for (const image of LargeImage) {
+      const url = await uploadAdImage(image);
+      uploadedLargeImages.push(url);
     }
 
     // Upload videos
@@ -113,8 +134,9 @@ export default function CreateAdPage() {
 
     const ad = await createAd({
       name,
-      squareImages: uploadedSquareImages,
-      rectImages: uploadedRectImages,
+      smallImages: uploadedSmallImages,
+      mediumImages: uploadedMediumImages,
+      largeImages: uploadedLargeImages,
       videos: uploadedVideos,
       endTime,
       user: user?.$id,
@@ -253,7 +275,7 @@ export default function CreateAdPage() {
             {/* Images */}
            <div>
   <label className="block text-sm font-medium text-gray-700 mb-2">
-    Square Images (max 3)
+    2.5 x 1 Images (max 3)
   </label>
 
   {/* Styled file picker */}
@@ -261,23 +283,23 @@ export default function CreateAdPage() {
     className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       hover:bg-gray-50 transition bg-blue-600
-      ${squareImages.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
+      ${smallImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
   >
     Choose images
     <input
       type="file"
       accept="image/*"
       multiple
-      onChange={(e) => handleSquareImageAdd(e.target.files)}
-      disabled={squareImages.length >= 3}
+      onChange={(e) => handleSmallImageAdd(e.target.files)}
+      disabled={smallImage.length >= 3}
       className="hidden"
     />
   </label>
 
   {/* Image previews */}
-  {squareImages.length > 0 && (
+  {smallImage.length > 0 && (
     <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {squareImages.map((file, index) => {
+      {smallImage.map((file, index) => {
         const previewUrl = URL.createObjectURL(file);
 
         return (
@@ -291,12 +313,13 @@ export default function CreateAdPage() {
               src={previewUrl}
               alt={`Selected image ${index + 1}`}
               className="w-full h-full object-cover"
+              style={{height: 100, width: 250}}
             />
 
             {/* Remove button */}
             <button
               type="button"
-              onClick={() => removeSquareImage(index)}
+              onClick={() => removeSmallImage(index)}
               className="absolute -top-2 -right-2 bottom-10
                          w-6 h-6 rounded-full
                          bg-red-600 text-white
@@ -315,7 +338,7 @@ export default function CreateAdPage() {
 
            <div>
   <label className="block text-sm font-medium text-gray-700 mb-2">
-    Rectangular Images (max 3)
+    1.5 x 1 Images (max 3)
   </label>
 
   {/* Styled file picker */}
@@ -323,23 +346,86 @@ export default function CreateAdPage() {
     className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       hover:bg-gray-50 transition bg-blue-600
-      ${rectImages.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
+      ${mediumImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
   >
     Choose images
     <input
       type="file"
       accept="image/*"
       multiple
-      onChange={(e) => handleRectImageAdd(e.target.files)}
-      disabled={rectImages.length >= 3}
+      onChange={(e) => handleMediumImageAdd(e.target.files)}
+      disabled={mediumImage.length >= 3}
       className="hidden"
     />
   </label>
 
   {/* Image previews */}
-  {rectImages.length > 0 && (
+  {mediumImage.length > 0 && (
     <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {rectImages.map((file, index) => {
+      {mediumImage.map((file, index) => {
+        const previewUrl = URL.createObjectURL(file);
+
+        return (
+          <div
+            key={index}
+            className="relative flex-shrink-0
+                       w-0.5 h-0.5 rounded-lg
+                       border border-gray-200 overflow-hidden bg-gray-50"
+          >
+            <img
+              src={previewUrl}
+              alt={`Selected image ${index + 1}`}
+              className="w-full h-full object-cover"
+              style={{height: 150, width: 225}}
+            />
+
+            {/* Remove button */}
+            <button
+              type="button"
+              onClick={() => removeMediumImage(index)}
+              className="absolute -top-2 -right-2 bottom-10
+                         w-6 h-6 rounded-full
+                         bg-red-600 text-white
+                         flex items-center justify-center
+                         shadow-md hover:bg-red-500 transition"
+              title="Remove image"
+            >
+              <X size={30} strokeWidth={2.5} />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</div>
+
+           <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Banner Images (max 3)
+  </label>
+
+  {/* Styled file picker */}
+  <label
+    className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
+      border border-gray-300 text-sm font-medium cursor-pointer
+      hover:bg-gray-50 transition bg-blue-600
+      ${LargeImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
+  >
+    Choose images
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      onChange={(e) => handleLargeImageAdd(e.target.files)}
+      disabled={LargeImage.length >= 3}
+      className="hidden"
+    />
+  </label>
+
+  {/* Image previews */}
+  {LargeImage.length > 0 && (
+    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+      {LargeImage.map((file, index) => {
         const previewUrl = URL.createObjectURL(file);
 
         return (
@@ -358,7 +444,7 @@ export default function CreateAdPage() {
             {/* Remove button */}
             <button
               type="button"
-              onClick={() => removeRectImage(index)}
+              onClick={() => removeLargeImage(index)}
               className="absolute -top-2 -right-2 bottom-10
                          w-6 h-6 rounded-full
                          bg-red-600 text-white

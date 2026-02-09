@@ -69,9 +69,10 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
     >
-      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg">
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 z-10" />
+      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{marginRight: 5, marginLeft: 5}}>
+       
+<div className="absolute inset-0 z-10  pointer-events-none" />
+
 
         {/* Close button */}
         <button
@@ -87,13 +88,13 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
             onClick={toggleMute}
             className="absolute top-3 right-3 z-20 p-5 rounded-full bg-white/80 hover:bg-white transition"
           >
-            {isMuted ? <VolumeX size={40} color="blue"/> : <Volume size={40} color="blue"/>}
+            {isMuted ? <VolumeX size={22} color="blue"/> : <Volume size={22} color="blue"/>}
           </button>
         )}
 
         {/* Loading indicator */}
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10" style={{height: 130, alignItems: 'center', flex: 1}}> 
+          <div className="absolute inset-0 flex items-center justify-center z-10" style={{height: 130, alignItems: 'center', flex: 1, }}> 
             <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
           </div>
         )}
@@ -103,7 +104,8 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
           <img
             src={ad.fileUrl}
             alt="Banner Ad"
-            className="w-full max-h-[400px] cursor-pointer object-contain relative z-0"
+            className=" max-h-[400px] cursor-pointer object-contain relative z-0"
+            style={{maxHeight: 1000, width: 500,}}
             onClick={handleClick}
             onLoad={handleAdLoaded}
           />

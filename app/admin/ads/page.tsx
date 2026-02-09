@@ -9,8 +9,9 @@ import { useRouter } from "next/navigation";
 interface Ad {
   id: string;
   name: string;
-  squareImages: string[];
-  rectImages: string[];
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
   videos: string[];
   views: number;
   uniqueUsers: string[];
@@ -53,7 +54,7 @@ export default function AllAdsPage() {
     <div className="min-h-screen px-4 py-10 bg-[#F8F9FA]">
       <div className="max-w-5xl mx-auto bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
-  <h1 className="text-3xl font-semibold text-black" style={{color: "black"}}>
+  <h1 className="text-2xl font-semibold text-black" style={{color: "black"}}>
     All Ads
   </h1>
 
@@ -122,7 +123,7 @@ export default function AllAdsPage() {
                 <th className="px-4 py-2 text-sm font-medium text-gray-700">Name</th>
                 <th className="px-4 py-2 text-sm font-medium text-gray-700">Type</th>
                 <th className="px-4 py-2 text-sm font-medium text-gray-700">Status</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">End Time</th>
+                <th className="px-4 py-2 text-sm font-medium text-gray-700" style={{fontSize: 12}}>End Time</th>
               </tr>
             </thead>
             <tbody>
@@ -130,12 +131,12 @@ export default function AllAdsPage() {
                 <tr key={ad.id} className="border-b border-gray-100 hover:bg-gray-50" onClick={() => {
                     router.push(`/admin/ads/ad/${ad.id}`)
                 }}>
-                  <td className="px-4 py-3 text-blue-600" style={{color: "black", textTransform: 'capitalize', }}>{ad.name}</td>
+                  <td className="px-4 py-3 text-blue-600" style={{color: "black", textTransform: 'capitalize', fontSize: 14}}>{ad.name}</td>
                   <td className="px-4 py-3 capitalize text-blue-600" style={{color: "black", textTransform: 'capitalize'}}>{ad.type}</td>
                   <td className={`px-4 py-3 ${ad.isExpired ? "text-red-600" : "text-green-500"}`} style={{color:ad.isExpired ?"red":  "green"}}>
                     {ad.isExpired ? "Expired" : "Active"}
                   </td>
-                  <td className="px-4 py-3 text-blue-600">{new Date(ad.endTime).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-blue-600" style={{fontSize: 10}}>{new Date(ad.endTime).toLocaleString()}</td>
                 </tr>
               ))}
               {ads.length === 0 && !loading && (

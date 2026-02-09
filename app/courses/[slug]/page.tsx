@@ -29,7 +29,7 @@ import EditCourseModal from '@/components/EditCourseModal';
 import PdfImageList from "@/components/PdfImageList"
 import NativeBanner from '@/components/ads/NativeBanner';
 import RectangularAd from '@/components/RectangularAd';
-import { fetchRectangularAds } from '@/lib/ads';
+import { fetchSmallAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
 
 interface Post {
@@ -160,7 +160,7 @@ function pickRandom<T>(arr: T[]): T | null {
     setBannerAdOpen(value)
     setCurrentBanner(pickRandom(courseBannerAds))
 
-    const { searchAds, topAds, middleAds } = await fetchRectangularAds()
+    const { searchAds, topAds, middleAds } = await fetchSmallAds()
 
     setTopAds(topAds);
     
