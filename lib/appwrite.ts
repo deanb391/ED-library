@@ -74,6 +74,25 @@ export async function createUser({
 }
 
 
+export async function updateUser({
+  userId,
+  lastTime
+}: {
+  userId: string,
+  lastTime: Date
+}) {
+
+  return databases.updateDocument(
+    DATABASE_ID,
+    USER_COLLECTION,
+    userId,
+    {
+      lastTime: lastTime
+    }
+  )
+
+}
+
 
 export async function getCurrentUser() {
   try {

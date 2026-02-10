@@ -9,14 +9,26 @@ import { advancedSearchCourses, Course, fetchCourses, fetchCoursesForUser, fetch
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 import { useRouter } from 'next/navigation';
+import RectangularAd from '@/components/RectangularAd';
+import { fetchSmallAds, fetchMediumAds } from '@/lib/ads';
+import BannerAd from '@/components/BannerAd';
 
+
+export type AdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link?: string;
+};
 // --- Dummy Data Configuration ---
 function CourseSection({
   title,
   courses,
+  ads
 }: {
   title: string;
   courses: Course[];
+  ads?: AdItem[];
 }) {
   if (!courses.length) return null;
 
@@ -30,9 +42,9 @@ function CourseSection({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {courses.map(course => (
+        {courses.map((course, index) => (
+          <React.Fragment key={course.id}>
           <Link
-      key={course.id}
       href={`/courses/${course.id}`}
       className="group bg-white rounded-2xl border border-gray-200
                  hover:border-gray-300 overflow-hidden
@@ -83,6 +95,17 @@ function CourseSection({
         </div>
       </div>
     </Link>
+
+    {title === "Others" && (index + 1) % 4 === 0 && (
+      <div className="col-span-2 sm:col-span-2 lg:col-span-4">
+        <RectangularAd
+          ads={ads || []}   // or whichever ad array you want
+          className="my-6"
+          height={130}
+        />
+      </div>
+    )}
+    </React.Fragment>
         ))}
       </div>
     </section>
@@ -272,6 +295,7 @@ const sessions = [
 
 
 
+
 export default function EDLibraryHome() {
   
   const [forYouCourses, setForYouCourses] = useState<Course[]>([]);
@@ -280,6 +304,21 @@ const [otherCourses, setOtherCourses] = useState<Course[]>([]);
 const [recentCourses, setRecentCourses] = useState<Course[]>([]);
 const [showAdvanced, setShowAdvanced] = useState(false);
 const [searchLoading, setSearchLoading] = useState(false);
+const [smallSearchAds, setSmallSearchAds] = useState<AdItem[]>([])
+const [smallTopAds, setSmallTopAds] = useState<AdItem[]>([])
+const [smallMiddleAds, setSmallMiddleAds] = useState<AdItem[]>([])
+const [largeSearchAds, setLargeSearchAds] = useState<AdItem[]>([])
+const [largeTopAds, setLargeTopAds] = useState<AdItem[]>([])
+const [largeMiddleAds, setLargeMiddleAds] = useState<AdItem[]>([])
+const [bannerAdOpen, setBannerAdOpen] = useState(false);
+const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
+
+// to open ad
+
+
+
+// render
+
 const [filters, setFilters] = useState({
   department: "",
   level: "",
@@ -289,9 +328,14 @@ const [filters, setFilters] = useState({
 
   const [lloading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const {user, loading: userLoading} = useUser()
+  const {user, loading: userLoading, homeBannerAds, showAdHome} = useUser()
   const router = useRouter()
 
+function pickRandom<T>(arr: T[]): T | null {
+  if (!arr.length) return null;
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index];
+}
   
 
 useEffect(() => {
@@ -299,6 +343,18 @@ useEffect(() => {
 
   async function load() {
     setLoading(true);
+    const value = showAdHome()
+    setBannerAdOpen(value)
+    setCurrentBanner(pickRandom(homeBannerAds))
+    const { searchAds, topAds, middleAds } = await fetchSmallAds()
+    setSmallSearchAds(searchAds);
+    setSmallTopAds(topAds);
+    setSmallMiddleAds(middleAds);
+
+    const { oneAds, twoAds, threeAds } = await fetchMediumAds()
+    setLargeSearchAds(oneAds);
+    setLargeTopAds(twoAds);
+    setLargeMiddleAds(threeAds);
 
 
     if (!user) {
@@ -429,14 +485,40 @@ useEffect(() => {
               </p>
             </div>
           ) : results ? (
-            <CourseSection title="Search results" courses={results} />
+            <>
+            <RectangularAd
+                ads={smallSearchAds}className='mb-5'
+  height={130}
+  />
+
+   <CourseSection title="Search results" courses={results} />
+  </>
+           
           ) : user ? (
             <>
+            <RectangularAd
+                ads={smallMiddleAds}
+                className='mb-5'
+                height={130}
+              />
               <CourseSection title="For you" courses={forYouCourses} />
-              <CourseSection title="Others" courses={otherCourses} />
+
+              <RectangularAd
+                ads={largeSearchAds}
+  className='mb-5'
+              />
+
+              <CourseSection title="Others" courses={otherCourses} ads={smallTopAds}/>
             </>
           ) : (
+            <>
+            <RectangularAd
+                ads={smallTopAds}
+                className='mb-5'
+                height={130}
+              />
             <CourseSection title="Recently updated" courses={recentCourses} />
+            </>
           )}
 </div>
 
@@ -446,7 +528,13 @@ useEffect(() => {
 */}
 
 
-
+    {currentBanner && (
+  <BannerAd
+    ad={currentBanner}
+    isOpen={bannerAdOpen}
+    onClose={() => setBannerAdOpen(false)}
+  />
+)}
 
 
         {/* Show More */}

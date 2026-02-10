@@ -16,7 +16,7 @@ import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
 import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts, fetchPostsAsc } from '@/lib/courses';
 import Image from 'next/image';
-import { getCurrentUser } from '@/lib/appwrite';
+import { getCurrentUser, updateUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
 import { useRouter } from 'next/navigation';
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';
@@ -28,6 +28,9 @@ import ConfirmPostDelete from '@/components/ConfirmPostDelete';
 import EditCourseModal from '@/components/EditCourseModal';
 import PdfImageList from "@/components/PdfImageList"
 import NativeBanner from '@/components/ads/NativeBanner';
+import RectangularAd from '@/components/RectangularAd';
+import { fetchSmallAds } from '@/lib/ads';
+import BannerAd from '@/components/BannerAd';
 
 interface Post {
   id: string;
@@ -80,7 +83,15 @@ const NOTES_DATA = [
   },
 ];
 
+export type AdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link?: string;
+};
+
 export default function CourseDetailsPage() {
+  
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(0);
   const params = useParams();
@@ -108,14 +119,23 @@ const [pdfImages, setPdfImages] = useState<string[]>([]);
 const [pdfCursor, setPdfCursor] = useState<string | null>(null);
 const [loadingPdf, setLoadingPdf] = useState(false);
 const [hasMorePdf, setHasMorePdf] = useState(true);
+const [topAds, setTopAds] = useState<AdItem[]>([])
 type ViewMode = "timeline" | "pdf";
 const [viewMode, setViewMode] = useState<ViewMode>("timeline");
+const [bannerAdOpen, setBannerAdOpen] = useState(false);
+const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
+
+function pickRandom<T>(arr: T[]): T | null {
+  if (!arr.length) return null;
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index];
+}
 
 
 
 
   const router = useRouter();
-  const {user} = useUser()
+  const {user, showAdCourse, courseBannerAds} = useUser()
 
   const fetchTimeLine = async () => {
     const { posts: firstPosts, lastId } = await fetchPosts(courseId);
@@ -134,6 +154,23 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
   useEffect(() => {
   const init = async () => {
     if (user?.isAdmin) setIsAdmin(true);
+    if (courseBannerAds.length === 0) return;
+
+    const value = showAdCourse()
+    setBannerAdOpen(value)
+    setCurrentBanner(pickRandom(courseBannerAds))
+
+    const { searchAds, topAds, middleAds } = await fetchSmallAds()
+
+    setTopAds(topAds);
+    
+    if (user) {
+      updateUser({
+        userId: user.$id,
+        lastTime: new Date()
+      })
+    }
+
 
     const courseDoc = await fetchCourseById(courseId);
     setCourse(courseDoc);
@@ -152,7 +189,7 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
   };
 
   init();
-}, [courseId]);
+}, [courseId, courseBannerAds]);
 
 
   const loadMorePosts = async () => {
@@ -344,6 +381,12 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
 
         </div>
 
+        <RectangularAd
+                        ads={topAds}
+                        className='mb-5'
+                        height={130}
+                      />
+
         {/* Notes Grid */}
         {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
           {course.files.map((file: any, index: number) => (
@@ -406,6 +449,7 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
       } else {
         router.push("/signup")
       }}}
+      topAds={topAds}
     />
 
     {loadingPdf && (
@@ -423,6 +467,14 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
           <div className="flex justify-center py-6">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
           </div>
+        )}
+
+           {currentBanner && (
+          <BannerAd
+            ad={currentBanner}
+            isOpen={bannerAdOpen}
+            onClose={() => setBannerAdOpen(false)}
+          />
         )}
 
         <NoteViewerModal

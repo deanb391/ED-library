@@ -1,7 +1,8 @@
-export async function uploadToServer(file: File, folder: string) {
+export async function uploadToServer(file: File, folder: string, type: string) {
   const form = new FormData();
   form.append("file", file);
   form.append("folder", folder);
+  form.append("type", type);
 
   const res = await fetch("/api/upload", {
     method: "POST",

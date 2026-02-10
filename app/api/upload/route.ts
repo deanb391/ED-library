@@ -15,13 +15,21 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "misc";
+    const type = (formData.get("type") as string);
 
     if (!file) {
       return NextResponse.json({ error: "No file" }, { status: 400 });
     }
 
+    let extension;
+    if (type === "image") {
+        extension = "jpg"
+    } else if (type === "video" ) {
+        extension = 'mp4'
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const key = `${folder}/${uuidv4()}.jpg`;
+    const key = `${folder}/${uuidv4()}.${extension}`;
 
     await s3.putObject({
       Bucket: BUCKET_NAME,
@@ -56,6 +64,7 @@ export async function GET(req: NextRequest) {
       ResponseContentDisposition: "attachment", // forces download
     });
 
+    
 
 
 
