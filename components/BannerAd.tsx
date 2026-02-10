@@ -70,7 +70,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
       )}
       
     >
-      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{alignItems:'center', alignSelf: 'center', maxHeight: "96%", maxWidth: '98%'}}>
+      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{alignItems:'center', alignSelf: 'center', maxHeight: "96%", maxWidth: '99%'}}>
        
 <div className="absolute inset-0 z-10  pointer-events-none" />
 
