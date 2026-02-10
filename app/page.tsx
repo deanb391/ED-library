@@ -13,13 +13,22 @@ import RectangularAd from '@/components/RectangularAd';
 import { fetchSmallAds, fetchMediumAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
 
+
+export type AdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link?: string;
+};
 // --- Dummy Data Configuration ---
 function CourseSection({
   title,
   courses,
+  ads
 }: {
   title: string;
   courses: Course[];
+  ads?: AdItem[];
 }) {
   if (!courses.length) return null;
 
@@ -33,9 +42,9 @@ function CourseSection({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {courses.map(course => (
+        {courses.map((course, index) => (
+          <React.Fragment key={course.id}>
           <Link
-      key={course.id}
       href={`/courses/${course.id}`}
       className="group bg-white rounded-2xl border border-gray-200
                  hover:border-gray-300 overflow-hidden
@@ -86,6 +95,17 @@ function CourseSection({
         </div>
       </div>
     </Link>
+
+    {title === "Others" && (index + 1) % 4 === 0 && (
+      <div className="col-span-2 sm:col-span-2 lg:col-span-4">
+        <RectangularAd
+          ads={ads || []}   // or whichever ad array you want
+          className="my-6"
+          height={130}
+        />
+      </div>
+    )}
+    </React.Fragment>
         ))}
       </div>
     </section>
@@ -273,12 +293,7 @@ const sessions = [
   );
 }
 
-export type AdItem = {
-  id: string;
-  fileUrl: string;
-  fileType: "image" | "video";
-  link?: string;
-};
+
 
 
 export default function EDLibraryHome() {
@@ -493,7 +508,7 @@ useEffect(() => {
   className='mb-5'
               />
 
-              <CourseSection title="Others" courses={otherCourses} />
+              <CourseSection title="Others" courses={otherCourses} ads={smallTopAds}/>
             </>
           ) : (
             <>

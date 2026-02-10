@@ -3,7 +3,7 @@ import BannerAd from "@/components/BannerAd";
 import DepartmentRow from "@/components/DepartmentRow";
 import RectangularAd from "@/components/RectangularAd";
 import { useUser } from "@/context/UserContext";
-import { fetchMediumAds } from "@/lib/ads";
+import { fetchMediumAds, fetchSmallAds } from "@/lib/ads";
 import { useEffect, useState } from "react";
 
 const DEPARTMENTS = [
@@ -40,6 +40,8 @@ export default function AllCoursesPage() {
 const [bannerAdOpen, setBannerAdOpen] = useState(false);
 const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
  const {allScreenBannerAds, showAdAll} = useUser()
+ const [small1, setSmall1] = useState<AdItem[]>([]);
+  const [small2, setSmall2] = useState<AdItem[]>([]);
 
   useEffect(() => {
 
@@ -47,6 +49,9 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
     async function load() {
       setLoading(true);
       const { oneAds, twoAds, threeAds } = await fetchMediumAds()
+      const { searchAds, topAds, middleAds} = await fetchSmallAds();
+      setSmall1(searchAds);
+      setSmall2(topAds);
       setSearchAds(oneAds);
       setTopAds(twoAds);
       setMiddleAds(threeAds);
@@ -55,7 +60,6 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       console.log(value)
     setBannerAdOpen(value)
     const add = pickRandom(allScreenBannerAds)
-    console.log(allScreenBannerAds)
     setCurrentBanner(add)
   
 
@@ -71,8 +75,9 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       </h1>
 
       <RectangularAd
-                ads={topAds}
+                ads={small1}
                 className='mb-5'
+                height={130}
               />
 
       {DEPARTMENTS.map((dept, index) => (
@@ -80,11 +85,21 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
     <DepartmentRow department={dept} />
 
     {(index + 1) % 3 === 0 && (
-      <RectangularAd
-        ads={middleAds}
-        className="my-6"
-      />
+      index % 2 === 0 ? (
+        <RectangularAd
+          ads={small2}
+          className="my-6"
+          height={130}
+        />
+      ) : (
+        <RectangularAd
+          ads={middleAds}
+          className="my-6"
+          
+        />
+      )
     )}
+    
     
   </div>
 ))}
