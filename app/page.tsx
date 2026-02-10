@@ -96,7 +96,7 @@ function CourseSection({
       </div>
     </Link>
 
-    {title === "Others" && (index + 1) % 4 === 0 && (
+    {(title === "Others" || title === "Recently updated") && (index + 1) % 4 === 0 && (
       <div className="col-span-2 sm:col-span-2 lg:col-span-4">
         <RectangularAd
           ads={ads || []}   // or whichever ad array you want
