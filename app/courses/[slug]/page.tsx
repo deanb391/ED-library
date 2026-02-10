@@ -31,6 +31,7 @@ import NativeBanner from '@/components/ads/NativeBanner';
 import RectangularAd from '@/components/RectangularAd';
 import { fetchSmallAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
+import NoUserModal from '@/components/NoUserModal';
 
 interface Post {
   id: string;
@@ -124,6 +125,7 @@ type ViewMode = "timeline" | "pdf";
 const [viewMode, setViewMode] = useState<ViewMode>("timeline");
 const [bannerAdOpen, setBannerAdOpen] = useState(false);
 const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
+const [showNoUserModal, setShowNoUserModal] = useState(false);
 
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null;
@@ -239,9 +241,28 @@ function pickRandom<T>(arr: T[]): T | null {
       document.body.offsetHeight - 200
     ) {
       if (viewMode === "timeline") {
-        loadMorePosts();
+        if (!user) {
+          setShowNoUserModal(true)
+
+          setTimeout(() => {
+            setShowNoUserModal(false);
+            router.push("/signup")
+          }, 5000)
+        } else {
+           loadMorePosts();
+        }
+       
       } else {
-        loadMorePdf();
+        if (!user) {
+          setShowNoUserModal(true)
+
+          setTimeout(() => {
+            setShowNoUserModal(false)
+            router.push("/signup")
+          }, 5000)
+        } else {
+           loadMorePdf();
+        }
       }
     }
   };
@@ -503,6 +524,12 @@ function pickRandom<T>(arr: T[]): T | null {
             router.replace(`/`)
           }}
           fileName={""}
+        />
+
+        <NoUserModal 
+          isOpen={showNoUserModal}
+          onClose={() => setShowNoUserModal(false)}
+          onConfirm={() => router.push("/signup")}
         />
 
         <ConfirmCourseDelete 

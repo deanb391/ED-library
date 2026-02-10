@@ -56,6 +56,7 @@ const DEPARTMENTS = [
 
     if (password.length <= 8 || confirmPassword.length <= 8) {
         alert("Password must not be less than 8, and must be one which is not common")
+        return;
     }
 
     const num_level = Number(level)
