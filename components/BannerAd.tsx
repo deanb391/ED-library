@@ -68,8 +68,9 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         "fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
+      
     >
-      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{marginRight: 5, marginLeft: 5}}>
+      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{alignItems:'center', alignSelf: 'center', maxHeight: "96%", maxWidth: '99%'}}>
        
 <div className="absolute inset-0 z-10  pointer-events-none" />
 
@@ -104,8 +105,8 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
           <img
             src={ad.fileUrl}
             alt="Banner Ad"
-            className=" max-h-[400px] cursor-pointer object-contain relative z-0"
-            style={{maxHeight: 1000, width: 500,}}
+            className="  cursor-pointer object-contain relative z-0"
+            style={{maxHeight: "90%", maxWidth: '100%', alignSelf: 'center', }}
             onClick={handleClick}
             onLoad={handleAdLoaded}
           />
@@ -113,8 +114,8 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
           <video
             ref={videoRef}
             src={ad.fileUrl}
-            className="w-full max-h-[400px] cursor-pointer object-contain relative z-0"
-            style={{maxHeight: 1000}}
+            className="w-full  cursor-pointer object-contain relative z-0"
+            style={{maxHeight: "90%", maxWidth: '100%',}}
             autoPlay
             muted
             loop
