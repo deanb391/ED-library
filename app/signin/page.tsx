@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   GraduationCap,
   ArrowRight,
@@ -10,7 +10,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {  signIn } from "@/lib/appwrite";
+import {  signIn, sendPasswordRecovery } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
 
 export default function AdminLoginPage() {
@@ -22,8 +22,26 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { user } = useUser();
+
+  // useEffect(() => {
+  //   const runCheck = async () => {
+  //     if (user ){
+  //       alert("You are already signed in")
+  //       router.replace("/")
+  //     }
+  //   } 
+  //   runCheck()
+  // }, [user])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (user) {
+      alert("A session is already active")
+      router.replace("/")
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -94,12 +112,35 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 px-2"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>
+
+          <div className="text-right">
+  <button
+    type="button"
+    onClick={async () => {
+      if (!email) {
+        alert("Enter your email first");
+        return;
+      }
+
+      try {
+        await sendPasswordRecovery(email);
+        alert("Recovery email sent");
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong");
+      }
+    }}
+    className="text-xs text-blue-600 hover:underline"
+  >
+    Forgot password?
+  </button>
+</div>
 
           {/* Submit */}
           <button
