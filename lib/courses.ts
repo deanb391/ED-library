@@ -146,7 +146,7 @@ export async function fetchCoursesForUser(user: any): Promise<{
   const all = await databases.listDocuments(
     DATABASE_ID,
     COLLECTION_ID,
-    [Query.orderDesc("$updatedAt"), Query.limit(30)]
+    [Query.orderDesc("$updatedAt"), Query.limit(100)]
   );
 
   const forYou: Course[] = [];
