@@ -153,6 +153,22 @@ export async function signIn(email: string, password: string) {
 }
 
 
+export async function sendPasswordRecovery(email: string) {
+  const redirectUrl = `${window.location.origin}/reset-password`;
+
+  return account.createRecovery(email, redirectUrl);
+}
+
+export async function completePasswordRecovery(
+  userId: string,
+  secret: string,
+  password: string
+) {
+  return account.updateRecovery(userId, secret, password);
+}
+
+
+
 // export const googleSignIn = async () => {
 //   try {
 //     const redirectUrl = "https://cca59d659739.ngrok-free.app";
