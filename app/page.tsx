@@ -365,6 +365,7 @@ useEffect(() => {
     }
 
     const { forYou, others } = await fetchCoursesForUser(user);
+    console.log("Courses, ", forYou)
     setForYouCourses(forYou);
     setOtherCourses(others);
     setLoading(false);
