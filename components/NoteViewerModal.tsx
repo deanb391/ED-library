@@ -226,9 +226,9 @@ const prevImage = () => {
       {/* --- Main Content Area --- */}
       <div 
         className="flex-1 relative flex items-center justify-center bg-[#0F1115] overflow-hidden"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        // onTouchStart={onTouchStart}
+        // onTouchMove={onTouchMove}
+        // onTouchEnd={onTouchEnd}
       >
         {/* Floating Page Counter */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40">
@@ -255,7 +255,7 @@ const prevImage = () => {
         </button>
 
         {/* Mobile tap zones */}
-<div className="absolute inset-0 z-30 flex md:hidden">
+{/* <div className="absolute inset-0 z-30 flex md:hidden">
   <div
     className="w-1/2 h-full"
     onClick={prevImage}
@@ -264,7 +264,7 @@ const prevImage = () => {
     className="w-1/2 h-full"
     onClick={nextImage}
   />
-</div>
+</div> */}
 
 
         {/* Image Display */}
@@ -379,7 +379,7 @@ const prevImage = () => {
 
     <div className="w-px h-6 bg-gray-700 mx-1" /> */}
 
-    <button
+    {/* <button
       onClick={ async () => {
         if (user) {
           const url = await fetchDownloadUrl(files[currentIndex]);
@@ -403,7 +403,7 @@ const prevImage = () => {
     >
       <Download size={16} />
       <span className="hidden sm:inline">Download</span>
-    </button>
+    </button> */}
 
   </div>
 </div>
@@ -411,8 +411,7 @@ const prevImage = () => {
 
       <TooltipButton icon={<Maximize size={18} />} onClick={toggleFullScreen} />
 
-      {/* Floating Action Toggle */}
-{!showActions && (
+{/* {!showActions && (
   <button
     onClick={() => setShowActions(true)}
     className="
@@ -426,7 +425,36 @@ const prevImage = () => {
   >
     <Maximize size={22} className="text-white" />
   </button>
-)}
+)} */}
+
+
+{/* Mobile Bottom Navigation */}
+<div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] z-50" style={{bottom: 15}}>
+  <div className="flex w-full bg-black/15 backdrop-blur-md border border-white/10 rounded-2xl py-4"
+  >
+  
+  <button
+    onClick={prevImage}
+    disabled={currentIndex === 0}
+    className="flex w-1/2 items-center justify-start gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
+  >
+    <ChevronLeft size={24} />
+    <span className="text-sm font-medium">Prev</span>
+  </button>
+
+  <button
+    onClick={nextImage}
+    disabled={currentIndex === files.length - 1}
+    className="flex w-1/2 items-center justify-end gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
+  >
+    <span className="text-sm font-medium">Next</span>
+    <ChevronRight size={24} />
+  </button>
+
+</div>
+
+</div>
+
 
 
     </div>

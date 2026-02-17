@@ -108,7 +108,7 @@ const [hasMore, setHasMore] = useState(true);
   const [postId, setPostId] = useState("")
 
   const [course, setCourse] = useState<Course| null>(null);
-  const [loading, setLoading] = useState(true);
+  const [lloading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false)
   const [modalImages, setModalImages] = useState<string []>([])
   const [activePost, setActivePost] = useState<Post | null>(null);
@@ -137,7 +137,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
 
   const router = useRouter();
-  const {user, showAdCourse, courseBannerAds} = useUser()
+  const {user, loading, showAdCourse, courseBannerAds} = useUser()
 
   const fetchTimeLine = async () => {
     const { posts: firstPosts, lastId } = await fetchPosts(courseId);
@@ -240,6 +240,10 @@ function pickRandom<T>(arr: T[]): T | null {
       window.innerHeight + window.scrollY >=
       document.body.offsetHeight - 200
     ) {
+
+      if(loading) return;
+
+
       if (viewMode === "timeline") {
         if (!user) {
           setShowNoUserModal(true)
@@ -269,7 +273,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
   window.addEventListener("scroll", onScroll);
   return () => window.removeEventListener("scroll", onScroll);
-}, [course, cursor, pdfCursor, loadingPosts, loadingPdf]);
+}, [course, cursor, pdfCursor, loadingPosts, loadingPdf, loading]);
 
 
 
@@ -293,7 +297,7 @@ function pickRandom<T>(arr: T[]): T | null {
   };
 
 
-   if (loading) {
+   if (lloading || loading) {
     return (
   <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
