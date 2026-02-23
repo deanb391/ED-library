@@ -226,7 +226,7 @@ export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
     const response = await databases.listDocuments(
       DATABASE_ID,
       COLLECTION_ID,
-      [Query.orderDesc("$updatedAt"), Query.equal("user", userId)]
+      [Query.orderDesc("$updatedAt"), Query.equal("user", userId), Query.limit(100)]
     );
 
     return response.documents.map((doc: any) => ({
