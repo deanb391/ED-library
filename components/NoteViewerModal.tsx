@@ -230,29 +230,43 @@ const prevImage = () => {
         // onTouchMove={onTouchMove}
         // onTouchEnd={onTouchEnd}
       >
-        {/* Floating Page Counter */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40">
-           <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 text-xs font-medium rounded-full border border-white/10 shadow-lg">
-             Page {currentIndex + 1} of {files.length}
-           </span>
-        </div>
 
-        {/* Navigation Arrows (Desktop) */}
-        <button 
-           onClick={prevImage}
-           disabled={currentIndex === 0}
-           className="absolute left-4 p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0 hidden md:block z-40"
-        >
-          <ChevronLeft size={32} />
-        </button>
+<div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 md:hidden">
+  <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 text-xs font-medium rounded-full border border-white/10 shadow-lg">
+    Page {currentIndex + 1} of {files.length}
+  </span>
+</div>
 
-        <button 
-           onClick={nextImage}
-           disabled={currentIndex === files.length - 1}
-           className="absolute right-4 p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0 hidden md:block z-40"
-        >
-          <ChevronRight size={32} />
-        </button>
+ {/* Desktop Navigation */}
+<div className="hidden md:flex absolute inset-0 items-center justify-between px-6 z-40 ">
+  
+  {/* Left Side */}
+  <div className="flex items-center gap-4 pointer-events-auto">
+    <button
+      onClick={prevImage}
+      disabled={currentIndex === 0}
+      className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
+    >
+      <ChevronLeft size={32} />
+    </button>
+
+    <span className="text-sm text-gray-300 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
+      Page {currentIndex + 1} of {files.length}
+    </span>
+  </div>
+
+  {/* Right Side */}
+  <div className="pointer-events-auto">
+    <button
+      onClick={nextImage}
+      disabled={currentIndex === files.length - 1}
+      className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
+    >
+      <ChevronRight size={32} />
+    </button>
+  </div>
+
+</div>
 
         {/* Mobile tap zones */}
 {/* <div className="absolute inset-0 z-30 flex md:hidden">
