@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from "next/link";
 
 import { getCurrentUser } from '@/lib/appwrite';
-import { advancedSearchCourses, Course, fetchCourses, fetchCoursesForUser, fetchRecentCourses, searchCourses } from '@/lib/courses';
+import { advancedSearchCourses, Course, fetchCourses, fetchCoursesForUser, fetchRecentCourses, searchCourses } from '@/lib/api/courses';
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 import { useRouter } from 'next/navigation';
