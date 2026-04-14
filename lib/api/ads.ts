@@ -1,5 +1,6 @@
 // lib/api/ads.ts
 
+import { uploadToServer } from "../upload";
 import { shuffle } from "../utils/ad-formatter";
 
 
@@ -61,7 +62,7 @@ export async function createAd(data: any) {
   return res.json();
 }
 
-export async function updateAd(adId: string, data: any) {
+export async function editAd(adId: string, data: any) {
   const res = await fetch("/api/ads/update", {
     method: "PATCH",
     body: JSON.stringify({ adId, data }),
@@ -175,4 +176,12 @@ export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
   }
 
   return formatted;
+}
+
+export async function uploadAdImage(file: File): Promise<string> {
+  return uploadToServer(file, "ads/images", "video");
+}
+
+export async function uploadAdVideo(file: File): Promise<string> {
+  return uploadToServer(file, "ads/videos", "video");
 }

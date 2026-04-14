@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { getCurrentUser, updateUser } from "@/lib/appwrite";
-import { BannerOrSquareAdItem, fetchSquareAds } from "@/lib/ads";
+import { BannerOrSquareAdItem, fetchSquareAds } from "@/lib/api/ads";
 
 type User = {
   $id: string;

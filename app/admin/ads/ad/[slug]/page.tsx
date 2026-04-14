@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useParams } from "next/navigation";
-import { editAd, fetchAdById, uploadAdImage, uploadAdVideo } from "@/lib/ads";
+import { editAd, fetchAdById, uploadAdImage, uploadAdVideo } from "@/lib/api/ads";
 
 // replace with real calls
 // import { updateAd } from "@/lib/ads";

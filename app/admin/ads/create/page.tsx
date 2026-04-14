@@ -5,7 +5,7 @@ import { Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { createAd, uploadAdImage, uploadAdVideo } from "@/lib/ads";
+import { createAd, uploadAdImage, uploadAdVideo } from "@/lib/api/ads";
 
 // TODO: replace with real implementations
 // import { uploadAdMedia, createAd } from "@/lib/ads";

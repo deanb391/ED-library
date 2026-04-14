@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { fetchAds } from "@/lib/ads";
+import { fetchAds } from "@/lib/api/ads";
 import { useRouter } from "next/navigation";
 
 
