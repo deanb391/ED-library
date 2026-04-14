@@ -114,24 +114,8 @@ export async function getCurrentUser() {
 
       return userDoc;
     } catch {
-      // 4. If document doesn't exist, create it
-      const avatar = generateAvatar(authUser.name || "User");
-
-      const newUserDoc = await databases.createDocument(
-        DATABASE_ID,
-        USER_COLLECTION,
-        authUser.$id,
-        {
-          username: authUser.name,
-          email: authUser.email,
-          level: null,
-          department: null,
-          avatar,
-          isAdmin: false,
-        }
-      );
-
-      return newUserDoc;
+      // 4. If document doesn't exist, return null (don't create)
+      return null;
     }
   } catch {
     return null;
@@ -190,4 +174,19 @@ export async function completePasswordRecovery(
 //     throw error;
 //   }
 // };
+
+export async function googleSignIn() {
+  try {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+
+    await account.createOAuth2Session(
+      OAuthProvider.Google,
+      redirectUrl,
+      redirectUrl
+    );
+  } catch (error) {
+    console.error("Error during Google sign-in:", error);
+    throw error;
+  }
+}
 
