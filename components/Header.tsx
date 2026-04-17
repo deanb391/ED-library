@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -13,24 +13,82 @@ import {
   Megaphone,
   Info,
   Phone,
-  LayoutGrid,
-  Home
+  Home,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
 
+/**
+ * Small media query hook
+ */
+
+
 export default function Header() {
   const { user, loading } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
+
+ 
+
   const closeMenu = () => setMenuOpen(false);
 
   function HeaderSkeleton() {
-    return <div className="h-9 w-20 rounded-lg bg-gray-200 animate-pulse" />;
+    return (
+      <div className="h-9 w-20 rounded-lg bg-gray-200 animate-pulse" />
+    );
   }
+
+  const MenuItems = ({ onSelect }: { onSelect: () => void }) => (
+    <div className="py-2 text-sm w-full">
+      <MenuItem icon={Home} label="Home" href="/" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100" />
+      <MenuItem icon={User} label="Account" href="/account" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100" />
+      <MenuItem
+        icon={Megaphone}
+        label="Become A Contributor"
+        href="/become-a-contributor"
+        onSelect={onSelect}
+      />
+      <div className="my-5 h-px bg-gray-100" />
+
+      {user?.isAdmin && (
+        <>
+          <MenuItem
+            icon={Plus}
+            label="Create Course"
+            href="/admin/create-course"
+            onSelect={onSelect}
+          />
+          <div className="my-5 h-px bg-gray-100" />
+          <MenuItem
+            icon={Upload}
+            label="Upload"
+            href="/admin/upload"
+            onSelect={onSelect}
+          />
+          <div className="my-5 h-px bg-gray-100" />
+          <MenuItem
+            icon={Megaphone}
+            label="Ads"
+            href="/admin/ads"
+            onSelect={onSelect}
+          />
+        </>
+      )}
+
+      <div className="my-5 h-px bg-gray-100" />
+
+      <MenuItem icon={Info} label="About" href="/about" onSelect={onSelect} />
+
+      <div className="my-5 h-px bg-gray-100" />
+
+      <MenuItem icon={Phone} label="Contact" href="#" onSelect={onSelect} />
+    </div>
+  );
 
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-      {/* Left */}
+      {/* LEFT */}
       <div className="flex items-center gap-8">
         <Link
           href="/"
@@ -49,20 +107,28 @@ export default function Header() {
             Home
           </Link>
           <Link href="#" className="hover:text-blue-600">
-            Browse
+            Account
           </Link>
+          <Link href="#" className="hover:text-blue-600">
+            Become A Contributor
+          </Link>
+
           <Link href="#" className="hover:text-blue-600">
             About
           </Link>
+          <Link href="#" className="hover:text-blue-600">
+            Contact
+          </Link>
+
         </div>
       </div>
 
-      {/* Right */}
+      {/* RIGHT */}
       {loading ? (
         <HeaderSkeleton />
       ) : (
         <div className="flex items-center gap-3 relative">
-          {/* Auth buttons stay as-is */}
+          {/* Auth */}
           {user === null && (
             <>
               <Link href="/signin">
@@ -70,6 +136,7 @@ export default function Header() {
                   Sign in
                 </button>
               </Link>
+
               <Link href="/signup">
                 <button className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all active:scale-[0.90]">
                   Sign Up
@@ -78,7 +145,7 @@ export default function Header() {
             </>
           )}
 
-          {/* Menu button (logged in users) */}
+          {/* USER MENU */}
           {user && (
             <>
               <button
@@ -88,61 +155,84 @@ export default function Header() {
                 <span
                   className={clsx(
                     "absolute transition-all duration-300",
-                    menuOpen ? "rotate-45 scale-110 opacity-0" : "opacity-100"
+                    menuOpen ? "rotate-45 opacity-0" : "opacity-100"
                   )}
                 >
-                  <Menu size={25} style={{color: "rgb(37 99 255)"}} />
+                  <Menu size={25} style={{ color: "rgb(37 99 255)" }} />
                 </span>
+
                 <span
                   className={clsx(
                     "absolute transition-all duration-300",
-                    menuOpen ? "opacity-100 rotate-0" : "opacity-0 -rotate-45"
+                    menuOpen ? "opacity-100 rotate-0" : "opacity-0"
                   )}
                 >
-                  <X size={25} style={{color: "rgb(37 99 235)"}}/>
+                  <X size={25} style={{ color: "rgb(239 68 68)" }} />
                 </span>
               </button>
 
-              {/* Popup */}
-              <div
-                className={clsx(
-                  "absolute right-0 top-1 mt-10 w-72 rounded-xl border bg-white shadow-lg overflow-hidden transition-all origin-top-right",
-                  menuOpen
-                    ? "scale-100 opacity-100"
-                    : "scale-95 opacity-0 pointer-events-none"
-                )}
-                style={{ width: 170 }}
-              >
-                <div className="py-2 text-sm w-90">
-                  <MenuItem icon={Home} label="Home" href="/"  onSelect={closeMenu}/>
-                  <MenuItem icon={User} label="Account" href="/account"  onSelect={closeMenu}/>
-                  {user.isAdmin && (
-                    <>
-                      <MenuItem
-                        icon={Plus}
-                        label="Create Course"
-                        href="/admin/create-course"
-                         onSelect={closeMenu}
-                      />
-                      <MenuItem
-                        icon={Upload}
-                        label="Upload"
-                        href="/admin/upload"
-                         onSelect={closeMenu}
-                      />
-                      <MenuItem
-                        icon={Megaphone}
-                        label="Ads"
-                        href="/admin/ads"
-                         onSelect={closeMenu}
-                      />
-                    </>
-                  )}
-                  <div className="my-1 h-px bg-gray-100"  onSelect={closeMenu}/>
-                  <MenuItem icon={Info} label="About" href="/about"  onSelect={closeMenu}/>
-                  <MenuItem icon={Phone} label="Contact" href="#"  onSelect={closeMenu}/>
-                </div>
-              </div>
+              {/* ================= MOBILE MENU ================= */}
+  
+                {/* ================= MOBILE MENU ================= */}
+<>
+  {/* Backdrop */}
+  <div
+    onClick={closeMenu}
+    className={clsx(
+      "fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] transition-opacity duration-300",
+      menuOpen
+        ? "opacity-100 pointer-events-auto"
+        : "opacity-0 pointer-events-none"
+    )}
+  />
+
+  {/* Drawer */}
+  {
+    menuOpen && (
+      <div
+    className={clsx(
+      "fixed right-0 top-0 h-full w-[100%] max-w-lvh bg-white shadow-xl z-[70] transition-transform duration-300 ease-out",
+      menuOpen
+        ? "translate-x-0 pointer-events-auto"
+        : "translate-x-full pointer-events-none"
+    )}
+    style={{paddingTop: 50, paddingRight: 30, paddingLeft: 10}}
+  >
+    {/* User header */}
+    <div className="flex items-center gap-3 px-4 py-4 border-b"
+      >
+      <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+        {user.avatar ? (
+          <Image
+            src={user.avatar}
+            alt="Avatar"
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-600">
+            {user.username?.[0]?.toUpperCase() || "U"}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="font-semibold text-gray-900">
+          {user.username || "User"}
+        </p>
+        <p className="text-xs text-gray-500">View profile</p>
+      </div>
+    </div>
+
+    <MenuItems onSelect={closeMenu} />
+  </div>
+    )
+  }
+</>
+            
+
+              {/* ================= DESKTOP MENU ================= */}
+              
             </>
           )}
         </div>
@@ -151,6 +241,9 @@ export default function Header() {
   );
 }
 
+/**
+ * Shared menu item
+ */
 function MenuItem({
   icon: Icon,
   label,
@@ -165,10 +258,10 @@ function MenuItem({
   return (
     <Link
       href={href}
-       onClick={onSelect}
-      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-all active:scale-[0.90]"
+      onClick={onSelect}
+      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-all active:scale-[0.98]"
     >
-      <Icon size={19} />
+      <Icon size={18} />
       <span>{label}</span>
     </Link>
   );
