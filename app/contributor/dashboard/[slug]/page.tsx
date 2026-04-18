@@ -1,4 +1,6 @@
-import React from 'react';
+"use client"
+
+import React, { useEffect, useState } from 'react';
 import { 
   Bell, 
   LayoutGrid, 
@@ -17,76 +19,166 @@ import {
   GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import clsx from 'clsx';
+import deskImg from "@/assets/images/desk.webp";
+import { Course } from '@/lib/courses';
+import { useUser } from '@/context/UserContext';
+import { fetchCoursesByAdmin } from '@/lib/courses';
+
+function CourseSection({
+  title,
+  courses
+}: {
+  title: string;
+  courses: Course[];
+}) {
+  if (!courses.length) return null;
+
+  return (
+    <section className="mb-12">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          {title}
+        </h2>
+
+        <a
+          href="/all_courses"
+          className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
+        >
+          See all
+        </a>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {courses.map((course) => (
+          <Link
+            key={course.id}
+            href={`/courses/${course.id}`}
+            className="group bg-white rounded-2xl border border-gray-200
+                       hover:border-gray-300 overflow-hidden
+                       flex flex-col transition
+                       active:scale-[0.98]
+                       hover:shadow-sm"
+          >
+            {/* Thumbnail */}
+            <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+              <Image
+                src={course.thumbnailUrl}
+                alt={course.title}
+                width={400}
+                height={240}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="p-4 flex flex-col gap-2 grow">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500" style={{fontSize: 12}}>
+                <span>{course.code}</span>
+                <span className="text-gray-300">•</span>
+                <span>{course.session}</span>
+              </div>
+
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug" style={{fontSize: 10}}>
+                {course.title}
+              </h3>
+
+              <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+                {course.description}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600">
+                <span className="px-2 py-0.5 rounded-full bg-gray-100">
+                  {course.department}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                  Level {String(course.level)}
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function DashboardUnderReviewPage() {
+  const {
+    user,
+    loading: userLoading,
+    contributor,
+    contributorLoading,
+    refetchContributor,
+  } = useUser();
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  const isContributorActive = contributor?.status === "live";
+  const followerCount = contributor?.followers ?? 0;
+  const profileName = contributor?.username ?? user?.username ?? "Contributor";
+  const profileInstitution = contributor?.institution ?? "Institution unavailable";
+  const profileCountry = contributor?.country ?? "Country unavailable";
+  const profileBio = contributor?.bio ?? "No bio available yet.";
+  const profileStatus = contributor?.status ?? "pending";
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      if (!user) {
+        setDashboardLoading(false);
+        return;
+      }
+
+      if (!contributor && !contributorLoading) {
+        await refetchContributor();
+      }
+
+      try {
+        const adminCourses = await fetchCoursesByAdmin(user.$id);
+        setCourses(adminCourses.slice(0, 8));
+      } catch (err) {
+        console.error("Failed to load contributor dashboard data", err);
+        setCourses([]);
+      } finally {
+        setDashboardLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [user?.$id, contributor, contributorLoading, refetchContributor]);
+
+  const isPageLoading = userLoading || contributorLoading || dashboardLoading;
+
+  if (isPageLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+    <p className="text-gray-700 text-sm">Loading, please wait...</p>
+  </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans text-gray-900">
       
-      {/* --- Top Navigation --- */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-10">
-          <div className="font-extrabold text-xl tracking-tight text-gray-900">
-            Azure Scholar
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-500">
-            <Link href="#" className="text-gray-900 transition-colors">Dashboard</Link>
-            <Link href="#" className="hover:text-gray-900 transition-colors">Courses</Link>
-            <Link href="#" className="hover:text-gray-900 transition-colors">Earnings</Link>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <button className="text-gray-500 hover:text-gray-900 transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-          </button>
-          <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden cursor-pointer">
-            {/* Dummy profile image */}
-            <img src="/api/placeholder/40/40" alt="Profile" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      </nav>
 
       {/* --- Page Layout (Sidebar + Main) --- */}
       <div className="flex flex-1 overflow-hidden">
-        
-        {/* --- Left Sidebar --- */}
-        <aside className="w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col flex-shrink-0">
-          
-          {/* Contributor Status Badge */}
-          <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0">
-              <GraduationCap size={20} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-gray-900 leading-tight">Academic<br/>Contributor</h3>
-              <p className="text-[11px] font-semibold text-gray-500 mt-0.5">Status: Under Review</p>
-            </div>
-          </div>
 
-          {/* Navigation Links */}
-          <div className="flex-1 py-6 px-4 space-y-1">
-            <SidebarItem icon={<LayoutGrid size={18} />} label="Overview" active />
-            <SidebarItem icon={<FileText size={18} />} label="My Uploads" />
-            <SidebarItem icon={<Users size={18} />} label="Subscribers" />
-            <SidebarItem icon={<Settings size={18} />} label="Settings" />
-            <SidebarItem icon={<HelpCircle size={18} />} label="Help" />
-          </div>
-
-          {/* Bottom Action */}
-          <div className="p-6">
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-sm transition-all text-sm">
-              Upload New Notes
-            </button>
-          </div>
-        </aside>
 
         {/* --- Main Content Area --- */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-white">
+          <div style={{ marginBottom: 20, fontSize: 20, fontWeight: "bold"}}>
+            My Dashboard
+          </div>
           <div className="max-w-5xl mx-auto space-y-8">
             
             {/* Alert Banner */}
-            <div className="bg-[#EBF3FF] border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+            {
+              contributor?.status === "pending" && (
+                <div className="bg-[#EBF3FF] border border-blue-100 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
               <div className="flex items-start gap-4">
                 <div className="mt-0.5 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0">
                   <Info size={16} strokeWidth={2.5} />
@@ -94,81 +186,155 @@ export default function DashboardUnderReviewPage() {
                 <div>
                   <h3 className="text-base font-bold text-gray-900 mb-1">Your application is currently Under Review</h3>
                   <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
-                    Full access to advanced features will be granted once our academic board approves your credentials.
+                    Full access to features will be granted once our academic board approves your credentials.
                   </p>
                 </div>
               </div>
-              <button className="bg-[#0B1528] hover:bg-black text-white text-sm font-bold py-3 px-6 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-md">
-                View Application Status
+              <button className="bg-[#0B1528] hover:bg-black text-black text-sm font-bold py-3 px-6 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-md">
+                Application Status: Pending
               </button>
             </div>
+              )
+            }
 
             {/* Profile & Stats Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Profile Card */}
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row gap-6">
-                {/* Avatar with Badge */}
-                <div className="relative shrink-0 w-24 h-24 sm:w-28 sm:h-28">
-                  <img src="/api/placeholder/120/120" alt="Dr. Elias Thorne" className="w-full h-full rounded-2xl object-cover border border-gray-100" />
-                  <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white text-[9px] font-extrabold px-2 py-1 rounded-md uppercase tracking-wider border border-white shadow-sm">
-                    Reviewing
-                  </div>
-                </div>
 
-                {/* Info */}
-                <div>
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-2xl font-extrabold text-gray-900">Dr. Elias Thorne</h2>
-                    <span className="bg-gray-100 text-gray-600 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      Under Review
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 leading-relaxed mb-6 max-w-lg">
-                    Specializing in Advanced Quantum Mechanics and Theoretical Physics. Currently a Senior Researcher at the Institute for Advanced Study, focused on bridging the gap between academic theory and practical student understanding.
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-6 text-xs font-bold text-gray-500">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin size={14} className="text-blue-600" />
-                      <span>Cambridge, United Kingdom</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Atom size={14} className="text-blue-600" />
-                      <span>Theoretical Physics</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  {/* LEFT SIDE - PROFILE */}
+  <div className="lg:col-span-2">
+    <div
+      className="rounded-2xl  border-slate-200 p-6 shadow-sm hover:shadow-md transition"
+      style={{ backgroundImage: "linear-gradient(135deg, #f8fafc, #f1f5f9)", borderWidth: 0 }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-500">
+          Profile
+        </div>
+        <Link
+          href="/account"
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg"
+        >
+          Edit
+        </Link>
+      </div>
 
-              {/* Stats Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-6">Profile Activity</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Profile Views</span>
-                      <span className="font-extrabold text-gray-900">142</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Joined Date</span>
-                      <span className="font-extrabold text-gray-900">Oct 2024</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">Upload Credits</span>
-                      <span className="font-extrabold text-gray-900">50.0</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <button className="text-left text-sm font-bold text-blue-600 hover:text-blue-700 mt-6 transition-colors">
-                  Edit Bio Details
-                </button>
-              </div>
-            </div>
+      {/* CONTENT */}
+      <div className="flex items-center gap-6">
 
-            {/* Disabled Action Cards */}
+        {/* IMAGE */}
+        <div className="shrink-0">
+          <div
+            className="rounded-full overflow-hidden border-2 border-white shadow-md"
+            style={{ width: 90, height: 90 }}
+          >
+            <img
+              src={contributor?.profileImage || deskImg.src}
+              alt="profile"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+        </div>
+
+        {/* INFO */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-xl font-bold text-slate-900 mb-1" style={{fontSize: 16}}>
+            {profileName}
+          </h2>
+
+          <div className="text-sm text-slate-500 mb-2" style={{fontSize: 10}}> 
+            {profileInstitution} • {profileCountry}
+          </div>
+
+          <p className="text-sm text-slate-600 mb-3 line-clamp-2" style={{fontSize: 10}}>
+            {profileBio}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase" style={{fontSize: 10}}>
+              Status:
+            </span>
+            <span
+              className={clsx(
+                "text-xs font-bold px-2 py-0.5 rounded-full uppercase",
+                profileStatus === "live"
+                  ? "bg-green-100 text-green-700"
+                  : profileStatus === "pending"
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-slate-200 text-slate-700"
+              )}
+              style={{backgroundColor: profileStatus === "live" ? " #90EE90" : "yellow", fontSize: 10}}
+            >
+              {profileStatus}
+            </span>
+          </div>
+        </div>
+
+        {/* STATS */}
+        <div className="text-right">
+          <div className="text-2xl font-bold text-slate-900" style={{fontSize: 12}}>
+            {followerCount.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-500" style={{fontSize: 10}}>Followers</div>
+
+          <div className="mt-3 text-xs text-slate-500" style={{fontSize: 9}}>
+            Member since
+          </div>
+          <div className="text-xs font-semibold text-slate-700">
+            {contributor?.$createdAt
+              ? new Date(contributor.$createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                })
+              : "Recently"}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* RIGHT SIDE - FIRST ACTION */}
+  <ActionCard 
+    icon={<PlusCircle size={20} />} 
+    title="Create Course" 
+    desc="Launch a new course and publish learning materials." 
+    enabled={isContributorActive}
+    link="/admin/create-course"
+    index={0}
+  />
+
+  {/* SECOND ROW */}
+  <ActionCard 
+    icon={<UploadCloud size={20} />} 
+    title="Upload Assets" 
+    desc="Batch upload notes and course assets for published classes." 
+    enabled={isContributorActive}
+    link="/admin/upload"
+    index={1}
+  />
+
+  <ActionCard 
+    icon={<LineChart size={20} />} 
+    title="Deep Analytics" 
+    desc="Track student engagement, visits, and content performance." 
+    enabled={isContributorActive}
+    link={`/contributor/dashboard/${user?.$id}/analytics`}
+    index={2}
+  />
+
+  {/* THIRD ROW */}
+  <ActionCard 
+    icon={<PlusCircle size={20} />} 
+    title="Subscriptions & Payments" 
+    desc="Monitor paid subscribers and payouts across your work." 
+    enabled={isContributorActive}
+    link={`/contributor/dashboard/${user?.$id}/earnings`}
+    index={3}
+  />
+
+</div>
+
+            {/* Disabled Action Cards
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <DisabledActionCard 
                 icon={<PlusCircle size={20} />} 
@@ -185,67 +351,15 @@ export default function DashboardUnderReviewPage() {
                 title="Deep Analytics" 
                 desc="Track student engagement, completion rates, and feedback loops." 
               />
+              <DisabledActionCard 
+                icon={<PlusCircle size={20} />} 
+                title="Create Course" 
+                desc="Design and launch interactive curriculums for students worldwide." 
+              />
             </div>
+ */}
 
-            {/* Activity Timeline */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Recent Application Activity</h3>
-              
-              <div className="space-y-4">
-                {/* Completed Step 1 */}
-                <div className="bg-gray-50 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-blue-600 shrink-0 ml-1"></div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Application received and verification started</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">2 days ago</p>
-                    </div>
-                  </div>
-                  <CheckCircle2 size={18} className="text-gray-400 sm:mr-2" />
-                </div>
-
-                {/* Completed Step 2 */}
-                <div className="bg-gray-50 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-blue-600 shrink-0 ml-1"></div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Credential documents (Ph.D. Physics) verified</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">1 day ago</p>
-                    </div>
-                  </div>
-                  <CheckCircle2 size={18} className="text-gray-400 sm:mr-2" />
-                </div>
-
-                {/* Current Active Step */}
-                <div className="bg-white border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
-                  {/* Subtle active state highlight line */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-blue-600 shrink-0 ml-1"></div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Final review by Academic Board in progress</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Started 4 hours ago</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider sm:mr-2">
-                    Current Step
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <footer className="py-8 flex flex-col items-center justify-center gap-4">
-              <div className="flex gap-6 text-xs font-bold text-gray-500">
-                <Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link>
-                <Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link>
-                <Link href="#" className="hover:text-gray-900 transition-colors">Faculty Guidelines</Link>
-              </div>
-              <div className="text-[11px] text-gray-400 font-medium">
-                © 2024 Azure Scholar Academic Systems
-              </div>
-            </footer>
+              <CourseSection title='My Courses' courses={courses} />
 
           </div>
         </main>
@@ -257,31 +371,66 @@ export default function DashboardUnderReviewPage() {
 
 // --- Helper Components ---
 
-function SidebarItem({ icon, label, active = false }: { icon: React.ReactNode, label: string, active?: boolean }) {
-  return (
-    <button 
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all
-        ${active 
-          ? 'bg-[#F4F7F9] text-blue-600' 
-          : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-        }`}
-    >
-      <div className={`${active ? 'text-blue-600' : 'text-gray-400'}`}>
-        {icon}
-      </div>
-      {label}
-    </button>
-  );
-}
 
-function DisabledActionCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
-  return (
-    <div className="bg-[#F8F9FB] rounded-2xl border border-gray-100 p-6 flex flex-col opacity-70">
-      <div className="w-10 h-10 bg-gray-200/50 rounded-full flex items-center justify-center text-gray-400 mb-4">
+function ActionCard({
+  icon,
+  title,
+  desc,
+  enabled = false,
+  link = "/",
+  index = 0,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  enabled?: boolean;
+  link?: string;
+  index?: number;
+}) {
+const gradientConfigs = [
+  { from: "#3b82f6", to: "#8b5cf6" }, // Blue → Violet (clean, modern default)
+  { from: "#3b82f6", to: "#06b6d4" }, // Blue → Cyan (fresh, techy)
+  { from: "#3b82f6", to: "#10b981" }, // Blue → Emerald (calm, trustworthy)
+  { from: "#3b82f6", to: "#f97316" }, // Blue → Orange (balanced contrast)
+  { from: "#3b82f6", to: "#ec4899" }, // Blue → Pink (vibrant but controlled)
+];
+
+  const gradient = gradientConfigs[index % 4];
+
+  const cardContent = (
+    <div
+      style={enabled ? { backgroundImage: `linear-gradient(170deg, ${gradient.from}, ${gradient.to})` } : undefined}
+      className={clsx(
+        "rounded-2xl border p-6 flex flex-col transition-all duration-500",
+        enabled
+          ? "shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer text-white"
+          : "bg-[#F8F9FB] border-gray-100 opacity-70 pointer-events-none"
+      )}
+    >
+      <div className={clsx(
+        "w-10 h-10 rounded-full flex items-center justify-center mb-4",
+        enabled ? "bg-white/20 text-white" : "bg-gray-200/50 text-gray-400"
+      )}>
         {icon}
       </div>
-      <h4 className="text-sm font-bold text-gray-600 mb-2">{title}</h4>
-      <p className="text-xs text-gray-400 leading-relaxed">{desc}</p>
+      <h4 className={clsx("text-sm font-bold mb-2", enabled ? "text-white" : "text-gray-600")}>
+        {title}
+      </h4>
+      <p className={clsx("text-xs leading-relaxed", enabled ? "text-white/90" : "text-gray-400")}>{desc}</p>
+      <div className="mt-4 text-[11px] uppercase tracking-[0.12em] font-semibold">
+        {!enabled && <span className="text-gray-500">Your Account Is Under Review</span>}
+        {enabled && <span className="text-white/80">Click to explore</span>}
+      </div>
     </div>
   );
+
+  if (enabled && link) {
+    return (
+      <Link href={link} className="group active:scale-95 transition-transform">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 }

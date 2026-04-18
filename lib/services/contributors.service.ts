@@ -1,4 +1,4 @@
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 
 const DATABASE_ID = "69617e75000c6c010a75";
@@ -21,6 +21,7 @@ export type Contributor = ContributorDraft & {
   $createdAt: string;
   $updatedAt: string;
   approvalNotes: string;
+  followers?: number;
 };
 
 function mapContributor(doc: any): Contributor {
@@ -38,6 +39,7 @@ function mapContributor(doc: any): Contributor {
     $createdAt: doc.$createdAt,
     $updatedAt: doc.$updatedAt,
     approvalNotes: doc.approvalNotes || "",
+    followers: doc.followers || 0,
   };
 }
 
@@ -107,4 +109,25 @@ export async function fetchContributorService(
   );
 
   return mapContributor(doc);
+}
+
+export async function getContributorByUserIdService(
+  userId: string
+): Promise<Contributor | null> {
+  try {
+    const res = await databases.listDocuments(
+      DATABASE_ID,
+      CONTRIBUTORS_COLLECTION,
+      [Query.equal("user", userId)]
+    );
+
+    if (res.documents.length === 0) {
+      return null;
+    }
+
+    return mapContributor(res.documents[0]);
+  } catch (err) {
+    console.error("Error fetching contributor by userId:", err);
+    return null;
+  }
 }

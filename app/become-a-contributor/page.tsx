@@ -109,7 +109,7 @@ export default function BecomeContributorPage() {
               }}
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent"></div>
             
             <div className="absolute bottom-0 left-0 p-8">
               <h4 className="text-white text-2xl font-bold mb-2">Knowledge is Value</h4>

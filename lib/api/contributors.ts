@@ -1,4 +1,7 @@
-import { ContributorDraft } from "@/lib/services/contributors.service";
+import {
+  ContributorDraft,
+  Contributor,
+} from "@/lib/services/contributors.service";
 
 const jsonHeaders = {
   "Content-Type": "application/json",
@@ -49,5 +52,29 @@ export async function deleteContributor(contributorId: string): Promise<void> {
 
   if (!res.ok) {
     throw new Error("Failed to delete contributor");
+  }
+}
+
+export async function getMyContributor(userId: string): Promise<Contributor | null> {
+  const res = await fetch(`/api/contributors/me?userId=${encodeURIComponent(userId)}`, {
+    method: "GET",
+    headers: jsonHeaders,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch contributor status");
+  }
+
+  const data = await res.json();
+  return data.contributor;
+}
+
+export async function hasContributorAccount(userId: string): Promise<boolean> {
+  try {
+    const contributor = await getMyContributor(userId);
+    return contributor !== null;
+  } catch (err) {
+    console.error("Error checking contributor status:", err);
+    return false;
   }
 }

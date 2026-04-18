@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -24,10 +24,17 @@ import clsx from "clsx";
 
 
 export default function Header() {
-  const { user, loading } = useUser();
+  const {
+    user,
+    loading,
+    contributor,
+    contributorLoading,
+  } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
+  const hasContributorAccount = Boolean(contributor);
+  const showContributorMenu = Boolean(user && !loading && !contributorLoading);
+  const contributorDashboardHref = user ? `/contributor/dashboard/${user.$id}` : "/";
 
- 
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -40,16 +47,32 @@ export default function Header() {
   const MenuItems = ({ onSelect }: { onSelect: () => void }) => (
     <div className="py-2 text-sm w-full">
       <MenuItem icon={Home} label="Home" href="/" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100" />
+      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
       <MenuItem icon={User} label="Account" href="/account" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100" />
-      <MenuItem
-        icon={Megaphone}
-        label="Become A Contributor"
-        href="/become-a-contributor"
-        onSelect={onSelect}
-      />
-      <div className="my-5 h-px bg-gray-100" />
+      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+      {showContributorMenu && (
+        hasContributorAccount ? (
+          <>
+            <MenuItem
+              icon={Megaphone}
+              label="Dashboard"
+              href={contributorDashboardHref}
+              onSelect={onSelect}
+            />
+            <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+          </>
+        ) : (
+          <>
+            <MenuItem
+              icon={Megaphone}
+              label="Become A Contributor"
+              href="/become-a-contributor"
+              onSelect={onSelect}
+            />
+            <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+          </>
+        )
+      )}
 
       {user?.isAdmin && (
         <>
@@ -59,14 +82,14 @@ export default function Header() {
             href="/admin/create-course"
             onSelect={onSelect}
           />
-          <div className="my-5 h-px bg-gray-100" />
+          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
           <MenuItem
             icon={Upload}
             label="Upload"
             href="/admin/upload"
             onSelect={onSelect}
           />
-          <div className="my-5 h-px bg-gray-100" />
+          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
           <MenuItem
             icon={Megaphone}
             label="Ads"
@@ -76,11 +99,11 @@ export default function Header() {
         </>
       )}
 
-      <div className="my-5 h-px bg-gray-100" />
+      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
       <MenuItem icon={Info} label="About" href="/about" onSelect={onSelect} />
 
-      <div className="my-5 h-px bg-gray-100" />
+      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
 
       <MenuItem icon={Phone} label="Contact" href="#" onSelect={onSelect} />
     </div>
@@ -106,12 +129,20 @@ export default function Header() {
           <Link href="/" className="text-gray-900 hover:text-blue-600">
             Home
           </Link>
-          <Link href="#" className="hover:text-blue-600">
+          <Link href="/account" className="hover:text-blue-600">
             Account
           </Link>
-          <Link href="#" className="hover:text-blue-600">
-            Become A Contributor
-          </Link>
+          {showContributorMenu && (
+            hasContributorAccount ? (
+              <Link href={contributorDashboardHref} className="hover:text-blue-600">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/become-a-contributor" className="hover:text-blue-600">
+                Become A Contributor
+              </Link>
+            )
+          )}
 
           <Link href="#" className="hover:text-blue-600">
             About
@@ -179,7 +210,7 @@ export default function Header() {
   <div
     onClick={closeMenu}
     className={clsx(
-      "fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] transition-opacity duration-300",
+      "fixed inset-0 bg-black/30 backdrop-blur-sm z-60 transition-opacity duration-300",
       menuOpen
         ? "opacity-100 pointer-events-auto"
         : "opacity-0 pointer-events-none"
@@ -191,7 +222,7 @@ export default function Header() {
     menuOpen && (
       <div
     className={clsx(
-      "fixed right-0 top-0 h-full w-[100%] max-w-lvh bg-white shadow-xl z-[70] transition-transform duration-300 ease-out",
+      "fixed right-0 top-0 h-full w-full max-w-lvh bg-white shadow-xl z-70 transition-transform duration-300 ease-out",
       menuOpen
         ? "translate-x-0 pointer-events-auto"
         : "translate-x-full pointer-events-none"
@@ -200,11 +231,12 @@ export default function Header() {
   >
     {/* User header */}
     <div className="flex items-center gap-3 px-4 py-4 border-b"
+    
       >
       <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100">
         {user.avatar ? (
           <Image
-            src={user.avatar}
+            src={hasContributorAccount ? contributor?.profileImage : user?.avatar}
             alt="Avatar"
             fill
             className="object-cover"
@@ -224,7 +256,7 @@ export default function Header() {
       </div>
     </div>
 
-    <MenuItems onSelect={closeMenu} />
+    <MenuItems onSelect={closeMenu}/>
   </div>
     )
   }
