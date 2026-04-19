@@ -1,3 +1,5 @@
+import { uploadToServer } from "../upload";
+
 const jsonHeaders = {
   "Content-Type": "application/json",
 };
@@ -8,6 +10,7 @@ export type Course = {
   code: string;
   description: string;
   lecturer?: string;
+  university?: string;
   thumbnailId: string;
   thumbnailUrl: string;
   files?: string[];
@@ -15,7 +18,18 @@ export type Course = {
   session: string;
   level: number;
   department: string;
+  price?: string;
+  analytics?: string
 };
+
+export async function uploadThumbnail(file: File) {
+  const url = await uploadToServer(file, "courses", "image");
+  return {
+    fileId: "",
+    url:`${url}`,
+  };
+}
+
 
 export async function createCourse(data: any) {
   const res = await fetch("/api/courses/create", {

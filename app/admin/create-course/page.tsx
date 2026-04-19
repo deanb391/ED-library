@@ -5,9 +5,9 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { uploadThumbnail, createCourse } from "@/lib/courses";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
 import NativeBanner from "@/components/ads/NativeBanner";
+import CoursePriceModal from "@/components/CoursePriceModalPast";
 
 
 export default function CreateCoursePage() {
@@ -16,8 +16,12 @@ export default function CreateCoursePage() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [lecturer, setLecturer] = useState("");
+  const [university, setUniversity] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [price, setPrice] = useState(0);
+  const [isFree, setIsFree] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true);
   const {user} = useUser()
@@ -26,17 +30,6 @@ export default function CreateCoursePage() {
     const [department, setDepartment] = useState("");
 
         const LEVELS = [100, 200, 300, 400, 500, 600];
-
-const DEPARTMENTS = [
-  "Mechanical Engineering",
-  "Electrical Engineering",
-  "Civil Engineering",
-  "Computer Engineering",
-  "Chemical Engineering",
-  "Petroleum Engineering",
-  "Agricultural Engineering",
-  "Marine Engineering",
-];
 
 const sessions = [
   "2023/2024",
@@ -54,10 +47,36 @@ const sessions = [
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!thumbnail) return;
 
-  const lvl = Number(level)
+  if (!user?.$id) {
+    alert("Unable to create course without a signed-in user.");
+    return;
+  }
+
+  if (!thumbnail) {
+    alert("Please upload a course thumbnail.");
+    return;
+  }
+
+  if (!university.trim()) {
+    alert("Please enter the university.");
+    return;
+  }
+
+  setShowPriceModal(true);
+};
+
+const handleCreateCourse = async ({ price, isFree }: { price: number; isFree: boolean }) => {
+  if (!thumbnail) return;
+  if (!user?.$id) {
+    alert("Unable to create course without a signed-in user.");
+    return;
+  }
+
+  const userId = user.$id;
+  const lvl = Number(level);
   setIsLoading(true);
+  setShowPriceModal(false);
 
   try {
     const uploaded = await uploadThumbnail(thumbnail);
@@ -67,17 +86,20 @@ const handleSubmit = async (e: React.FormEvent) => {
       code,
       description,
       lecturer: lecturer || undefined,
+      university,
       thumbnailId: uploaded.fileId,
       thumbnailUrl: uploaded.url,
-      user: user?.$id,
+      user: userId,
       department: department,
       level: lvl,
       session: session,
-      isOnGoing: false
+      isOnGoing: false,
+      price,
+      isFree,
     });
 
     alert("Course created successfully");
-    router.push("/")
+    router.push("/");
   } catch (err) {
     console.error(err);
     alert("Failed to create course");
@@ -168,6 +190,21 @@ const handleSubmit = async (e: React.FormEvent) => {
             />
           </div>
 
+          {/* University */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              University
+            </label>
+            <input
+              required
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              placeholder="University of Lagos"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
+
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -234,21 +271,13 @@ const handleSubmit = async (e: React.FormEvent) => {
   <label className="block text-xs font-bold text-gray-700 ml-1">
     Department
   </label>
-  <select
+  <input
     required
     value={department}
     onChange={(e) => setDepartment(e.target.value)}
+    placeholder="e.g. Computer Science"
     className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
-  >
-    <option value="" disabled>
-      Select department
-    </option>
-    {DEPARTMENTS.map((dept) => (
-      <option key={dept} value={dept}>
-        {dept}
-      </option>
-    ))}
-  </select>
+  />
 </div>
 
           {/* Lecturer */}
@@ -292,7 +321,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                        hover:bg-blue-500 active:bg-blue-700
                        disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            {isLoading ? "Creating…" : "Create course"}
+            {isLoading ? "Creating…" : "Proceed"}
           </button>
         </form>
 
@@ -307,6 +336,15 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
       </div>
     </div>
+
+    <CoursePriceModal
+      isOpen={showPriceModal}
+      onClose={() => setShowPriceModal(false)}
+      onConfirm={handleCreateCourse}
+      isSaving={isLoading}
+      initialPrice={price}
+      initialFree={isFree}
+    />
   </div>
 );
 

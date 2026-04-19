@@ -32,6 +32,27 @@ import RectangularAd from '@/components/RectangularAd';
 import { fetchSmallAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
 import NoUserModal from '@/components/NoUserModal';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import AnalyticsChart from '@/components/AnalyticsChart';
+import ReviewModal from '@/components/ReviewModal';
+import { createReview, fetchReviews, Review } from '@/lib/api/reviews';
+
+const data = [
+  { day: "Mon", visits: 120 },
+  { day: "Tue", visits: 150 },
+  { day: "Wed", visits: 130 },
+  { day: "Thu", visits: 170 },
+  { day: "Fri", visits: 200 },
+  { day: "Sat", visits: 180 },
+  { day: "Sun", visits: 220 },
+];
 
 interface Post {
   id: string;
@@ -45,44 +66,69 @@ export type Course = {
   code: string;
   description: string;
   lecturer?: string;
+  university?: string;
   thumbnailId: string;
   thumbnailUrl: string;
   files?: string[];
-  user?: any,
-  isOnGoing: Boolean,
-  session: string,
-  level: Number,
-  department: string
+  user?: any;
+  isOnGoing: Boolean;
+  session: string;
+  level: Number;
+  department: string;
+  price?: number;
+  isFree?: boolean;
 };
 
 
-// --- Dummy Data ---
-const NOTES_DATA = [
-  {
-    id: 1,
-    title: 'Lecture 01: Introduction & GDP',
-    meta: 'Uploaded Sep 12, 2023 • 5 pages',
-    image: '/api/placeholder/400/500', // Vertical aspect ratio
-  },
-  {
-    id: 2,
-    title: 'Lecture 02: Aggregate Demand',
-    meta: 'Uploaded Sep 15, 2023 • 8 pages',
-    image: '/api/placeholder/400/500',
-  },
-  {
-    id: 3,
-    title: 'Lecture 03: Fiscal Policy',
-    meta: 'Uploaded Sep 19, 2023 • 12 pages',
-    image: '/api/placeholder/400/500',
-  },
-  {
-    id: 4,
-    title: 'Lecture 04: The Solow Growth Model',
-    meta: 'Uploaded Sep 22, 2023 • 15 pages',
-    image: '/api/placeholder/400/500',
-  },
-];
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border rounded-lg p-3" style={{borderWidth: 0.1}}>
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-sm font-semibold text-gray-900 mt-1">{value}</p>
+    </div>
+  );
+}
+
+function ReviewItem({ review }: { review: Review }) {
+  const rating = Math.max(0, Math.min(5, Math.round(review.rating ?? 0)));
+  const stars = `${"★".repeat(rating)}${"☆".repeat(5 - rating)}`;
+  const user = review.user || "Anonymous";
+  console.log("Review", user)
+  const createdAt = review.$createdAt
+    ? new Date(review.$createdAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "";
+
+  return (
+    <div className="flex gap-3 mb-5">
+      {/* Avatar */}
+      <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" >
+        <img
+        src={user?.image || user?.avatar}
+        alt={user?.username}
+        className="w-full h-full object-cover rounded-full"
+      />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-gray-900">{user.username}</p>
+          <span className="text-xs text-gray-500">{createdAt}</span>
+        </div>
+
+        {/* Rating */}
+        <div className="text-sm text-yellow-500 mt-1" style={{color: "gold"}}>{stars}</div>
+
+        {/* Comment */}
+        <p className="text-sm text-gray-600 mt-1">{review.review}</p>
+      </div>
+    </div>
+  );
+}
 
 export type AdItem = {
   id: string;
@@ -126,6 +172,14 @@ const [viewMode, setViewMode] = useState<ViewMode>("timeline");
 const [bannerAdOpen, setBannerAdOpen] = useState(false);
 const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
 const [showNoUserModal, setShowNoUserModal] = useState(false);
+const [reviews, setReviews] = useState<Review[]>([]);
+const [loadingReviews, setLoadingReviews] = useState(false);
+const [reviewCursor, setReviewCursor] = useState<string | undefined>(undefined);
+const [hasMoreReviews, setHasMoreReviews] = useState(true);
+type Tab = "lecture" | "information" | "review";
+const [activeTab, setActiveTab] = useState<Tab>('lecture')
+const [reviewModalOpen, setReviewModalOpen] = useState(false);
+const [isReviewSaving, setIsReviewSaving] = useState(false);
 
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null;
@@ -153,10 +207,48 @@ function pickRandom<T>(arr: T[]): T | null {
       setHasMorePdf(posts.length === 10);
   }
 
+  const loadMoreReviews = async () => {
+    if (!hasMoreReviews || loadingReviews) return;
+
+    setLoadingReviews(true);
+
+    try {
+      const res = await fetchReviews(courseId, 5, reviewCursor);
+
+      setReviews((prev) => [...prev, ...res.reviews]);
+      setReviewCursor(res.nextCursor);
+      setHasMoreReviews(res.hasMore);
+    } catch (error) {
+      console.error("LOAD REVIEWS ERROR:", error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadInitialReviews = async () => {
+      setLoadingReviews(true);
+
+      try {
+        const res = await fetchReviews(courseId, 5);
+        setReviews(res.reviews);
+        setReviewCursor(res.nextCursor);
+        setHasMoreReviews(res.hasMore);
+      } catch (error) {
+        console.error("FETCH REVIEWS ERROR:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    loadInitialReviews();
+  }, [courseId]);
+
   useEffect(() => {
   const init = async () => {
     if (user?.isAdmin) setIsAdmin(true);
     if (courseBannerAds.length === 0) return;
+    if (course?.user === user?.$id) setActiveTab("information")
 
     const value = showAdCourse()
     setBannerAdOpen(value)
@@ -192,6 +284,35 @@ function pickRandom<T>(arr: T[]): T | null {
 
   init();
 }, [courseId, courseBannerAds]);
+
+   const handleCreateReview = async ({
+      rating,
+      comment,
+    }: {
+      rating: number;
+      comment: string;
+    }) => {
+
+      try {
+        setIsReviewSaving(true);
+        const newReview = await createReview(
+          {
+            user: user?.$id || {},
+            courses: course?.id || {},
+            rating: rating,
+            review: comment
+          }
+        );
+        console.log("NEw Revieew", newReview)
+
+        setReviews((prev) => [newReview, ...prev]);
+        setReviewModalOpen(false);
+      } catch (error) {
+        console.error("CREATE REVIEW ERROR:", error);
+      } finally {
+        setIsReviewSaving(false);
+      }
+   }
 
 
   const loadMorePosts = async () => {
@@ -332,6 +453,9 @@ function pickRandom<T>(arr: T[]): T | null {
           <span className="px-2 py-0.5 rounded-full bg-gray-100">
             {course?.department}
           </span>
+          <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            {course?.university || "University unavailable"}
+          </span>
           <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
             Level {String(course?.level)}
           </span>
@@ -340,7 +464,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
           {/* Action Buttons */}
           {
-            (isAdmin && course?.user === user?.$id) && (
+            (course?.user === user?.$id) && (
               <div className="flex items-center gap-3">
             <button 
             onClick={() => setShowEditCourse(true)}
@@ -366,15 +490,196 @@ function pickRandom<T>(arr: T[]): T | null {
         
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8 overflow-x-auto">
+        <div className=" mb-2 overflow-x-auto">
           <div className="flex gap-8 min-w-max">
-            <button className="pb-3 border-b-2 border-blue-600 text-blue-600 font-semibold text-sm">
+            {
+              (course?.user === user?.$id) && (
+                <button 
+                onClick={() => setActiveTab("information")}
+                className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "information" ? 4 : 0, borderBottomColor: activeTab === "information" ? "#155dfc" : "", color: activeTab === "information" ? "#155dfc" : "#6a7282"}}>
+              Information
+            </button>
+              )
+            }
+
+            <button 
+              onClick={() => setActiveTab('lecture')}
+              className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "lecture" ? 4 : 0, borderBottomColor: activeTab === "lecture" ? "#155dfc" : "", color: activeTab === "lecture" ? "#155dfc" : "#6a7282"}}>
               Lecture Notes
             </button>
 
-          </div>
+            {
+              (course?.user === user?.$id) && (
+                <button 
+              onClick={() => setActiveTab('review')}
+              className="pb-2   font-semibold text-sm" style={{ borderBottomWidth: activeTab === "review" ? 4 : 0, borderBottomColor: activeTab === "review" ? "#155dfc" : "", color: activeTab === "review" ? "#155dfc" : "#6a7282"}}>
+              Reviews
+            </button>
+              )
+            }
 
-          <div className="flex items-center gap-2 mt-2 mb-2">
+          </div>
+           </div>
+
+          {
+            activeTab === "information" ? (
+              <div className="max-w-6xl mx-auto px-0 py-6 space-y-6">
+
+  {/* 1. REVIEW STATUS */}
+  <section className="bg-yellow-50 border border-yellow-200 rounded-xl p-4" style={{borderWidth: 0.1}}>
+    <h2 className="text-sm font-semibold text-yellow-800">
+      Course Under Review
+    </h2>
+    <p className="text-sm text-yellow-700 mt-1">
+      This course is currently under review. Reviews typically take between 24 to 72 hours.
+      You will be notified once the course becomes active.
+    </p>
+  </section>
+
+  {/* 2. COURSE META */}
+  <section className="bg-white rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
+  
+  {/* EDIT BUTTON */}
+  <button className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 transition text-white">
+    Edit
+  </button>
+
+  <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+    
+    {/* Thumbnail */}
+    <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0" style={{width: 100}}>
+      <img
+        src={course?.thumbnailUrl}
+        alt={course?.title}
+        className="w-full h-full object-cover"
+      />
+    </div>
+
+    {/* Info */}
+    <div className="flex-1 flex flex-col justify-between">
+      
+      {/* Top */}
+      <div>
+        <h1 className="text-lg md:text-xl font-semibold text-gray-900 leading-snug pr-16">
+          {course?.title}
+        </h1>
+
+        <p className="text-xs md:text-sm text-gray-500 mt-1">
+          {course?.code} • {course?.department} • Level {course?.level.toString()}
+        </p>
+
+        <p className="text-sm text-gray-600 mt-3 line-clamp-3">
+          {course?.description}
+        </p>
+      </div>
+
+      {/* Bottom row */}
+      <div className="mt-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        
+        {/* Meta tags */}
+        <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600">
+          {course?.lecturer && (
+            <span className="bg-gray-100 px-2 py-1 rounded-md">
+              {course.lecturer}
+            </span>
+          )}
+          {course?.university && (
+            <span className="bg-gray-100 px-2 py-1 rounded-md">
+              {course.university}
+            </span>
+          )}
+          <span className="bg-gray-100 px-2 py-1 rounded-md">
+            {course?.session}
+          </span>
+          <span className="bg-gray-100 px-2 py-1 rounded-md">
+            {course?.isOnGoing ? "Ongoing" : "Past"}
+          </span>
+        </div>
+
+        {/* Pricing */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Pricing:</span>
+          <span className="text-sm font-semibold text-gray-900">
+            Free
+          </span>
+          <span className="text-xs text-gray-400">
+            (Subscription)
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+  {/* 3. ANALYTICS */}
+  <section className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md" style={{}}>
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-lg font-semibold text-gray-900">
+        Analytics
+      </h2>
+      <span className="text-sm text-gray-500">
+        Last 7 days
+      </span>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <Stat label="Avg Rating" value="4.5 ⭐" />
+      <Stat label="Avg Time" value="12 min" />
+      <Stat label="Avg Daily Visits" value="120" />
+      <Stat label="Total Reach" value="2.3k" />
+    </div>
+<div style={{marginTop: 50}}>
+ <AnalyticsChart/>
+</div>
+  
+  </section>
+
+  {/* 4. REVIEWS */}
+  <section className="bg-white rounded-xl " style={{marginTop: 40}}>
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-lg font-semibold text-gray-900">
+        Reviews
+      </h2>
+      <a href="#" className="text-sm text-blue-600 hover:underline">
+        See all
+      </a>
+    </div>
+
+    <div className="space-y-4">
+      {reviews.length === 0 && !loadingReviews ? (
+        <p className="text-sm text-gray-500">No reviews yet.</p>
+      ) : (
+        reviews.map((review) => (
+          <ReviewItem key={review.$id} review={review} />
+        ))
+      )}
+    </div>
+
+    {loadingReviews && (
+      <div className="flex justify-center py-4">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    )}
+
+    {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
+      <div className="flex justify-center mt-3">
+        <button
+          onClick={loadMoreReviews}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          See more
+        </button>
+      </div>
+    )}
+  </section>
+
+</div>
+            ) : (
+              activeTab === "lecture" ? (
+                <>
+              <div className="flex items-center gap-2 mt-3 border-b border-gray-200 mb-8 pb-3 overflow-x-auto">
   <button
     onClick={() => {setViewMode("timeline");
      posts.length === 0 && fetchTimeLine()
@@ -404,7 +709,7 @@ function pickRandom<T>(arr: T[]): T | null {
   </button>
 </div>
 
-        </div>
+       
 
         <RectangularAd
                         ads={topAds}
@@ -412,29 +717,7 @@ function pickRandom<T>(arr: T[]): T | null {
                         height={130}
                       />
 
-        {/* Notes Grid */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
-          {course.files.map((file: any, index: number) => (
-  <div key={file.id} className="group cursor-pointer">
-    <div
-      className="bg-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 aspect-[4/5] relative mb-4"
-      onClick={() => {
-        setSelectedNoteIndex(index);
-        setIsViewerOpen(true);
-      }}
-    >
-      <Image
-        src={file.previewUrl}
-        alt={`Note ${index + 1}`}
-        fill
-        className="object-cover"
-      />
-    </div>
 
-  </div>
-))}
-
-        </div> */}
 
 {viewMode === "timeline" ? (
   posts.map(post => (
@@ -579,6 +862,8 @@ function pickRandom<T>(arr: T[]): T | null {
   onSave={handleSaveEdit}
 />
 
+
+
 {course && (
   <EditCourseModal
     isOpen={showEditCourse}
@@ -588,6 +873,7 @@ function pickRandom<T>(arr: T[]): T | null {
       title: course.title,
       code: course.code,
       description: course.description,
+      university: course.university,
       lecturer: course.lecturer,
       thumbnailId: course.thumbnailId,
       thumbnailUrl: course.thumbnailUrl,
@@ -597,6 +883,58 @@ function pickRandom<T>(arr: T[]): T | null {
     }
   />
 )}
+              </>
+              ) : (
+                <div>
+                  {/* 4. REVIEWS */}
+  <section className="bg-white rounded-xl " style={{marginTop: 40}}>
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-lg font-semibold text-gray-900">
+        Reviews
+      </h2>
+      <button onClick={() => setReviewModalOpen(true)} className="text-sm text-blue-600 hover:underline">
+        Leave a review
+      </button>
+    </div>
+
+    <div className="space-y-4">
+      {reviews.length === 0 && !loadingReviews ? (
+        <p className="text-sm text-gray-500">No reviews yet.</p>
+      ) : (
+        reviews.map((review) => (
+          <ReviewItem key={review.$id} review={review} />
+        ))
+      )}
+    </div>
+
+    {loadingReviews && (
+      <div className="flex justify-center py-4">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    )}
+
+    {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
+      <div className="flex justify-center mt-3">
+        <button
+          onClick={loadMoreReviews}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          See more
+        </button>
+      </div>
+    )}
+  </section>
+
+    <ReviewModal 
+      isOpen={reviewModalOpen}
+      isSaving={isReviewSaving}
+      onClose={() => setReviewModalOpen(false)}
+      onSubmit={ ({rating, comment}) => handleCreateReview({rating, comment})}
+      />
+    </div>
+              )
+            )
+          }
 
 
 

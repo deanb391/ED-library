@@ -79,7 +79,7 @@ export default function Header() {
           <MenuItem
             icon={Plus}
             label="Create Course"
-            href="/admin/create-course"
+            href="/contributor/dashboard/create-course"
             onSelect={onSelect}
           />
           <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>

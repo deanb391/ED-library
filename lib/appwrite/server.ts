@@ -8,3 +8,20 @@ const client = new Client()
   .setKey(process.env.APPWRITE_API_KEY!); // IMPORTANT
 
 export const databases = new Databases(client);
+
+const DATABASE_ID = "69617e75000c6c010a75";
+const USER_COLLECTION = "user";
+
+export async function getUserById(userId: string) {
+  try {
+    const userDoc = await databases.getDocument(
+      DATABASE_ID,
+      USER_COLLECTION,
+      userId
+    );
+    return userDoc;
+  } catch (error) {
+    console.error("Error fetching user by ID:", error);
+    throw error; // Handle errors gracefully, no silent failures
+  }
+}

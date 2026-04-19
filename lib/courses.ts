@@ -19,13 +19,16 @@ export type Course = {
   code: string;
   description: string;
   lecturer?: string;
+  university: string;
   thumbnailId: string;
   thumbnailUrl: string;
   files?: string[];
-  isOnGoing: Boolean,
-  session: string,
-  level: Number,
-  department: string
+  isOnGoing: Boolean;
+  session: string;
+  level: Number;
+  department: string;
+  price: number;
+  isFree: boolean;
 };
 
 
@@ -39,17 +42,7 @@ export function buildFileViewUrl(
 }
 
 export async function uploadThumbnail(file: File) {
-  // const uploaded = await storage.createFile(
-  //   BUCKET_ID,
-  //   ID.unique(),
-  //   file
-  // );
-
-  // const buffer = Buffer.from(await file.arrayBuffer());
   const url = await uploadToServer(file, "courses", "image");
-
-//  const url = buildFileViewUrl(BUCKET_ID, uploaded.$id);
-
   return {
     fileId: "",
     url:`${url}`,
@@ -61,13 +54,16 @@ export async function createCourse(data: {
   code: string;
   description: string;
   lecturer?: string;
+  university: string;
   thumbnailId: string;
   thumbnailUrl: string;
-  user: string,
-  department: string,
-  level: Number,
-  session: string,
-  isOnGoing?: Boolean
+  user: string;
+  department: string;
+  level: Number;
+  session: string;
+  isOnGoing?: Boolean;
+  price: number;
+  isFree: boolean;
 }) {
   return databases.createDocument(
     DATABASE_ID,
@@ -84,6 +80,7 @@ function mapCourse(doc: any): Course {
     code: doc.code,
     description: doc.description,
     lecturer: doc.lecturer,
+    university: doc.university || "",
     thumbnailId: doc.thumbnailId,
     thumbnailUrl: doc.thumbnailUrl,
     files: doc.files || [],
@@ -91,6 +88,8 @@ function mapCourse(doc: any): Course {
     session: doc.session,
     department: doc.department,
     level: doc.level,
+    price: typeof doc.price === "number" ? doc.price : 0,
+    isFree: Boolean(doc.isFree),
   };
 }
 
@@ -205,6 +204,7 @@ export async function fetchCourses(
       code: doc.code,
       description: doc.description,
       lecturer: doc.lecturer,
+      university: doc.university || "",
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
@@ -212,6 +212,8 @@ export async function fetchCourses(
       session: doc.session,
       department: doc.department,
       level: doc.level,
+      price: typeof doc.price === "number" ? doc.price : 0,
+      isFree: Boolean(doc.isFree),
     }));
   } catch (err) {
     console.error("Failed to fetch courses", err);
@@ -235,6 +237,7 @@ export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
       code: doc.code,
       description: doc.description,
       lecturer: doc.lecturer,
+      university: doc.university || "",
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
@@ -242,7 +245,9 @@ export async function fetchCoursesByAdmin(userId: string): Promise<Course[]> {
       isOnGoing: doc.isOnGoing,
       session: doc.session,
       level: doc.level,
-      department: doc.department
+      department: doc.department,
+      price: typeof doc.price === "number" ? doc.price : 0,
+      isFree: Boolean(doc.isFree),
     }));
   } catch (err) {
     console.error("Failed to fetch courses", err);
@@ -601,6 +606,7 @@ export async function searchCourses(
       code: doc.code,
       description: doc.description,
       lecturer: doc.lecturer,
+      university: doc.university || "",
       thumbnailId: doc.thumbnailId,
       thumbnailUrl: doc.thumbnailUrl,
       files: doc.files || [],
@@ -608,6 +614,8 @@ export async function searchCourses(
       session: doc.session,
       department: doc.department,
       level: doc.level,
+      price: typeof doc.price === "number" ? doc.price : 0,
+      isFree: Boolean(doc.isFree),
     }));
 
   } catch (err) {

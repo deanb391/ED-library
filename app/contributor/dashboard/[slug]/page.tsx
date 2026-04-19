@@ -22,9 +22,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import clsx from 'clsx';
 import deskImg from "@/assets/images/desk.webp";
-import { Course } from '@/lib/courses';
+import { Course } from '@/lib/api/courses';
 import { useUser } from '@/context/UserContext';
-import { fetchCoursesByAdmin } from '@/lib/courses';
+import { fetchCoursesByAdmin } from '@/lib/api/courses';
 
 function CourseSection({
   title,
@@ -299,7 +299,7 @@ export default function DashboardUnderReviewPage() {
     title="Create Course" 
     desc="Launch a new course and publish learning materials." 
     enabled={isContributorActive}
-    link="/admin/create-course"
+    link="/contributor/dashboard/create-course"
     index={0}
   />
 

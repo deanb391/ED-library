@@ -14,6 +14,7 @@ function mapCourse(doc: any) {
     code: doc.code,
     description: doc.description,
     lecturer: doc.lecturer,
+    university: doc.university || "",
     thumbnailId: doc.thumbnailId,
     thumbnailUrl: doc.thumbnailUrl,
     files: doc.files || [],
@@ -21,7 +22,9 @@ function mapCourse(doc: any) {
     session: doc.session,
     department: doc.department,
     level: doc.level,
+    price: doc.price, 
     user: doc.user,
+    analytics: doc.analytics
   };
 }
 

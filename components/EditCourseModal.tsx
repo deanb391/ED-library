@@ -12,6 +12,7 @@ interface EditCourseModalProps {
     title: string;
     code: string;
     description: string;
+    university?: string;
     lecturer?: string;
     thumbnailId?: string;
     thumbnailUrl?: string;
@@ -28,6 +29,7 @@ export default function EditCourseModal({
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
+  const [university, setUniversity] = useState("");
   const [lecturer, setLecturer] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +40,7 @@ export default function EditCourseModal({
     setTitle(course.title);
     setCode(course.code);
     setDescription(course.description);
+    setUniversity(course.university || "");
     setLecturer(course.lecturer || "");
     setThumbnail(null);
   }, [isOpen, course]);
@@ -53,6 +56,7 @@ export default function EditCourseModal({
         title,
         code,
         description,
+        university,
         lecturer: lecturer || undefined,
       };
 
@@ -127,6 +131,20 @@ export default function EditCourseModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 resize-none
+                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* University */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                University
+              </label>
+              <input
+                required
+                value={university}
+                onChange={(e) => setUniversity(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300
                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
