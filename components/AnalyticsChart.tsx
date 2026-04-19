@@ -10,34 +10,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { day: "Mon", visits: 120 },
-  { day: "Tue", visits: 150 },
-  { day: "Wed", visits: 130 },
-  { day: "Thu", visits: 170 },
-  { day: "Fri", visits: 200 },
-  { day: "Sat", visits: 180 },
-  { day: "Sun", visits: 220 },
-];
-
-const analytics = {
-    avg_rating: 4.5,
-    avg_time: 12,
-    reached: [
-        "1", "2", "3", "4", "5"
-    ],
-    visits_per_day: {
-        mon: 1,
-        tue: 2,
-        wed: 3,
-        thu: 4,
-        fri: 5,
-        sat: 6,
-        sun: 7
-    }
+interface AnalyticsChartProps {
+  visitsPerDay: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
 }
 
-export default function AnalyticsChart() {
+export default function AnalyticsChart({ visitsPerDay }: AnalyticsChartProps) {
+  const data = [
+    { day: "Mon", visits: visitsPerDay.mon },
+    { day: "Tue", visits: visitsPerDay.tue },
+    { day: "Wed", visits: visitsPerDay.wed },
+    { day: "Thu", visits: visitsPerDay.thu },
+    { day: "Fri", visits: visitsPerDay.fri },
+    { day: "Sat", visits: visitsPerDay.sat },
+    { day: "Sun", visits: visitsPerDay.sun },
+  ];
   return (
     <div className="w-full" style={{ height: 220, marginBottom: 20 }}>
         <div className="flex items-center justify-between mb-3" >

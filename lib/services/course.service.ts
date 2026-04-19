@@ -278,3 +278,61 @@ export async function fetchCoursesForUserService(user: any) {
 
   return { forYou, others };
 }
+
+/* ================= ANALYTICS ================= */
+
+export async function recordCourseVisitService(courseId: string, userId: string) {
+  // Fetch the course document
+  const courseDoc = await databases.getDocument(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    courseId
+  );
+
+  // Parse analytics, initialize if missing
+  let analytics = courseDoc.analytics;
+  if (!analytics) {
+    analytics = {
+      avg_rating: 0,
+      reached: [],
+      visits_per_day: {
+        mon: 0,
+        tue: 0,
+        wed: 0,
+        thu: 0,
+        fri: 0,
+        sat: 0,
+        sun: 0
+      }
+    };
+  }
+
+  // Update reached: add userId if not present
+  if (!analytics.reached.includes(userId)) {
+    analytics.reached.push(userId);
+  }
+
+  // Update visits_per_day: increment current day
+  const now = new Date();
+  const day = new Intl.DateTimeFormat('en-NG', { weekday: 'short' }).format(now).toLowerCase(); // 'mon', 'tue', etc.
+  if (analytics.visits_per_day[day] !== undefined) {
+    analytics.visits_per_day[day] += 1;
+    // If updating on Monday, reset other days to 0 for weekly reset
+    if (day === 'mon') {
+      analytics.visits_per_day.tue = 0;
+      analytics.visits_per_day.wed = 0;
+      analytics.visits_per_day.thu = 0;
+      analytics.visits_per_day.fri = 0;
+      analytics.visits_per_day.sat = 0;
+      analytics.visits_per_day.sun = 0;
+    }
+  }
+
+  // Update the course document with new analytics
+  await databases.updateDocument(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    courseId,
+    { analytics: JSON.stringify(analytics) }
+  );
+}

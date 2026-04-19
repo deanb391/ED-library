@@ -53,6 +53,21 @@ export async function fetchReviews(
   return res.json();
 }
 
+export async function calculateCourseAverageRating(
+  courseId: string
+): Promise<{
+  avgRating: number;
+  totalReviews: number;
+}> {
+  const res = await fetch(`/api/review/calculate-average?courseId=${courseId}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to calculate average rating");
+  }
+
+  return res.json();
+}
+
 
 
 

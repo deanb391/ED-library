@@ -100,3 +100,29 @@ export async function fetchReviewsService(
     hasMore: Boolean(nextCursor),
   };
 }
+
+export async function calculateCourseAverageRatingService(courseId: string): Promise<{
+  avgRating: number;
+  totalReviews: number;
+}> {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    REVIEW_COLLECTION,
+    [
+      Query.equal("courses", courseId),
+      Query.limit(1000), // Assuming not too many reviews, adjust if needed
+    ]
+  );
+
+  const reviews = res.documents.map(mapReview);
+  const totalReviews = reviews.length;
+
+  if (totalReviews === 0) {
+    return { avgRating: 0, totalReviews: 0 };
+  }
+
+  const sum = reviews.reduce((acc, review) => acc + (review.rating || 0), 0);
+  const avgRating = sum / totalReviews;
+
+  return { avgRating, totalReviews };
+}

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
-import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts, fetchPostsAsc } from '@/lib/courses';
+import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit } from '@/lib/courses';
 import Image from 'next/image';
 import { getCurrentUser, updateUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
@@ -42,7 +42,7 @@ import {
 } from "recharts";
 import AnalyticsChart from '@/components/AnalyticsChart';
 import ReviewModal from '@/components/ReviewModal';
-import { createReview, fetchReviews, Review } from '@/lib/api/reviews';
+import { createReview, fetchReviews, Review, calculateCourseAverageRating } from '@/lib/api/reviews';
 
 const data = [
   { day: "Mon", visits: 120 },
@@ -77,6 +77,11 @@ export type Course = {
   department: string;
   price?: number;
   isFree?: boolean;
+  analytics?: {
+    avg_rating: number;
+    reached: string[];
+    visits_per_day: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
+  };
 };
 
 
@@ -180,6 +185,10 @@ type Tab = "lecture" | "information" | "review";
 const [activeTab, setActiveTab] = useState<Tab>('lecture')
 const [reviewModalOpen, setReviewModalOpen] = useState(false);
 const [isReviewSaving, setIsReviewSaving] = useState(false);
+const [avgRating, setAvgRating] = useState(0);
+const [totalReviews, setTotalReviews] = useState(0);
+const [visitsPerDay, setVisitsPerDay] = useState({ mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
+const [totalReach, setTotalReach] = useState(0);
 
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null;
@@ -245,6 +254,13 @@ function pickRandom<T>(arr: T[]): T | null {
   }, [courseId]);
 
   useEffect(() => {
+    if (user && course && user.$id !== course.user) {
+      // Record visit only once
+      recordCourseVisit(courseId, user.$id).catch(console.error);
+    }
+  }, [courseId, user, course]);
+
+  useEffect(() => {
   const init = async () => {
     if (user?.isAdmin) setIsAdmin(true);
     if (courseBannerAds.length === 0) return;
@@ -268,6 +284,22 @@ function pickRandom<T>(arr: T[]): T | null {
 
     const courseDoc = await fetchCourseById(courseId);
     setCourse(courseDoc);
+
+    // Fetch average rating
+    try {
+      const ratingData = await calculateCourseAverageRating(courseId);
+      setAvgRating(ratingData.avgRating);
+      setTotalReviews(ratingData.totalReviews);
+    } catch (error) {
+      console.error("Failed to fetch average rating", error);
+    }
+
+    // Set analytics data
+    if (courseDoc.analytics) {
+      const data = JSON.parse(courseDoc.analytics)
+      setVisitsPerDay(data.visits_per_day || { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
+      setTotalReach(data.reached?.length || 0);
+    }
 
     const defaultView: ViewMode = courseDoc.isOnGoing ? "timeline" : "pdf";
     setViewMode(defaultView);
@@ -509,7 +541,7 @@ function pickRandom<T>(arr: T[]): T | null {
             </button>
 
             {
-              (course?.user === user?.$id) && (
+              (course?.user !== user?.$id) && (
                 <button 
               onClick={() => setActiveTab('review')}
               className="pb-2   font-semibold text-sm" style={{ borderBottomWidth: activeTab === "review" ? 4 : 0, borderBottomColor: activeTab === "review" ? "#155dfc" : "", color: activeTab === "review" ? "#155dfc" : "#6a7282"}}>
@@ -625,13 +657,13 @@ function pickRandom<T>(arr: T[]): T | null {
     </div>
 
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <Stat label="Avg Rating" value="4.5 ⭐" />
-      <Stat label="Avg Time" value="12 min" />
-      <Stat label="Avg Daily Visits" value="120" />
-      <Stat label="Total Reach" value="2.3k" />
+      <Stat label="Avg Rating" value={`${avgRating.toFixed(1)} ⭐`} />
+      <Stat label="Reviews" value={totalReviews.toString()} />
+      <Stat label="Avg Daily Visits" value={Math.round(Object.values(visitsPerDay).reduce((a, b) => a + b, 0) / 7)} />
+      <Stat label="Total Reach" value={totalReach.toString()} />
     </div>
 <div style={{marginTop: 50}}>
- <AnalyticsChart/>
+ <AnalyticsChart visitsPerDay={visitsPerDay}/>
 </div>
   
   </section>

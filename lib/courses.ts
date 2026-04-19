@@ -29,6 +29,11 @@ export type Course = {
   department: string;
   price: number;
   isFree: boolean;
+  analytics?: {
+    avg_rating: number;
+    reached: string[];
+    visits_per_day: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
+  };
 };
 
 
@@ -488,7 +493,8 @@ export async function fetchCourseById(courseId: string) {
       isOnGoing: course.isOnGoing,
       session: course.session,
       department: course.department,
-      level: course.level
+      level: course.level,
+      analytics: course.analytics
     })
 }
 
@@ -650,4 +656,20 @@ export async function fetchCoursesByDepartment({
     courses: res.documents,
     total: res.total,
   };
+}
+
+export async function recordCourseVisit(courseId: string, userId: string) {
+  const res = await fetch("/api/courses/record-visit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ courseId, userId }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to record course visit");
+  }
+
+  return res.json();
 }
