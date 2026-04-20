@@ -37,7 +37,7 @@ export async function debitWallet(userId: string, amount: number, description: s
 }
 
 export async function verifyPayment(paymentId: string) {
-  const res = await fetch(`/api/wallet/verify?paymentId=${encodeURIComponent(paymentId)}&`, {
+  const res = await fetch(`/api/wallet/topup/verify?paymentId=${encodeURIComponent(paymentId)}&`, {
     method: "GET",
   });
 
