@@ -22,6 +22,7 @@ type User = {
   department: string;
   avatar: string;
   isAdmin?: boolean;
+  $createdAt: string;
 };
 
 type UserContextType = {
