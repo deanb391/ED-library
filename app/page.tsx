@@ -168,7 +168,7 @@ const sessions = [
 
     const t = setTimeout(async () => {
       onLoading(true);
-      const res = await searchCourses(query, user);
+      const res = await searchCourses(query);
       onResults(res);
       onLoading(false);
     }, 1500);
