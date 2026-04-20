@@ -24,7 +24,7 @@ export default function WalletPage() {
         if (!user) return;
 
         const walletRes = await fetchWallet(user.$id);
-        setWallet(walletRes);
+        setWallet(walletRes.wallet);
       } catch (err) {
         console.error("Wallet load failed:", err);
       } finally {
