@@ -17,8 +17,11 @@ export default function WalletPage() {
 
   useEffect(() => {
     const load = async () => {
+
       try {
+        
         setLoading(true);
+        if (!user) return;
 
         const walletRes = await fetchWallet(user.$id);
         setWallet(walletRes);

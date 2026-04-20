@@ -273,7 +273,7 @@ const handleConfirm = async () => {
         name="paymentMethod"
         value="wallet"
         checked={selectedPaymentMethod === "wallet"}
-        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+        onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
         disabled={!wallet || wallet.balance < total}
         style={{
           width: "18px",
@@ -400,7 +400,7 @@ const handleConfirm = async () => {
         name="paymentMethod"
         value="flutterwave"
         checked={selectedPaymentMethod === "flutterwave"}
-        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+        onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
         style={{
           width: "18px",
           height: "18px",

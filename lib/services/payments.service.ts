@@ -109,7 +109,7 @@ export async function payForCourseService(params: {
     user: params.userId,
     description: `Payment for ${courses.length} course(s)`,
     courses: JSON.stringify(params.courseIds),
-    provider: params?.paymentMethod || "",
+    provider: params?.paymentMethod as "wallet" || "flutterwave",
   });
 
   // =========================

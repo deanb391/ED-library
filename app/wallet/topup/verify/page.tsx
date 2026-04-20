@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { verifyPayment } from "@/lib/api/wallet";
 
 export default function VerifyTopUpPage() {
+
+    const BRAND_BLUE = "#2563EB";
   const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId");
