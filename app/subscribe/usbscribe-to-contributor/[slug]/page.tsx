@@ -32,7 +32,9 @@ export default function SubscribeToCreatorPage() {
         const contributorRes = await getContributor(slug);
         setContributor(contributorRes);
 
-        const courseRes = await fetchCoursesByAdmin(contributorRes?.user);
+        if(!contributorRes) return;
+
+        const courseRes = await fetchCoursesByAdmin(contributorRes.user);
 
         const normalizedCourses: SelectableCourse[] = (courseRes || []).map(
           (c: Course) => ({
