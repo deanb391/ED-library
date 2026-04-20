@@ -187,6 +187,10 @@ export default function CreatorProfilePage() {
         const contributorRes = await getContributor(slug);
         setContributor(contributorRes);
 
+        if (!contributorRes) {
+          return;
+        }
+
         const raw = contributorRes?.followersIds;
 
         let followersIds: string[] = [];
@@ -207,7 +211,7 @@ export default function CreatorProfilePage() {
           setFollowing(false);
         }
 
-        const courseRes = await fetchCoursesByAdmin(contributorRes?.user);
+        const courseRes = await fetchCoursesByAdmin(contributorRes.user);
         setCourses(courseRes || []);
 
         console.log(contributorRes, courseRes)
