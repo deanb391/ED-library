@@ -15,6 +15,7 @@ export default function CreateWalletPage() {
   const handleCreate = async () => {
     try {
       setLoading(true);
+      if(!user ) return;
 
       const res = await createWallet(user?.$id);
 
