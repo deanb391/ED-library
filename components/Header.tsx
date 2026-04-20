@@ -36,6 +36,10 @@ export default function Header() {
   const showContributorMenu = Boolean(user && !loading && !contributorLoading);
   const contributorDashboardHref = user ? `/contributor/dashboard/${user.$id}` : "/";
 
+  const avatarSrc =
+  hasContributorAccount
+    ? contributor?.profileImage
+    : user?.avatar;
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -256,7 +260,7 @@ export default function Header() {
       <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100">
         {user.avatar ? (
           <Image
-            src={hasContributorAccount ? contributor?.profileImage : user?.avatar}
+            src={avatarSrc || "/default-avatar.png"}
             alt="Avatar"
             fill
             className="object-cover"
