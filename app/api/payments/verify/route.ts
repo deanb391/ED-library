@@ -17,7 +17,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: result.success,
-      status: result.status,
     });
   } catch (error) {
     console.error("Verify API error:", error);
