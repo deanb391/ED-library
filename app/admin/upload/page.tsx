@@ -79,7 +79,8 @@ export default function UploadPage() {
   const {user} = useUser();
 
   useEffect(() => {
-      fetchCoursesByAdmin(user?.$id).then(setCourses);
+      if (!user) return;
+      fetchCoursesByAdmin(user.$id).then(setCourses);
       const getUser = async () => {
         if (user?.isAdmin) setIsAdmin(true);
         setLoading(false)
