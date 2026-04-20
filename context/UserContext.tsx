@@ -12,6 +12,7 @@ import { getCurrentUser, updateUser } from "@/lib/appwrite";
 import { BannerOrSquareAdItem, fetchSquareAds } from "@/lib/api/ads";
 import { getMyContributor } from "@/lib/api/contributors";
 import type { Contributor } from "@/lib/services/contributors.service";
+import { fetchWallet } from "@/lib/api/wallet";
 
 type User = {
   $id: string;
@@ -27,6 +28,7 @@ type UserContextType = {
   user: User | null;
   contributor: Contributor | null;
   loading: boolean;
+  hasWallet:boolean;
   refreshUser: () => Promise<void>;
   setUser: (user: User | null) => void;
   setContributor: (contributor: Contributor | null) => void;
@@ -62,6 +64,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [homeBannerAds, setHomeBannerAds] = useState<BannerOrSquareAdItem[]>([]);
   const [courseBannerAds, setCourseBannerAds] = useState<BannerOrSquareAdItem[]>([]);
   const [allScreenBannerAds, setAllScreenBannerAds] = useState<BannerOrSquareAdItem[]>([]);
+  const [hasWallet, setHasWallet] = useState(false);
 
   const fetchContributorForUser = useCallback(
     async (userId: string) => {
@@ -101,6 +104,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
           lastTime: new Date(),
         });
         await fetchContributorForUser(currentUser.$id);
+
+        const walletRes = await fetchWallet(currentUser.$id);
+        if (walletRes) {
+          setHasWallet(true);
+        }
       } else {
         setContributor(null);
       }
@@ -153,6 +161,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         user,
         contributor,
         loading,
+        hasWallet,
         refreshUser: fetchUser,
         setUser,
         setContributor,

@@ -22,6 +22,7 @@ export type Contributor = ContributorDraft & {
   $updatedAt: string;
   approvalNotes: string;
   followers?: number;
+  followersIds?: string;
 };
 
 function mapContributor(doc: any): Contributor {
@@ -40,6 +41,7 @@ function mapContributor(doc: any): Contributor {
     $updatedAt: doc.$updatedAt,
     approvalNotes: doc.approvalNotes || "",
     followers: doc.followers || 0,
+    followersIds: doc.followersIds
   };
 }
 
@@ -129,5 +131,52 @@ export async function getContributorByUserIdService(
   } catch (err) {
     console.error("Error fetching contributor by userId:", err);
     return null;
+  }
+}
+
+export async function toggleFollowContributorService(
+  userId: string,
+  contributorId: string
+): Promise<boolean> {
+  try {
+    const contributor = await fetchContributorService(contributorId);
+
+    const raw = contributor.followersIds;
+
+    let followersIds: string[] = [];
+
+    if (raw) {
+      try {
+        followersIds = JSON.parse(raw);
+        if (!Array.isArray(followersIds)) followersIds = [];
+      } catch {
+        followersIds = [];
+      }
+    }
+
+    const isFollowing = followersIds.includes(userId);
+
+    if (isFollowing) {
+      followersIds = followersIds.filter((id) => id !== userId);
+    } else {
+      followersIds.push(userId);
+    }
+
+    const updatedFollowersCount = followersIds.length;
+
+    await databases.updateDocument(
+      DATABASE_ID,
+      CONTRIBUTORS_COLLECTION,
+      contributorId,
+      {
+        followers: updatedFollowersCount,
+        followersIds: JSON.stringify(followersIds),
+      }
+    );
+
+    return true;
+  } catch (err) {
+    console.error("toggleFollowContributorService error:", err);
+    return false;
   }
 }

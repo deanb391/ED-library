@@ -27,6 +27,7 @@ export default function Header() {
   const {
     user,
     loading,
+    hasWallet,
     contributor,
     contributorLoading,
   } = useUser();
@@ -99,6 +100,17 @@ export default function Header() {
         </>
       )}
 
+      {
+        hasWallet && (
+          <>
+          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
+
+      <MenuItem icon={Info} label="Wallet" href="/wallet" onSelect={onSelect} />
+          </>
+          
+        )
+      }
+
       <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
       <MenuItem icon={Info} label="About" href="/about" onSelect={onSelect} />
@@ -143,6 +155,14 @@ export default function Header() {
               </Link>
             )
           )}
+
+          {
+            hasWallet && (
+              <Link href="/wallet" className="hover:text-blue-600">
+            Wallet
+          </Link>
+            )
+          }
 
           <Link href="#" className="hover:text-blue-600">
             About

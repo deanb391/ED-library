@@ -43,6 +43,9 @@ import {
 import AnalyticsChart from '@/components/AnalyticsChart';
 import ReviewModal from '@/components/ReviewModal';
 import { createReview, fetchReviews, Review, calculateCourseAverageRating } from '@/lib/api/reviews';
+import { getMyContributor, toggleFollowContributor } from '@/lib/api/contributors';
+import { Contributor } from '@/lib/services/contributors.service';
+import Link from 'next/link';
 
 const data = [
   { day: "Mon", visits: 120 },
@@ -75,8 +78,7 @@ export type Course = {
   session: string;
   level: Number;
   department: string;
-  price?: number;
-  isFree?: boolean;
+  price?: string;
   analytics?: {
     avg_rating: number;
     reached: string[];
@@ -189,6 +191,9 @@ const [avgRating, setAvgRating] = useState(0);
 const [totalReviews, setTotalReviews] = useState(0);
 const [visitsPerDay, setVisitsPerDay] = useState({ mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
 const [totalReach, setTotalReach] = useState(0);
+const [contributor, setContributor] = useState<Contributor | null>(null)
+const [follow, setFollow] = useState(false);
+  const [following, setFollowing] = useState(false);
 
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null;
@@ -285,6 +290,31 @@ function pickRandom<T>(arr: T[]): T | null {
     const courseDoc = await fetchCourseById(courseId);
     setCourse(courseDoc);
 
+    try {
+        const c_response = await getMyContributor(courseDoc?.user)
+        setContributor(c_response);
+        const raw = c_response?.followersIds;
+
+        let followersIds: string[] = [];
+
+        if (raw) {
+          try {
+            followersIds = JSON.parse(raw);
+            if (!Array.isArray(followersIds)) followersIds = [];
+          } catch {
+            followersIds = [];
+          }
+        }
+
+        if (user?.$id && followersIds.includes(user.$id)) {
+          setFollowing(true);
+        } else {
+          setFollowing(false);
+        }
+      } catch (error) {
+        setContributor(null)
+      }
+
     // Fetch average rating
     try {
       const ratingData = await calculateCourseAverageRating(courseId);
@@ -317,6 +347,19 @@ function pickRandom<T>(arr: T[]): T | null {
   init();
 }, [courseId, courseBannerAds]);
 
+const isOwner = course?.user === user?.$id;
+
+const effectiveTabs = React.useMemo(() => {
+  if (isOwner) return ["information", "lecture"] as const;
+  return ["lecture", "review"] as const;
+}, [isOwner]);
+
+useEffect(() => {
+  if (!effectiveTabs.includes(activeTab)) {
+    setActiveTab(effectiveTabs[0]);
+  }
+}, [effectiveTabs]);
+
    const handleCreateReview = async ({
       rating,
       comment,
@@ -335,7 +378,6 @@ function pickRandom<T>(arr: T[]): T | null {
             review: comment
           }
         );
-        console.log("NEw Revieew", newReview)
 
         setReviews((prev) => [newReview, ...prev]);
         setReviewModalOpen(false);
@@ -428,7 +470,45 @@ function pickRandom<T>(arr: T[]): T | null {
   return () => window.removeEventListener("scroll", onScroll);
 }, [course, cursor, pdfCursor, loadingPosts, loadingPdf, loading]);
 
+const handleFollow = async () => {
+  if (!contributor) return;
 
+
+  try {
+    setFollow(true);
+
+    if (!user) { 
+      router.push("/signin") 
+      setFollow(false);
+      return;
+    }
+
+    const res = await toggleFollowContributor(
+      user.$id,
+      contributor.$id
+    );
+
+    if (!res) return;
+
+    // optimistic UI toggle
+    setFollowing((prev) => !prev);
+
+    setContributor((prev: any) => {
+      if (!prev) return prev;
+
+      const current = prev.followers || 0;
+
+      return {
+        ...prev,
+        followers: following ? current - 1 : current + 1,
+      };
+    });
+  } catch (error) {
+    console.error("FOLLOW ERROR:", error);
+  } finally {
+    setFollow(false);
+  }
+};
 
   const handleSaveEdit = async (value: string) => {
     if (!activePost) return;
@@ -448,6 +528,7 @@ function pickRandom<T>(arr: T[]): T | null {
       setSavingEdit(false);
     }
   };
+  console.log(course)
 
 
    if (lloading || loading) {
@@ -496,7 +577,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
           {/* Action Buttons */}
           {
-            (course?.user === user?.$id) && (
+            isOwner && (
               <div className="flex items-center gap-3">
             <button 
             onClick={() => setShowEditCourse(true)}
@@ -514,6 +595,59 @@ function pickRandom<T>(arr: T[]): T | null {
           }
         </div>
 
+        {
+      isOwner && (
+        <div className="flex items-center gap-3 mb-3">
+
+          {/* Avatar */}
+          <button className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden" onClick={() => router.push(`/contributor/account/${contributor?.$id}`)}>
+            <img
+              src={contributor?.profileImage}
+              alt={contributor?.username}
+              className="w-full h-full object-cover"
+            />
+          </button>
+
+          {/* Username + Follow */}
+          <div className="flex items-center gap-2 text-sm">
+
+            <Link className="font-semibold text-gray-900" href={`/contributor/account/${contributor?.$id}`}>
+              {contributor?.username || "unknown"}
+            </Link>
+
+            <span className="text-gray-300">•</span>
+
+            <button
+  className={`font-semibold flex items-center gap-2 ${
+    following
+      ? "text-gray-500"
+      : "text-blue-600 hover:underline"
+  }`}
+  onClick={handleFollow}
+  disabled={follow}
+>
+  {follow ? (
+    <span
+  style={{
+    width: 14,
+    height: 14,
+    border: "2px solid currentColor",
+    borderTop: "2px solid transparent",
+    borderRadius: "50%",
+    display: "inline-block",
+    animation: "spin 0.8s linear infinite",
+  }}
+/>
+  ) : null}
+
+  {following ? "Following" : "Follow"}
+</button>
+
+          </div>
+        </div>
+      )
+    }
+
                 {/* Meta row */}
 {/*
 
@@ -525,7 +659,7 @@ function pickRandom<T>(arr: T[]): T | null {
         <div className=" mb-2 overflow-x-auto">
           <div className="flex gap-8 min-w-max">
             {
-              (course?.user === user?.$id) && (
+              isOwner && (
                 <button 
                 onClick={() => setActiveTab("information")}
                 className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "information" ? 4 : 0, borderBottomColor: activeTab === "information" ? "#155dfc" : "", color: activeTab === "information" ? "#155dfc" : "#6a7282"}}>
@@ -541,7 +675,7 @@ function pickRandom<T>(arr: T[]): T | null {
             </button>
 
             {
-              (course?.user !== user?.$id) && (
+              !isOwner && (
                 <button 
               onClick={() => setActiveTab('review')}
               className="pb-2   font-semibold text-sm" style={{ borderBottomWidth: activeTab === "review" ? 4 : 0, borderBottomColor: activeTab === "review" ? "#155dfc" : "", color: activeTab === "review" ? "#155dfc" : "#6a7282"}}>
@@ -554,11 +688,11 @@ function pickRandom<T>(arr: T[]): T | null {
            </div>
 
           {
-            activeTab === "information" ? (
+            activeTab === "information" && isOwner  && (
               <div className="max-w-6xl mx-auto px-0 py-6 space-y-6">
 
   {/* 1. REVIEW STATUS */}
-  <section className="bg-yellow-50 border border-yellow-200 rounded-xl p-4" style={{borderWidth: 0.1}}>
+  {/* <section className="bg-yellow-50 border border-yellow-200 rounded-xl p-4" style={{borderWidth: 0.1}}>
     <h2 className="text-sm font-semibold text-yellow-800">
       Course Under Review
     </h2>
@@ -566,7 +700,7 @@ function pickRandom<T>(arr: T[]): T | null {
       This course is currently under review. Reviews typically take between 24 to 72 hours.
       You will be notified once the course becomes active.
     </p>
-  </section>
+  </section> */}
 
   {/* 2. COURSE META */}
   <section className="bg-white rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
@@ -632,10 +766,10 @@ function pickRandom<T>(arr: T[]): T | null {
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Pricing:</span>
           <span className="text-sm font-semibold text-gray-900">
-            Free
+            {JSON.parse(course?.price)?.isFree || `${JSON.parse(course?.price)?.currency} ${JSON.parse(course?.price)?.amount}`}
           </span>
           <span className="text-xs text-gray-400">
-            (Subscription)
+            ({JSON.parse(course?.price)?.type})
           </span>
         </div>
 
@@ -708,8 +842,9 @@ function pickRandom<T>(arr: T[]): T | null {
   </section>
 
 </div>
-            ) : (
-              activeTab === "lecture" ? (
+            ) }
+            
+            { activeTab === "lecture" && (
                 <>
               <div className="flex items-center gap-2 mt-3 border-b border-gray-200 mb-8 pb-3 overflow-x-auto">
   <button
@@ -834,16 +969,7 @@ function pickRandom<T>(arr: T[]): T | null {
           viewMode={viewMode}
         />
 
-        <ConfirmFileDelete
-          isOpen={isFileDeleteOpen}
-          onClose={() => setIsFileDeleteOpen(false)}
-          onConfirm={async () => {
-            await deleteFileFromPost(postId, deleteUrl);
-            setIsFileDeleteOpen(false);
-            router.replace(`/`)
-          }}
-          fileName={""}
-        />
+        
 
         <NoUserModal 
           isOpen={showNoUserModal}
@@ -851,16 +977,7 @@ function pickRandom<T>(arr: T[]): T | null {
           onConfirm={() => router.push("/signup")}
         />
 
-        <ConfirmCourseDelete 
-          isOpen={isCourseDeleteOpen} 
-          onClose={() => setIsCourseDeleteOpen(false)}
-          onConfirm={async () => {
-            await deleteCourse(courseId);
-            setIsCourseDeleteOpen(false);
-            router.replace("/")
-          }}
-          courseTitle={course?.title}
-        />
+        
 
           <ConfirmPostDelete 
             isOpen={isPostDeleteOpen} 
@@ -896,27 +1013,11 @@ function pickRandom<T>(arr: T[]): T | null {
 
 
 
-{course && (
-  <EditCourseModal
-    isOpen={showEditCourse}
-    onClose={() => setShowEditCourse(false)}
-    course={{
-      id: course.id,
-      title: course.title,
-      code: course.code,
-      description: course.description,
-      university: course.university,
-      lecturer: course.lecturer,
-      thumbnailId: course.thumbnailId,
-      thumbnailUrl: course.thumbnailUrl,
-    }}
-    onUpdated={(updated) =>
-      setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)
-    }
-  />
-)}
+
               </>
-              ) : (
+              ) }
+              
+              { activeTab === "review" && !isOwner &&  (
                 <div>
                   {/* 4. REVIEWS */}
   <section className="bg-white rounded-xl " style={{marginTop: 40}}>
@@ -965,10 +1066,51 @@ function pickRandom<T>(arr: T[]): T | null {
       />
     </div>
               )
-            )
+          
           }
 
 
+<ConfirmFileDelete
+          isOpen={isFileDeleteOpen}
+          onClose={() => setIsFileDeleteOpen(false)}
+          onConfirm={async () => {
+            await deleteFileFromPost(postId, deleteUrl);
+            setIsFileDeleteOpen(false);
+            router.replace(`/`)
+          }}
+          fileName={""}
+        />
+
+{course && (
+  <EditCourseModal
+    isOpen={showEditCourse}
+    onClose={() => setShowEditCourse(false)}
+    course={{
+      id: course.id,
+      title: course.title,
+      code: course.code,
+      description: course.description,
+      university: course.university,
+      lecturer: course.lecturer,
+      thumbnailId: course.thumbnailId,
+      thumbnailUrl: course.thumbnailUrl,
+    }}
+    onUpdated={(updated) =>
+      setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)
+    }
+  />
+)}
+
+<ConfirmCourseDelete 
+          isOpen={isCourseDeleteOpen} 
+          onClose={() => setIsCourseDeleteOpen(false)}
+          onConfirm={async () => {
+            await deleteCourse(courseId);
+            setIsCourseDeleteOpen(false);
+            router.replace("/")
+          }}
+          courseTitle={course?.title}
+        />
 
       </main>
     </div>

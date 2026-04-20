@@ -318,7 +318,7 @@ export default function DashboardUnderReviewPage() {
     title="Deep Analytics" 
     desc="Track student engagement, visits, and content performance." 
     enabled={isContributorActive}
-    link={`/contributor/dashboard/${user?.$id}/analytics`}
+    link={`/contributor/dashboard/deep-analytics`}
     index={2}
   />
 
@@ -328,7 +328,7 @@ export default function DashboardUnderReviewPage() {
     title="Subscriptions & Payments" 
     desc="Monitor paid subscribers and payouts across your work." 
     enabled={isContributorActive}
-    link={`/contributor/dashboard/${user?.$id}/earnings`}
+    link={`/contributor/dashboard/subscriptions-and-earnings`}
     index={3}
   />
 
@@ -388,8 +388,8 @@ function ActionCard({
   index?: number;
 }) {
 const gradientConfigs = [
-  { from: "#3b82f6", to: "#8b5cf6" }, // Blue → Violet (clean, modern default)
-  { from: "#3b82f6", to: "#06b6d4" }, // Blue → Cyan (fresh, techy)
+  { from: "#3b82f6", to: "#06b6d4" }, // Blue → Violet (clean, modern default)
+  { from: "#3b82f6", to: "#8b5cf6" }, // Blue → Cyan (fresh, techy)
   { from: "#3b82f6", to: "#10b981" }, // Blue → Emerald (calm, trustworthy)
   { from: "#3b82f6", to: "#f97316" }, // Blue → Orange (balanced contrast)
   { from: "#3b82f6", to: "#ec4899" }, // Blue → Pink (vibrant but controlled)

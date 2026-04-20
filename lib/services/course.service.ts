@@ -58,16 +58,19 @@ export async function fetchCoursesByAdminService(userId: string) {
       Query.orderDesc("$updatedAt"),
     ]
   );
+  console.log(res, "Courses")
 
   return res.documents.map(mapCourse);
 }
 
 export async function fetchCourseByIdService(courseId: string) {
+  
   const doc = await databases.getDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
     courseId
   );
+
 
   return mapCourse(doc);
 }
@@ -308,8 +311,8 @@ export async function recordCourseVisitService(courseId: string, userId: string)
   }
 
   // Update reached: add userId if not present
-  if (!analytics.reached.includes(userId)) {
-    analytics.reached.push(userId);
+  if (!analytics?.reached?.includes(userId)) {
+    analytics?.reached?.push(userId);
   }
 
   // Update visits_per_day: increment current day
