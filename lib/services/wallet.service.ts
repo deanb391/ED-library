@@ -91,7 +91,7 @@ export async function topUpWalletService(params: {
     email: params.email,
     tx_ref: payment.$id,
     description: "Wallet Top-up",
-    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/wallet/verify?paymentId=${payment.$id}`,
+    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/wallet/topup/verify?paymentId=${payment.$id}`,
   });
 
   return {
