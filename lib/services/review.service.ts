@@ -4,6 +4,8 @@ import { databases, getUserById } from "@/lib/appwrite/server";
 const DATABASE_ID = "69617e75000c6c010a75";
 const REVIEW_COLLECTION = "course_review_and_rating";
 
+
+
 export type ReviewDraft = {
   courses: {};
   user: string | {};

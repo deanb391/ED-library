@@ -96,11 +96,17 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+interface ReviewUser {
+  username: string;
+  image?: string;
+  avatar?: string;
+}
+
 function ReviewItem({ review }: { review: Review }) {
   const rating = Math.max(0, Math.min(5, Math.round(review.rating ?? 0)));
   const stars = `${"★".repeat(rating)}${"☆".repeat(5 - rating)}`;
-  const user = review.user || "Anonymous";
-  console.log("Review", user)
+  const user = review.user as ReviewUser || "Anonymous";
+
   const createdAt = review.$createdAt
     ? new Date(review.$createdAt).toLocaleDateString(undefined, {
         year: "numeric",
@@ -349,10 +355,11 @@ function pickRandom<T>(arr: T[]): T | null {
 
 const isOwner = course?.user === user?.$id;
 
-const effectiveTabs = React.useMemo(() => {
-  if (isOwner) return ["information", "lecture"] as const;
-  return ["lecture", "review"] as const;
+const effectiveTabs: Tab[] = React.useMemo(() => {
+  if (isOwner) return ["information", "lecture"];
+  return ["lecture", "review"];
 }, [isOwner]);
+
 
 useEffect(() => {
   if (!effectiveTabs.includes(activeTab)) {
@@ -766,10 +773,10 @@ const handleFollow = async () => {
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Pricing:</span>
           <span className="text-sm font-semibold text-gray-900">
-            {JSON.parse(course?.price)?.isFree || `${JSON.parse(course?.price)?.currency} ${JSON.parse(course?.price)?.amount}`}
+            {JSON.parse(course?.price || "")?.isFree || `${JSON.parse(course?.price || "")?.currency} ${JSON.parse(course?.price || "")?.amount}`}
           </span>
           <span className="text-xs text-gray-400">
-            ({JSON.parse(course?.price)?.type})
+            ({JSON.parse(course?.price || "")?.type})
           </span>
         </div>
 
@@ -793,7 +800,9 @@ const handleFollow = async () => {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <Stat label="Avg Rating" value={`${avgRating.toFixed(1)} ⭐`} />
       <Stat label="Reviews" value={totalReviews.toString()} />
-      <Stat label="Avg Daily Visits" value={Math.round(Object.values(visitsPerDay).reduce((a, b) => a + b, 0) / 7)} />
+      <Stat label="Avg Daily Visits" value={Math.round(
+    Object.values(visitsPerDay).reduce((a, b) => a + b, 0) / 7
+  ).toString()} />
       <Stat label="Total Reach" value={totalReach.toString()} />
     </div>
 <div style={{marginTop: 50}}>
