@@ -25,6 +25,7 @@ import deskImg from "@/assets/images/desk.webp";
 import { Course } from '@/lib/api/courses';
 import { useUser } from '@/context/UserContext';
 import { fetchCoursesByAdmin } from '@/lib/api/courses';
+import Message from '@/components/Message';
 
 function CourseSection({
   title,
@@ -293,6 +294,8 @@ export default function DashboardUnderReviewPage() {
     </div>
   </div>
 
+
+
   {/* RIGHT SIDE - FIRST ACTION */}
   <ActionCard 
     icon={<PlusCircle size={20} />} 
@@ -362,6 +365,22 @@ export default function DashboardUnderReviewPage() {
               <CourseSection title='My Courses' courses={courses} />
 
           </div>
+{/* 
+            <Message
+  type="success"
+  title="Payment Successful"
+  message="Your course has been added to your library."
+/>
+
+<Message
+  type="error"
+  title="Payment Failed"
+  message="Something went wrong. Try again."
+/>
+
+<Message
+  message="This is just an informational message."
+/> */}
         </main>
 
       </div>

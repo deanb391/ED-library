@@ -5,6 +5,7 @@ import { getPaymentById, updatePaymentStatus } from "@/lib/services/payments.ser
 import { createEarningService } from "@/lib/services/earnings.service";
 import { addCourseToLibraryService } from "@/lib/services/library.service";
 import { creditWalletService } from "@/lib/services/wallet.service";
+import { fetchContributorService } from "@/lib/services/contributors.service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -42,14 +43,17 @@ export async function GET(request: Request) {
       const rev = 0.15 * payment.amount;
 
       // 5. Actually top up the user's wallet!
-      await createEarningService({amount: payment.amount, description: payment.description, courses: payment.courses, type: payment.type, contributorId: contributorId});
+      await createEarningService({amount: rev, description: payment.description, courses: payment.courses, type: payment.type, contributorId: contributorId});
 
-      for (const course in JSON.parse(payment.courses)) {
-        await addCourseToLibraryService(course, payment.user, payment.type)
-      }
+      const courseIds = JSON.parse(payment.courses)
+    for (const course of courseIds) {
+      await addCourseToLibraryService(course, payment.user.$id, payment.type)
+    }
 
+      const Contributor = await fetchContributorService(contributorId)
       
-      await creditWalletService(contributorId, rev)
+          
+      await creditWalletService(Contributor.user, rev)
       
 
       return NextResponse.json({ success: true });

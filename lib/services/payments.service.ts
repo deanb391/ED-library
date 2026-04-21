@@ -164,7 +164,7 @@ export async function payForCourseService(params: {
     email: params.email,
     tx_ref: payment.$id,
     description: payment.description || "",
-    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/subscribe/usbscribe-to-contributor/verify?paymentId=${payment.$id}`,
+    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/subscribe/usbscribe-to-contributor/verify?paymentId=${payment.$id}&contributorId=${params.contributorId}`,
   });
 
   if (!flutter?.data?.link) {

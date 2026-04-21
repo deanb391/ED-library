@@ -136,6 +136,7 @@ const handleConfirm = async () => {
   } catch (err) {
     console.error("Payment failed:", err);
     setShowPaymentModal(false);
+    router.push("/subscribe/usbscribe-to-contributor/failed");
   } finally {
     setLoading(false);
   }
