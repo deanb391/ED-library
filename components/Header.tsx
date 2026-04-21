@@ -28,6 +28,7 @@ export default function Header() {
     user,
     loading,
     hasWallet,
+    hasLibrary,
     contributor,
     contributorLoading,
   } = useUser();
@@ -105,6 +106,17 @@ export default function Header() {
       )}
 
       {
+        hasLibrary && (
+          <>
+          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
+
+      <MenuItem icon={Info} label="Library" href="/library" onSelect={onSelect} />
+          </>
+          
+        )
+      }
+
+      {
         hasWallet && (
           <>
           <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
@@ -159,6 +171,14 @@ export default function Header() {
               </Link>
             )
           )}
+
+          {
+            hasLibrary && (
+              <Link href="/library" className="hover:text-blue-600">
+            Library
+          </Link>
+            )
+          }
 
           {
             hasWallet && (

@@ -36,6 +36,15 @@ export async function debitWallet(userId: string, amount: number, description: s
   return res.json();
 }
 
+export async function creditWallet(userId: string, amount: number) {
+  const res = await fetch("/api/wallet/credit", {
+    method: "POST",
+    body: JSON.stringify({ userId, amount }),
+  });
+
+  return res.json();
+}
+
 export async function verifyPayment(paymentId: string) {
   const res = await fetch(`/api/wallet/verify?paymentId=${encodeURIComponent(paymentId)}&`, {
     method: "GET",

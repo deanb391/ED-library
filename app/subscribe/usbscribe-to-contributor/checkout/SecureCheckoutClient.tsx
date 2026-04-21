@@ -12,6 +12,8 @@ import { fetchCourse } from "@/lib/api/courses";
 import { payForCourse } from "@/lib/api/payments";
 import { fetchWallet } from "@/lib/api/wallet";
 import { useUser } from "@/context/UserContext";
+import { getContributor, getMyContributor } from "@/lib/api/contributors";
+import { Contributor } from "@/lib/services/contributors.service";
 
 const BRAND_BLUE = "#1C64F2";
 
@@ -19,6 +21,7 @@ type CheckoutCourse = {
   id: string;
   title: string;
   price: number;
+  user: string;
 };
 
 export default function SecureCheckoutPage() {
@@ -34,6 +37,7 @@ export default function SecureCheckoutPage() {
   const [wallet, setWallet] = useState<any>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"wallet" | "flutterwave">("flutterwave");
   const {user} = useUser()
+  const [contributor, setContributor] = useState<Contributor>()
 
   const router = useRouter();
 
@@ -56,13 +60,19 @@ export default function SecureCheckoutPage() {
               id: course.id,
               title: course.title,
               price: priceData?.isFree ? 0 : priceData?.amount || 0,
+              user: course.user
             });
           } catch (err) {
             console.error("Failed to fetch course:", id, err);
           }
         }
-
         setCourses(results);
+
+        const res = await getMyContributor(results[0].user)
+        if (!res) return;
+        setContributor(res);
+
+        
       } catch (err) {
         console.error("Checkout fetch failed:", err);
         setCourses([]);
@@ -75,7 +85,6 @@ export default function SecureCheckoutPage() {
       try {
         if (user?.$id) {
           const walletData = await fetchWallet(user.$id);
-          console.log("Waller=t, ", walletData.wallet)
           setWallet(walletData.wallet);
         }
       } catch (err) {
@@ -107,9 +116,11 @@ const handleConfirm = async () => {
       return
     }
 
+    if (!contributor) return;
+
     if (selectedPaymentMethod === "wallet") {
       setShowPaymentModal(true);
-      const res = await payForCourse(ids, user.$id, user.email, "wallet", "subscription");
+      const res = await payForCourse(ids, user.$id, user.email, "wallet", "subscription", contributor.$id);
       if (res.success) {
         router.push("/subscribe/usbscribe-to-contributor/success");
       } else {
@@ -117,7 +128,7 @@ const handleConfirm = async () => {
       }
       setShowPaymentModal(false);
     } else {
-      const res = await payForCourse(ids, user.$id, user.email, "flutterwave", "subscription");
+      const res = await payForCourse(ids, user.$id, user.email, "flutterwave", "subscription", contributor.$id);
       if (res.checkoutUrl) {
         window.location.href = res.checkoutUrl;
       }

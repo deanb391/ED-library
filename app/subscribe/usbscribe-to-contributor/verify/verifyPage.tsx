@@ -10,6 +10,7 @@ export default function VerifyPaymentPage() {
   const searchParams = useSearchParams();
 
   const paymentId = searchParams.get("paymentId");
+  const contributorId = searchParams.get("contributorId");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("Verifying your payment...");
@@ -19,11 +20,12 @@ export default function VerifyPaymentPage() {
       if (!paymentId) {
         router.replace("/subscribe/usbscribe-to-contributor/failed");
         return;
-      }
+      } 
+      if (!contributorId) return;
 
       try {
         const res = await fetch(
-          `/api/payments/verify?paymentId=${encodeURIComponent(paymentId)}`,
+          `/api/payments/verify?paymentId=${encodeURIComponent(paymentId)}&contributorId=${encodeURIComponent(contributorId)}`,
           {
             method: "GET",
           }

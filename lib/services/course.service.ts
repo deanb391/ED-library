@@ -58,7 +58,6 @@ export async function fetchCoursesByAdminService(userId: string) {
       Query.orderDesc("$updatedAt"),
     ]
   );
-  console.log(res, "Courses")
 
   return res.documents.map(mapCourse);
 }

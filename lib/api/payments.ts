@@ -1,10 +1,10 @@
-export async function payForCourse(courseIds: string[], userId: string, email: string, paymentMethod: string, type: string) {
+export async function payForCourse(courseIds: string[], userId: string, email: string, paymentMethod: string, type: string, contributorId: string) {
   const res = await fetch("/api/payments/subscribe", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ courseIds, userId, email, paymentMethod, type}),
+    body: JSON.stringify({ courseIds, userId, email, paymentMethod, type, contributorId}),
   });
 
   if (!res.ok) {

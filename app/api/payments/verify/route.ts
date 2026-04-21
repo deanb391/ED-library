@@ -1,29 +1,65 @@
+// app/api/payments/verify/route.ts
 import { NextResponse } from "next/server";
-import { verifyPaymentService } from "@/lib/services/payments.service";
+import { verifyFlutterwaveTransaction } from "@/lib/services/flutterwave.service"; // adjust import
+import { getPaymentById, updatePaymentStatus } from "@/lib/services/payments.service"; // adjust import
+import { createEarningService } from "@/lib/services/earnings.service";
+import { addCourseToLibraryService } from "@/lib/services/library.service";
+import { creditWalletService } from "@/lib/services/wallet.service";
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const paymentId = searchParams.get("paymentId");
+  const contributorId = searchParams.get("contributorId");
+
+  if (!paymentId) {
+    return NextResponse.json({ success: false, error: "Missing paymentId" }, { status: 400 });
+  }
+
+  if (!contributorId) {
+    return NextResponse.json({ success: false, error: "Missing contributorId" }, { status: 400 });
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const paymentId = searchParams.get("paymentId");
+    // 1. Fetch the payment record from your database
+    const payment = await getPaymentById(paymentId);
+    if (!payment) throw new Error("Payment not found");
 
-    if (!paymentId) {
-      return NextResponse.json(
-        { error: "Missing paymentId" },
-        { status: 400 }
-      );
+    // 2. CRITICAL: Prevent double-crediting!
+    // If the payment is already successful, the wallet was already credited.
+    if (payment.status === "successful" || payment.status === "completed") {
+      return NextResponse.json({ success: true, message: "Already verified" });
     }
 
-    const result = await verifyPaymentService(paymentId);
+    // 3. Verify the actual transaction with Flutterwave
+    // (Ensure the amount paid matches the amount in your database)
+    const isVerified = await verifyFlutterwaveTransaction(paymentId);
+    
+    if (isVerified) {
+      // 4. Mark payment as successful in the database
+      await updatePaymentStatus(paymentId, "successful");
 
-    return NextResponse.json({
-      success: result.success,
-    });
+
+      const rev = 0.15 * payment.amount;
+
+      // 5. Actually top up the user's wallet!
+      await createEarningService({amount: payment.amount, description: payment.description, courses: payment.courses, type: payment.type, contributorId: contributorId});
+
+      for (const course in JSON.parse(payment.courses)) {
+        await addCourseToLibraryService(course, payment.user, payment.type)
+      }
+
+      
+      await creditWalletService(contributorId, rev)
+      
+
+      return NextResponse.json({ success: true });
+    } else {
+      // Handle failed Flutterwave verification
+      await updatePaymentStatus(paymentId, "failed");
+      return NextResponse.json({ success: false, error: "Payment verification failed at provider" });
+    }
   } catch (error) {
-    console.error("Verify API error:", error);
-
-    return NextResponse.json(
-      { error: "Verification failed" },
-      { status: 500 }
-    );
+    console.error("Payment verification error:", error);
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

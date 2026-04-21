@@ -1,15 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Landmark,
   Wallet,
-  ChevronDown,
   Monitor,
   GraduationCap,
   ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
+import { fetchWallet } from "@/lib/api/wallet";
+import { fetchContributorEarnings } from "@/lib/api/earnings";
+
 import {
   LineChart,
   Line,
@@ -19,133 +22,130 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const TRANSACTIONS = [
-  {
-    id: 1,
-    name: "Sarah Jenkins",
-    action: "subscribed",
-    plan: "Premium Tier - Monthly",
-    amount: "+$29.00",
-    date: "Today, 10:42 AM",
-    type: "subscription",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    action: "purchased",
-    plan: "Advanced UI Design Course",
-    amount: "+$149.00",
-    date: "Yesterday, 4:15 PM",
-    type: "purchase",
-  },
-  {
-    id: 3,
-    name: "Elena Rodriguez",
-    action: "subscribed",
-    plan: "Pro Tier - Annual",
-    amount: "+$290.00",
-    date: "Oct 24, 09:20 AM",
-    type: "subscription",
-  },
-  {
-    id: 4,
-    name: "David Smith",
-    action: "purchased",
-    plan: "Figma Mastery Bundle",
-    amount: "+$89.00",
-    date: "Oct 22, 11:05 AM",
-    type: "purchase",
-  },
-  {
-    id: 5,
-    name: "Alex Johnson",
-    action: "subscribed",
-    plan: "Premium Tier - Monthly",
-    amount: "+$29.00",
-    date: "Oct 21, 02:30 PM",
-    type: "subscription",
-  },
-];
+/* ===================== CHART PROCESSOR ===================== */
 
+function processEarningsData(
+  earnings: any[],
+  range: "7d" | "30d" | "1y"
+) {
+  const now = new Date();
 
+  if (range === "7d") {
+    const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const result: Record<string, number> = {
+      Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0,
+    };
 
-interface AnalyticsChartProps {
-  title?: string;
-  subtitle?: string;
-  data: {
-    mon: number;
-    tue: number;
-    wed: number;
-    thu: number;
-    fri: number;
-    sat: number;
-    sun: number;
-  };
+    earnings.forEach((e) => {
+      const date = new Date(e.$createdAt);
+      const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (diff <= 7) {
+        const day = days[date.getDay()];
+        result[day] += e.amount || 0;
+      }
+    });
+
+    return Object.entries(result).map(([day, value]) => ({ day, value }));
+  }
+
+  if (range === "30d") {
+    const result: { day: string; value: number }[] = [];
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+
+      const key = d.toLocaleDateString("en-GB", { day: "2-digit" });
+
+      const value = earnings
+        .filter((e) => {
+          const ed = new Date(e.$createdAt);
+          return ed.toDateString() === d.toDateString();
+        })
+        .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+      result.push({ day: key, value });
+    }
+
+    return result;
+  }
+
+  if (range === "1y") {
+    const months = [
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
+    ];
+
+    const result = months.map((m) => ({ day: m, value: 0 }));
+
+    earnings.forEach((e) => {
+      const date = new Date(e.$createdAt);
+      const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
+
+      if (diff <= 365) {
+        result[date.getMonth()].value += e.amount || 0;
+      }
+    });
+
+    return result;
+  }
+
+  return [];
 }
 
-function AnalyticsChart({
-  title = "Earnings Growth",
-  subtitle = "Last 7 Days",
-  data,
-}: AnalyticsChartProps) {
-  const chartData = [
-    { day: "Mon", value: data.mon },
-    { day: "Tue", value: data.tue },
-    { day: "Wed", value: data.wed },
-    { day: "Thu", value: data.thu },
-    { day: "Fri", value: data.fri },
-    { day: "Sat", value: data.sat },
-    { day: "Sun", value: data.sun },
-  ];
+/* ===================== CHART ===================== */
 
+function AnalyticsChart({
+  data,
+  range,
+  setRange,
+}: {
+  data: any[];
+  range: string;
+  setRange: (r: "7d" | "30d" | "1y") => void;
+}) {
   return (
     <div className="bg-white rounded-3xl p-6 border border-gray-100 w-full">
-
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-500">{subtitle}</p>
+          <h3 className="text-lg font-bold text-gray-900">
+            Earnings Growth
+          </h3>
+          <p className="text-sm text-gray-500">
+            {range === "7d"
+              ? "Last 7 Days"
+              : range === "30d"
+              ? "Last 30 Days"
+              : "This Year"}
+          </p>
         </div>
 
-        <select className="bg-white border border-gray-200 text-gray-600 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none">
-          <option>Last 7 Days</option>
-          <option>Last 30 Days</option>
-          <option>This Year</option>
+        <select
+          value={range}
+          onChange={(e) =>
+            setRange(e.target.value as "7d" | "30d" | "1y")
+          }
+          className="bg-white border border-gray-200 text-gray-600 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none"
+        >
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+          <option value="1y">This Year</option>
         </select>
       </div>
 
-      {/* Chart */}
       <div className="w-full h-56" style={{height: 220}}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-          >
-            <XAxis
-              dataKey="day"
-              tick={{ fontSize: 12, fill: "#9CA3AF" }}
-              axisLine={true}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 12, fill: "#9CA3AF" }}
-              axisLine={true}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: 12,
-                border: "1px solid #E5E7EB",
-              }}
-            />
+          <LineChart data={data}>
+            <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip />
             <Line
               type="monotone"
               dataKey="value"
               stroke="#2563EB"
               strokeWidth={2.5}
               dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -154,93 +154,119 @@ function AnalyticsChart({
   );
 }
 
+/* ===================== PAGE ===================== */
+
 export default function EarningsPage() {
   const router = useRouter();
+  const { user, contributor } = useUser();
+
+  const [wallet, setWallet] = useState<any>(null);
+  const [earnings, setEarnings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<"7d" | "30d" | "1y">("7d");
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.$id) return;
+      if (!contributor?.$id) return;
+
+      try {
+        setLoading(true);
+
+        const [walletRes, earningsRes] = await Promise.all([
+          fetchWallet(user.$id),
+          fetchContributorEarnings(contributor.$id),
+        ]);
+        console.log(earningsRes)
+
+        setWallet(walletRes.wallet);
+        setEarnings(earningsRes.earnings || []);
+      } catch (err) {
+        console.error("Load failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [user?.$id]);
+
+  const chartData = processEarningsData(earnings, range);
+
+  const totalEarnings = earnings.reduce(
+    (sum, e) => sum + (e.amount || 0),
+    0
+  );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+    <p className="text-gray-700 text-sm">Loading, please wait...</p>
+  </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col text-gray-900 pb-20">
-
-      {/* MAIN WRAPPER (THIS FIXES YOUR ISSUE) */}
       <main className="flex-1 w-full">
-        
-        {/* Constrained container */}
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
           {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <button
-                onClick={() => router.back()}
-                className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition mt-1"
-              >
-                <ArrowLeft size={20} />
-              </button>
+          <div className="flex items-start gap-3">
+            <button onClick={() => router.back()}>
+              <ArrowLeft size={20} />
+            </button>
 
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                  Earnings & Subscriptions
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Manage your revenue and track recent transactions.
-                </p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold">
+                Earnings & Subscriptions
+              </h2>
+              <p className="text-sm text-gray-500">
+                Manage your revenue and track transactions.
+              </p>
             </div>
           </div>
 
-          {/* Total Earnings */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-100">
+          {/* Balance */}
+          <div className="bg-white rounded-3xl p-6 ">
             <div className="flex items-center gap-2 text-gray-500 mb-4">
               <Landmark size={20} />
-              <span className="text-sm font-medium">Available balance</span>
+              <span className="text-sm">Available balance</span>
             </div>
 
-            <h3 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              NGN 124,500.00
+            <h3 className="text-4xl font-extrabold">
+              NGN {wallet?.balance?.toLocaleString() || "0"}
             </h3>
 
             <p className="text-sm text-gray-400 mt-2 mb-6">
-              Total Earnings: NGN 4,200,000.00
+              Total Earnings: NGN {totalEarnings.toLocaleString()}
             </p>
 
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2">
+            <button className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2">
               <Wallet size={18} />
               Withdraw Funds
             </button>
           </div>
 
-        <AnalyticsChart
-  data={{
-    mon: 120,
-    tue: 210,
-    wed: 180,
-    thu: 260,
-    fri: 300,
-    sat: 220,
-    sun: 340,
-  }}
-/>
+          {/* Chart */}
+          <AnalyticsChart
+            data={chartData}
+            range={range}
+            setRange={setRange}
+          />
 
           {/* Transactions */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold">Recent Transactions</h3>
-
-              <button className="text-blue-600 text-sm font-semibold">
-                View All
-              </button>
-            </div>
+          <div className="bg-white rounded-3xl p-6">
+            <h3 className="text-lg font-bold mb-6">
+              Recent Transactions
+            </h3>
 
             <div className="space-y-6">
-              {TRANSACTIONS.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        tx.type === "subscription"
-                          ? "bg-purple-50 text-purple-600"
-                          : "bg-blue-50 text-blue-600"
-                      }`}
-                    >
+              {earnings.map((tx) => (
+                <div key={tx.$id} className="flex justify-between">
+                  <div className="flex gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
                       {tx.type === "subscription" ? (
                         <Monitor size={20} />
                       ) : (
@@ -249,17 +275,22 @@ export default function EarningsPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm text-gray-900">
-                        <span className="font-semibold">{tx.name}</span>{" "}
-                        {tx.action}
+                      <p className="text-sm font-semibold">
+                        {tx.description || "Earning"}
                       </p>
-                      <p className="text-xs text-gray-500">{tx.plan}</p>
+                      <p className="text-xs text-gray-500">
+                        {tx.courses || "Course purchase"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm font-bold">{tx.amount}</p>
-                    <p className="text-[10px] text-gray-400">{tx.date}</p>
+                    <p className="font-bold">
+                      +₦{tx.amount?.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(tx.$createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               ))}

@@ -1,9 +1,12 @@
 import { databases } from "@/lib/appwrite/server";
 import { ID } from "appwrite";
 import { fetchCourseByIdService } from "@/lib/services/course.service";
-import {  debitWalletService } from "@/lib/services/wallet.service";
+import {  creditWalletService, debitWalletService } from "@/lib/services/wallet.service";
 import { initFlutterwavePayment } from "./flutterwave.service";
 import { verifyFlutterwaveTransaction } from "./flutterwave.service";
+import { createEarningService } from "./earnings.service";
+import { addCourseToLibraryService } from "./library.service";
+import { fetchContributorService } from "./contributors.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const PAYMENTS_COLLECTION = "payments";
@@ -82,6 +85,7 @@ export async function payForCourseService(params: {
   courseIds: string[];
   type: "subscription" | "onetime";
   walletBalance?: number;
+  contributorId: string;
 }) {
   let total = 0;
   const courses: any[] = [];
@@ -126,6 +130,21 @@ export async function payForCourseService(params: {
       description: "Wallet payment",
       transactionId: "WALLET_" + payment.$id,
     });
+
+    const rev = 0.85 * payment.amount;
+
+    await createEarningService({amount: rev, description: payment.description, courses: payment.courses, type: payment.type, contributorId: params.contributorId});
+    
+
+    const courseIds = JSON.parse(payment.courses)
+    for (const course of courseIds) {
+      await addCourseToLibraryService(course, payment.user.$id, payment.type)
+    }
+
+    const Contributor = await fetchContributorService(params.contributorId)
+
+    
+    await creditWalletService(Contributor.user, rev)
 
     return {
       type: "wallet",

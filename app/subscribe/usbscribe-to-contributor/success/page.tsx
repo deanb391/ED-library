@@ -37,7 +37,7 @@ export default function SubscriptionSuccessPage() {
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-3">
-          <Link href="/courses" className="w-full">
+          <Link href="/library" className="w-full">
             <button 
               className="w-full text-white font-bold text-lg py-4 px-4 rounded-xl shadow-sm transition-transform active:scale-[0.98] leading-tight"
               style={{ backgroundColor: BRAND_BLUE }}
