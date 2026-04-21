@@ -31,11 +31,15 @@ export default function VerifyPaymentPage() {
           }
         );
 
-        if (!res.ok) {
-          throw new Error("Verification failed");
-        }
-
         const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data?.error || "Verification failed");
+          }
+
+          if (!data.success) {
+  throw new Error(data?.error || "Payment not successful");
+}
 
         if (data?.success) {
           setMessage("Payment verified. Redirecting...");
