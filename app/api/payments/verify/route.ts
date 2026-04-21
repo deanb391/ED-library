@@ -23,45 +23,66 @@ export async function GET(request: Request) {
   try {
     // 1. Fetch the payment record from your database
     const payment = await getPaymentById(paymentId);
-    if (!payment) throw new Error("Payment not found");
+if (!payment) throw new Error("Payment not found");
 
-    // 2. CRITICAL: Prevent double-crediting!
-    // If the payment is already successful, the wallet was already credited.
-    if (payment.status === "successful" || payment.status === "completed") {
-      return NextResponse.json({ success: true, message: "Already verified" });
-    }
+if (payment.status === "successful" || payment.status === "completed") {
+  return NextResponse.json({ success: true, message: "Already verified" });
+}
 
-    // 3. Verify the actual transaction with Flutterwave
-    // (Ensure the amount paid matches the amount in your database)
-    const isVerified = await verifyFlutterwaveTransaction(paymentId);
-    
-    if (isVerified) {
-      // 4. Mark payment as successful in the database
-      await updatePaymentStatus(paymentId, "successful");
+const isVerified = await verifyFlutterwaveTransaction(paymentId);
 
+if (!isVerified) {
+  await updatePaymentStatus(paymentId, "failed");
+  return NextResponse.json(
+    { success: false, error: "Payment verification failed at provider" },
+    { status: 400 }
+  );
+}
 
-      const rev = 0.15 * payment.amount;
+// ✅ safe user extraction
+const userId =
+  typeof payment.user === "string"
+    ? payment.user
+    : payment.user?.$id;
 
-      // 5. Actually top up the user's wallet!
-      await createEarningService({amount: rev, description: payment.description, courses: payment.courses, type: payment.type, contributorId: contributorId});
+if (!userId) throw new Error("Invalid user on payment");
 
-      const courseIds = JSON.parse(payment.courses)
-    for (const course of courseIds) {
-      await addCourseToLibraryService(course, payment.user.$id, payment.type)
-    }
+// ✅ safe courses parsing
+let courseIds: string[] = [];
+try {
+  courseIds = JSON.parse(payment.courses || "[]");
+} catch {
+  courseIds = [];
+}
 
-      const Contributor = await fetchContributorService(contributorId)
-      
-          
-      await creditWalletService(Contributor.user, rev)
-      
+// ✅ contributor
+const contributor = await fetchContributorService(contributorId);
+if (!contributor) throw new Error("Contributor not found");
 
-      return NextResponse.json({ success: true });
-    } else {
-      // Handle failed Flutterwave verification
-      await updatePaymentStatus(paymentId, "failed");
-      return NextResponse.json({ success: false, error: "Payment verification failed at provider" });
-    }
+// ✅ update payment
+await updatePaymentStatus(paymentId, "successful");
+
+// ✅ revenue
+const rev = 0.15 * payment.amount;
+
+// ✅ earning record
+await createEarningService({
+  amount: rev,
+  description: payment.description,
+  courses: payment.courses,
+  type: payment.type,
+  contributorId,
+});
+
+// ✅ library
+for (const courseId of courseIds) {
+  await addCourseToLibraryService(courseId, userId, payment.type);
+}
+
+// ✅ wallet credit
+await creditWalletService(contributor.user, rev);
+
+return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Payment verification error:", error);
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
