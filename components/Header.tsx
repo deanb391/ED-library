@@ -225,7 +225,7 @@ export default function Header() {
             <>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="relative z-50 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-all active:scale-[0.90]"
+                className="relative z-100 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-all active:scale-[0.90]"
               >
                 <span
                   className={clsx(
@@ -261,9 +261,12 @@ export default function Header() {
     )}
   />
 
+  
+
   {/* Drawer */}
   {
     menuOpen && (
+
       <div
     className={clsx(
       "fixed right-0 top-0 h-full w-full max-w-lvh bg-white shadow-xl z-70 transition-transform duration-300 ease-out",
