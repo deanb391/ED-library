@@ -603,7 +603,7 @@ const handleFollow = async () => {
         </div>
 
         {
-      isOwner && (
+      !isOwner && (
         <div className="flex items-center gap-3 mb-3">
 
           {/* Avatar */}

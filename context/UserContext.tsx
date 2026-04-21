@@ -110,7 +110,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         await fetchContributorForUser(currentUser.$id);
 
         const walletRes = await fetchWallet(currentUser.$id);
-        if (walletRes) {
+        if (walletRes.wallet) {
           setHasWallet(true);
         }
         const libraryData = await fetchLibrary(currentUser.$id);

@@ -63,7 +63,7 @@ if (!contributor) throw new Error("Contributor not found");
 await updatePaymentStatus(paymentId, "successful");
 
 // ✅ revenue
-const rev = 0.15 * payment.amount;
+const rev = 0.85 * payment.amount;
 
 // ✅ earning record
 await createEarningService({
