@@ -10,10 +10,15 @@ export default function VerifyTopUpPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId");
+  const status = searchParams.get("status")
 
   useEffect(() => {
     const verify = async () => {
       try {
+
+        if (status === "cancelled" || "failed") {
+          router.push("/wallet/topup/failed");
+        } 
         const res = await verifyPayment(paymentId!);
 
         if (res.success) {

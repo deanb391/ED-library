@@ -495,7 +495,8 @@ export async function fetchCourseById(courseId: string) {
       department: course.department,
       level: course.level,
       analytics: course.analytics,
-      price: course.price
+      price: course.price,
+      pageCount: course.pageCount,
     })
 }
 

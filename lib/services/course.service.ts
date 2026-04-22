@@ -24,7 +24,8 @@ function mapCourse(doc: any) {
     level: doc.level,
     price: doc.price, 
     user: doc.user,
-    analytics: doc.analytics
+    analytics: doc.analytics,
+    pageCount: doc?.pageCount || 0,
   };
 }
 
@@ -194,13 +195,41 @@ export async function fetchPostsService(queries: any[]) {
   };
 }
 
+export async function fetchAllPostsService(queries: any[]) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    POST_COLLECTION,
+    queries
+  );
+
+  return {
+    posts: res.documents.map((doc: any) => ({
+      id: doc.$id,
+      images: doc.images ?? [],
+      description: doc.description ?? "",
+    })),
+    lastId:
+      res.documents.length > 0
+        ? res.documents[res.documents.length - 1].$id
+        : null,
+  };
+}
+
 export async function createPostService(data: any) {
-  return databases.createDocument(
+  const post = databases.createDocument(
     DATABASE_ID,
     POST_COLLECTION,
     ID.unique(),
     data
   );
+
+  const course = await fetchCourseByIdService(data.courseId)
+
+  await updateCourseService(data.courseId, {
+    pageCount: course.pageCount + data.images.length
+  })
+
+  return post
 }
 
 export async function updatePostService(postId: string, data: any) {

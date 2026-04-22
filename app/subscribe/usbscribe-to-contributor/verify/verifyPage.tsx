@@ -11,6 +11,7 @@ export default function VerifyPaymentPage() {
 
   const paymentId = searchParams.get("paymentId");
   const contributorId = searchParams.get("contributorId");
+  const status = searchParams.get("status")
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("Verifying your payment...");
@@ -22,6 +23,10 @@ export default function VerifyPaymentPage() {
         return;
       } 
       if (!contributorId) return;
+
+      if (status === "cancelled" || "failed") {
+          router.push("/subscribe/usbscribe-to-contributor/failed");
+        } 
 
       try {
         const res = await fetch(

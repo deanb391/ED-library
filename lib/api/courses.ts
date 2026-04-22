@@ -19,7 +19,8 @@ export type Course = {
   level: number;
   department: string;
   price?: string;
-  analytics?: string
+  analytics?: string,
+  pageCount?: string,
 };
 
 export async function uploadThumbnail(file: File) {
@@ -158,6 +159,12 @@ export async function appendFiles(courseId: string, urls: string[]) {
 export async function fetchPosts(courseId: string, cursor?: string) {
   const query = new URLSearchParams({ courseId, cursor: cursor || "" });
   const res = await fetch(`/api/posts/list?${query}`);
+  return res.json();
+}
+
+export async function fetchAllPosts(courseId: string,) {
+  const query = new URLSearchParams({ courseId});
+  const res = await fetch(`/api/posts/fetch-all?${query}`);
   return res.json();
 }
 

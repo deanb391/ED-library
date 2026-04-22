@@ -12,7 +12,7 @@ const DATABASE_ID = "69617e75000c6c010a75";
 const PAYMENTS_COLLECTION = "payments";
 
 export type PaymentStatus = "pending" | "successful" | "failed";
-export type PaymentType = "subscription" | "onetime" | "wallet_topup" | "withdrawal" | "debit";
+export type PaymentType = "subscription" | "one-time" | "wallet_topup" | "withdrawal" | "debit";
 
 export interface PaymentPayload {
   type: PaymentType;
@@ -83,7 +83,7 @@ export async function payForCourseService(params: {
   email: string;
   paymentMethod: "wallet" | "flutter";
   courseIds: string[];
-  type: "subscription" | "onetime";
+  type: "subscription" | "one-time";
   walletBalance?: number;
   contributorId: string;
 }) {

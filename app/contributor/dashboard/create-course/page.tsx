@@ -123,7 +123,8 @@ const handleCreateCourse = async ({ price, isFree }: { price: number; isFree: bo
         sat: 0,
         sun: 0
     }
-      })
+      }),
+      pageCount: 0,
     });
 
 

@@ -12,6 +12,7 @@ const BRAND_BLUE = "#2563EB";
 
 type SelectableCourse = Course & {
   included: boolean;
+  alreadyOwned?: boolean;
 };
 
 export default function SubscribeToCreatorPage() {
@@ -25,44 +26,76 @@ export default function SubscribeToCreatorPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetch_contributor_courses = async () => {
+  const fetch_contributor_courses = async () => {
+    try {
+      setLoading(true);
+
+      const contributorRes = await getContributor(slug);
+      setContributor(contributorRes);
+
+      if (!contributorRes) return;
+
+      const courseRes = await fetchCoursesByAdmin(contributorRes.user);
+
+      // ===== FETCH USER LIBRARY =====
+      let library: any = null;
+
       try {
-        setLoading(true);
-
-        const contributorRes = await getContributor(slug);
-        setContributor(contributorRes);
-
-        if(!contributorRes) return;
-
-        const courseRes = await fetchCoursesByAdmin(contributorRes.user);
-
-        const normalizedCourses: SelectableCourse[] = (courseRes || []).map(
-          (c: Course) => ({
-            ...c,
-            included: true,
-          })
-        );
-
-        setCourses(normalizedCourses);
-      } catch (error) {
-        setCourses([]);
-      } finally {
-        setLoading(false);
+        // ⚠️ Replace with your actual service
+        // library = await fetchUserLibrary(user.$id);
+      } catch {
+        library = null;
       }
-    };
 
-    if (slug) fetch_contributor_courses();
-  }, [slug]);
+      let oneTime: string[] = [];
+      let subscription: string[] = [];
+
+      try {
+        oneTime = library?.oneTime ? JSON.parse(library.oneTime) : [];
+        subscription = library?.subscription ? JSON.parse(library.subscription) : [];
+      } catch {
+        oneTime = [];
+        subscription = [];
+      }
+
+      const normalizedCourses: SelectableCourse[] = (courseRes || [])
+        // ===== FILTER ONLY ONGOING =====
+        .filter((c: Course) => c.isOnGoing === true)
+        .map((c: Course) => {
+          const alreadyOwned =
+            oneTime.includes(c.id) || subscription.includes(c.id);
+
+          return {
+            ...c,
+            included: alreadyOwned ? false : true,
+            alreadyOwned, // <-- new field
+          };
+        });
+
+      setCourses(normalizedCourses);
+    } catch (error) {
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (slug) fetch_contributor_courses();
+}, [slug]);
 
   const hasSelectedCourses = courses.some((c) => c.included);
 
   const toggleCourse = (id: string) => {
-    setCourses((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, included: !c.included } : c
-      )
-    );
-  };
+  setCourses((prev) =>
+    prev.map((c) => {
+      if (c.id !== id) return c;
+
+      if (c.alreadyOwned) return c; // 🚫 block toggle
+
+      return { ...c, included: !c.included };
+    })
+  );
+};
 
   const handleProceed = () => {
     const selectedIds = courses
@@ -72,7 +105,7 @@ export default function SubscribeToCreatorPage() {
     const query = selectedIds.join(",");
 
     router.push(
-      `/subscribe/usbscribe-to-contributor/checkout?courses=${query}`
+      `/subscribe/usbscribe-to-contributor/checkout?courses=${query}&type=${"subscription"}`
     );
   };
 
@@ -152,7 +185,19 @@ export default function SubscribeToCreatorPage() {
 
     {/* Courses List */}
     <section style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      {courses.map((course) => {
+      {courses.length === 0 ? (
+    <div
+      style={{
+        textAlign: "center",
+        padding: "2rem 1rem",
+        color: "#6b7280",
+        fontSize: "0.875rem",
+      }}
+    >
+      No ongoing courses available for subscription.
+    </div>
+  ) : (
+    courses.map((course) => {
         const priceData = course.price ? JSON.parse(course.price) : null;
         const isFree = priceData?.isFree;
         const amount = priceData?.amount;
@@ -250,6 +295,18 @@ export default function SubscribeToCreatorPage() {
                 {course.description}
               </p>
 
+              {course.alreadyOwned && (
+  <span
+    style={{
+      fontSize: "11px",
+      color: "#16a34a",
+      fontWeight: "600",
+    }}
+  >
+    Already Subscribed
+  </span>
+)}
+
               {/* Toggle Section */}
               <div
                 style={{
@@ -269,19 +326,30 @@ export default function SubscribeToCreatorPage() {
                   type="button"
                   role="switch"
                   aria-checked={course.included}
-                  onClick={() => toggleCourse(course.id)}
+                  onClick={() => {
+                    if (course.alreadyOwned) return;
+                    toggleCourse(course.id);
+                  }}
                   style={{
                     position: "relative",
                     width: 42,
                     height: 24,
                     borderRadius: 999,
-                    backgroundColor: course.included ? BRAND_BLUE : "#E5E7EB",
+                    backgroundColor: course.alreadyOwned
+                      ? "#d1d5db"
+                      : course.included
+                      ? BRAND_BLUE
+                      : "#E5E7EB",
                     transition: "background-color 0.25s ease",
                     display: "inline-flex",
                     alignItems: "center",
                     padding: 2,
                     border: "none",
-                    cursor: "pointer"
+                    cursor: course.alreadyOwned
+                      ? "not-allowed"
+                      : course.included
+                      ? "pointer"
+                      : "pointer",
                   }}
                 >
                   <span
@@ -300,7 +368,7 @@ export default function SubscribeToCreatorPage() {
             </div>
           </div>
         );
-      })}
+      }) )} 
     </section>
   </main>
 

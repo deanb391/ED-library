@@ -31,7 +31,6 @@ export default function LibraryPage() {
         setLoading(true);
 
         const lib = (await fetchLibrary(user.$id)).wallet;
-        console.log("LIbrary: ", lib)
 
         if (!lib) {
           setSubscriptionCourses([]);

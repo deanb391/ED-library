@@ -14,6 +14,8 @@ import { fetchWallet } from "@/lib/api/wallet";
 import { useUser } from "@/context/UserContext";
 import { getContributor, getMyContributor } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
+import { fetchAllPosts } from "@/lib/api/courses";
+import { addCourseToLibrary } from "@/lib/api/library";
 
 const BRAND_BLUE = "#1C64F2";
 
@@ -27,6 +29,7 @@ type CheckoutCourse = {
 export default function SecureCheckoutPage() {
   const searchParams = useSearchParams();
   const idsParam = searchParams.get("courses");
+  const type = searchParams.get("type");
   const courseIds = idsParam ? idsParam.split(",") : [];
 
   const [courses, setCourses] = useState<CheckoutCourse[]>([]);
@@ -38,6 +41,7 @@ export default function SecureCheckoutPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"wallet" | "flutterwave">("flutterwave");
   const {user} = useUser()
   const [contributor, setContributor] = useState<Contributor>()
+  const [showPaymentTransferModal, setShowPaymentTransferModal] = useState(false)
 
   const router = useRouter();
 
@@ -49,23 +53,30 @@ export default function SecureCheckoutPage() {
         const results: CheckoutCourse[] = [];
 
         for (const id of courseIds) {
-          try {
-            const course = await fetchCourse(id);
+  try {
+    const course = await fetchCourse(id);
 
-            const priceData = course?.price
-              ? JSON.parse(course.price)
-              : null;
+    const priceData = course?.price
+      ? JSON.parse(course.price)
+      : null;
 
-            results.push({
-              id: course.id,
-              title: course.title,
-              price: priceData?.isFree ? 0 : priceData?.amount || 0,
-              user: course.user
-            });
-          } catch (err) {
-            console.error("Failed to fetch course:", id, err);
-          }
-        }
+    let finalPrice = priceData?.isFree ? 0 : priceData?.amount || 0;
+    finalPrice = finalPrice * ( course?.pageCount || 0 )
+
+    // 👉 ONLY APPLY THIS LOGIC FOR ONE-TIME COURSES
+   
+
+    results.push({
+      id: course.id,
+      title: course.title,
+      price: finalPrice,
+      user: course.user
+    });
+
+  } catch (err) {
+    console.error("Failed to fetch course:", id, err);
+  }
+}
         setCourses(results);
 
         const res = await getMyContributor(results[0].user)
@@ -104,23 +115,41 @@ export default function SecureCheckoutPage() {
   const total = courses.reduce((sum, c) => sum + c.price, 0);
   const isFreeFlow = total === 0;
 
+  const handleShowModel = async () => {
+    if(isFreeFlow) {
+      setShowFreeModal(true);
+      if (!user) return;
+      if(!type) return;
+      const ids = courses.map((c) => c.id);
+      await addCourseToLibrary(user.$id, ids, type)
+      return;
+    }
+
+    if (selectedPaymentMethod === "flutterwave") {
+      setShowPaymentTransferModal(true);
+    } else if (selectedPaymentMethod === "wallet") {
+      handleConfirm()
+    }
+
+  }
+
 const handleConfirm = async () => {
   if (courses.length === 0 || !user?.$id || !user?.email) return;
 
   try {
+    setShowPaymentTransferModal(false);
     setLoading(true);
     const ids = courses.map((c) => c.id);
 
-    if (isFreeFlow) {
-      setShowFreeModal(true);
-      return
-    }
 
     if (!contributor) return;
+    if (!type) return;
+
+    
 
     if (selectedPaymentMethod === "wallet") {
       setShowPaymentModal(true);
-      const res = await payForCourse(ids, user.$id, user.email, "wallet", "subscription", contributor.$id);
+      const res = await payForCourse(ids, user.$id, user.email, "wallet", type, contributor.$id);
       if (res.success) {
         router.push("/subscribe/usbscribe-to-contributor/success");
       } else {
@@ -128,7 +157,7 @@ const handleConfirm = async () => {
       }
       setShowPaymentModal(false);
     } else {
-      const res = await payForCourse(ids, user.$id, user.email, "flutterwave", "subscription", contributor.$id);
+      const res = await payForCourse(ids, user.$id, user.email, "flutterwave", type, contributor.$id);
       if (res.checkoutUrl) {
         window.location.href = res.checkoutUrl;
       }
@@ -169,7 +198,7 @@ const handleConfirm = async () => {
               Checkout
             </h1>
             <p className="text-sm text-gray-500">
-              ED-Library Subscription
+              ED-Library { type === "subscription" ? "Subscription" : "Course Payment"}
             </p>
           </div>
         </div>
@@ -200,7 +229,7 @@ const handleConfirm = async () => {
                       {course.title}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Monthly access
+                      { type === "subscription" ? "Monthly access" : "FullTime Access"}
                     </p>
                   </div>
                 </div>
@@ -523,6 +552,60 @@ const handleConfirm = async () => {
 </div>
         )}
 
+        {showPaymentTransferModal && (
+          <div
+          onClick={() => setShowPaymentTransferModal(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 16,
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 400,
+                backgroundColor: "#fff",
+                borderRadius: 16,
+                padding: 20,
+              }}
+            >
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Payment Information
+              </h2>
+
+              <p className="text-sm text-gray-600 mb-4">
+                You will be redirected to complete your payment.  
+                If you are paying via bank transfer, the account name may appear as:
+              </p>
+
+              <div className="bg-gray-100 rounded-lg p-3 mb-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Blessed Okori (ED-Library)
+                </p>
+              </div>
+
+              <p className="text-xs text-gray-500 mb-5">
+                This is the official payment account for ED-Library.  
+                Please proceed only if the details match.
+              </p>
+
+              <button
+                onClick={handleConfirm}
+                className="w-full py-3 rounded-xl text-white font-semibold"
+                style={{ backgroundColor: BRAND_BLUE }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
         {showFreeModal && (
           <div
   style={{
@@ -603,7 +686,7 @@ const handleConfirm = async () => {
 
         {/* CTA */}
         <button
-          onClick={handleConfirm}
+          onClick={handleShowModel}
           disabled={courses.length === 0}
           className="w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition"
           style={{

@@ -7,20 +7,39 @@ import { topUpWallet } from "@/lib/api/wallet";
 
 const BRAND_BLUE = "#2563EB";
 
+const MIN_AMOUNT = 100;
+
+const getFeePercent = (amount: number) => {
+  if (amount >= 100 && amount <= 999) return 0.05;
+  if (amount >= 1000 && amount <= 4999) return 0.04;
+  if (amount >= 5000) return 0.03;
+  return 0;
+};
+
 export default function TopUpPage() {
-  const [amount, setAmount] = useState<number>();
+  const [amount, setAmount] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   const { user } = useUser();
 
+  const isValidAmount = !!amount && amount >= MIN_AMOUNT;
+
+  const feePercent = isValidAmount ? getFeePercent(amount!) : 0;
+  const fee = isValidAmount ? amount! * feePercent : 0;
+  const totalAmount = isValidAmount ? amount! + fee : 0;
+
   const handleTopUp = async () => {
-    if (!amount || amount <= 0 || !user?.$id) return;
+    if (!isValidAmount || !user?.$id) return;
 
     try {
       setLoading(true);
 
-      const res = await topUpWallet(user.$id, amount, user?.email);
+      const res = await topUpWallet(
+        user.$id,
+        totalAmount,
+        user?.email
+      );
 
       if (!res?.checkoutUrl) {
         throw new Error("Failed to initialize top up");
@@ -36,84 +55,110 @@ export default function TopUpPage() {
 
   return (
     <div
-  style={{
-    minHeight: "100vh",
-    backgroundColor: "#F8F9FB",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "1rem",
-    boxSizing: "border-box",
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  }}
->
-  <div
-    style={{
-      width: "100%",
-      maxWidth: "448px",
-      backgroundColor: "#ffffff",
-      border: "1px solid #e5e7eb",
-      borderRadius: "16px",
-      padding: "1.5rem",
-      display: "flex",
-      flexDirection: "column",
-      gap: "1rem",
-      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-      boxSizing: "border-box"
-    }}
-  >
-    <h1
       style={{
-        fontSize: "1.125rem",
-        fontWeight: "600",
-        color: "#111827",
-        margin: 0
-      }}
-    >
-      Top Up Wallet
-    </h1>
-
-    <input
-      type="number"
-      value={amount}
-      onChange={(e) => setAmount(Number(e.target.value))}
-      placeholder="Enter amount"
-      style={{
-        width: "100%",
-        border: "1px solid #e5e7eb",
-        borderRadius: "12px",
-        padding: "0.75rem 1rem",
-        fontSize: "0.875rem",
-        color: "#111827",
-        outline: "none",
-        backgroundColor: "#ffffff",
+        minHeight: "100vh",
+        backgroundColor: "#F8F9FB",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
         boxSizing: "border-box",
-        transition: "border-color 0.2s ease-in-out"
-      }}
-      // Optional: Since pure inline styles lack pseudo-classes like :focus, 
-      // ensuring the outline is 'none' but giving it a clean default border works best here.
-    />
-
-    <button
-      onClick={handleTopUp}
-      disabled={loading}
-      style={{
-        width: "100%",
-        padding: "0.85rem 1.5rem",
-        borderRadius: "12px",
-        backgroundColor: BRAND_BLUE,
-        color: "#ffffff",
-        fontWeight: "600",
-        fontSize: "1rem",
-        border: "none",
-        cursor: loading ? "not-allowed" : "pointer",
-        opacity: loading ? 0.6 : 1,
-        transition: "opacity 0.2s ease-in-out"
+        fontFamily:
+          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      {loading ? "Processing..." : "Continue"}
-    </button>
-  </div>
-</div>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "448px",
+          backgroundColor: "#ffffff",
+          border: "1px solid #e5e7eb",
+          borderRadius: "16px",
+          padding: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+          boxSizing: "border-box",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: "600",
+            color: "#111827",
+            margin: 0,
+          }}
+        >
+          Top Up Wallet
+        </h1>
+
+        <input
+          type="number"
+          value={amount ?? ""}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          placeholder="Minimum deposit is NGN 100"
+          style={{
+            width: "100%",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
+            padding: "0.75rem 1rem",
+            fontSize: "0.875rem",
+            color: "#111827",
+            outline: "none",
+            backgroundColor: "#ffffff",
+            boxSizing: "border-box",
+          }}
+        />
+
+        {/* Fee breakdown */}
+        {isValidAmount && (
+          <div
+            style={{
+              backgroundColor: "#F3F4F6",
+              borderRadius: "12px",
+              padding: "0.75rem 1rem",
+              fontSize: "0.85rem",
+              color: "#374151",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+            }}
+          >
+            <div>
+              Transaction fee ({(feePercent * 100).toFixed(0)}%):{" "}
+              <strong>NGN {fee.toFixed(2)}</strong>
+            </div>
+
+            <div>
+              Total to be charged:{" "}
+              <strong>NGN {totalAmount.toFixed(2)}</strong>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={handleTopUp}
+          disabled={!isValidAmount || loading}
+          style={{
+            width: "100%",
+            padding: "0.85rem 1.5rem",
+            borderRadius: "12px",
+            backgroundColor: BRAND_BLUE,
+            color: "#ffffff",
+            fontWeight: "600",
+            fontSize: "1rem",
+            border: "none",
+            cursor:
+              !isValidAmount || loading ? "not-allowed" : "pointer",
+            opacity: !isValidAmount || loading ? 0.6 : 1,
+            transition: "opacity 0.2s ease-in-out",
+          }}
+        >
+          {loading ? "Processing..." : "Continue"}
+        </button>
+      </div>
+    </div>
   );
 }

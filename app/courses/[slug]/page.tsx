@@ -46,6 +46,7 @@ import { createReview, fetchReviews, Review, calculateCourseAverageRating } from
 import { getMyContributor, toggleFollowContributor } from '@/lib/api/contributors';
 import { Contributor } from '@/lib/services/contributors.service';
 import Link from 'next/link';
+import { fetchLibrary } from '@/lib/api/library';
 
 const data = [
   { day: "Mon", visits: 120 },
@@ -84,6 +85,7 @@ export type Course = {
     reached: string[];
     visits_per_day: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
   };
+  pageCount: number;
 };
 
 
@@ -201,6 +203,10 @@ const [contributor, setContributor] = useState<Contributor | null>(null)
 const [follow, setFollow] = useState(false);
   const [following, setFollowing] = useState(false);
 
+  const [hasAccess, setHasAccess] = useState<boolean>(true);
+const [accessTag, setAccessTag] = useState<"free" | "paid" | "owned" | "subscribed" | null>(null);
+const [priceMeta, setPriceMeta] = useState<any>(null);
+
 function pickRandom<T>(arr: T[]): T | null {
   if (!arr.length) return null;
   const index = Math.floor(Math.random() * arr.length);
@@ -296,6 +302,82 @@ function pickRandom<T>(arr: T[]): T | null {
     const courseDoc = await fetchCourseById(courseId);
     setCourse(courseDoc);
 
+    // ===== COURSE LOCKING LOGIC =====
+    try {
+      let library: any = null;
+
+      if (user) {
+        const res = (await fetchLibrary(user.$id)).wallet;
+        library = res;
+
+        // TEMP fallback (so app doesn’t crash if not implemented yet)
+        if (!library) {
+          library = null;
+        }
+        
+      }
+
+      let localHasAccess = true;
+  let localTag: "free" | "paid" | "owned" | "subscribed" | null = null;
+
+
+      let parsedPrice: any = null;
+
+      try {
+        parsedPrice = JSON.parse(courseDoc.price || "{}");
+      } catch {
+        parsedPrice = null;
+      }
+
+      setPriceMeta(parsedPrice);
+
+      const isFree = parsedPrice?.isFree === true;
+
+      if (isFree) {
+        localHasAccess = true;
+        localTag = "free";
+      } else {
+        const oneTime = library?.oneTime ? JSON.parse(library.oneTime) : [];
+        const subscription = library?.subscription ? JSON.parse(library.subscription) : [];
+
+        const isOwned = oneTime.includes(courseDoc.id);
+        const isSubscribed = subscription.includes(courseDoc.id);
+
+        if (isOwned) {
+          localHasAccess = true;
+          localTag = "owned";
+        } else if (isSubscribed) {
+          localHasAccess = true;
+          localTag = "subscribed";
+        } else {
+          localHasAccess = false;
+          localTag = "paid";
+
+        }
+      }
+
+      setHasAccess(localHasAccess);
+      setAccessTag(localTag);
+      setPriceMeta(parsedPrice);
+
+      // ===== NOW safe to decide view =====
+      const defaultView: ViewMode = courseDoc.isOnGoing ? "timeline" : "pdf";
+      setViewMode(localHasAccess ? defaultView : "pdf");
+
+      if (localHasAccess) {
+        if (courseDoc.isOnGoing) {
+          fetchTimeLine();
+        } else {
+          fetchPDf();
+        }
+      } else {
+        // locked users always get preview via PDF mode
+        fetchPDf();
+      }
+    } catch (err) {
+      console.error("COURSE LOCK ERROR:", err);
+    }
+
     try {
         const c_response = await getMyContributor(courseDoc?.user)
         setContributor(c_response);
@@ -337,15 +419,10 @@ function pickRandom<T>(arr: T[]): T | null {
       setTotalReach(data.reached?.length || 0);
     }
 
-    const defaultView: ViewMode = courseDoc.isOnGoing ? "timeline" : "pdf";
-    setViewMode(defaultView);
+    
 
 
-    if (courseDoc.isOnGoing) {
-      fetchTimeLine()
-    } else {
-      fetchPDf()
-    }
+    
 
     setLoading(false);
   };
@@ -580,6 +657,39 @@ const handleFollow = async () => {
             Level {String(course?.level)}
           </span>
         </div>
+
+        {accessTag && (
+  <div className="flex gap-2 mt-3 text-xs font-medium">
+    {accessTag === "free" && (
+      <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700" style={{backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+        Free
+      </span>
+    )}
+
+    {accessTag === "paid" && (
+      <>
+        <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700" style={{backgroundColor: "#fb2c36", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+          Paid ({priceMeta?.type})
+        </span>
+        <span className="px-2 py-0.5 rounded-full bg-gray-100">
+          {priceMeta?.currency} { ( priceMeta.type === "one-time" ? (course?.pageCount || 0) * priceMeta?.amount : priceMeta.amount)}
+        </span>
+      </>
+    )}
+
+    {accessTag === "owned" && (
+      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700" style={{backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+        Owned
+      </span>
+    )}
+
+    {accessTag === "subscribed" && (
+      <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700" style={{backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+        Subscribed
+      </span>
+    )}
+  </div>
+)}
           </div>
 
           {/* Action Buttons */}
@@ -603,7 +713,7 @@ const handleFollow = async () => {
         </div>
 
         {
-      !isOwner && (
+      isOwner && (
         <div className="flex items-center gap-3 mb-3">
 
           {/* Avatar */}
@@ -857,7 +967,9 @@ const handleFollow = async () => {
                 <>
               <div className="flex items-center gap-2 mt-3 border-b border-gray-200 mb-8 pb-3 overflow-x-auto">
   <button
-    onClick={() => {setViewMode("timeline");
+    onClick={() => {
+      if (!hasAccess) return;
+      setViewMode("timeline");
      posts.length === 0 && fetchTimeLine()
     }}
     className={`p-2 rounded-lg border transition ${
@@ -896,15 +1008,15 @@ const handleFollow = async () => {
 
 
 {viewMode === "timeline" ? (
-  posts.map(post => (
+  (hasAccess ? posts : posts.slice(0, 1)).map(post => (
     <div key={post.id} className="mb-5">
       <ImageMessages
         id={post.id}
-        images={post.images}
+        images={hasAccess ? post.images : post.images.slice(0, 3)}
         message={post.description}
         onPress={(index) => {
           if (user) {setSelectedNoteIndex(index);
-          setModalImages(post.images);
+          setModalImages(hasAccess ? post.images : post.images.slice(0, 3));
           setIsViewerOpen(true);
           setPostId(post.id)
         } else {
@@ -920,15 +1032,22 @@ const handleFollow = async () => {
         }}
         course_user={course?.user}
       />
+      {!hasAccess && (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <span className="text-xs bg-black/40 text-white px-2 py-1 rounded">
+        Preview
+      </span>
+    </div>
+  )}
     </div>
   ))
 ) : (
   <>
     <PdfImageList
-      images={pdfImages}
+      images={hasAccess ? pdfImages : pdfImages.slice(0, 3)}
       onPress={(index) => { if (user) {
         setSelectedNoteIndex(index);
-        setModalImages(pdfImages);
+        setModalImages(hasAccess ? pdfImages : pdfImages.slice(0, 3));
         setIsViewerOpen(true);
       } else {
         router.push("/signup")
@@ -942,6 +1061,21 @@ const handleFollow = async () => {
       </div>
     )}
   </>
+)}
+
+{!hasAccess && (
+  <div className="mt-6">
+    <button
+      onClick={() => {
+        let query = [course?.id]
+        router.push(`/subscribe/usbscribe-to-contributor/checkout?courses=${query}&type=${(JSON.parse(course?.price || "{}")).type}`)
+      }}
+      className="w-full py-3 rounded-xl text-white font-semibold"
+      style={{ backgroundColor: "#155dfc" }}
+    >
+      Pay for Course
+    </button>
+  </div>
 )}
 
 
