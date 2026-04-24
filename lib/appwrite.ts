@@ -177,7 +177,7 @@ export async function completePasswordRecovery(
 
 export async function googleSignIn() {
   try {
-    const redirectUrl = `www.ed-library.app/auth/callback`;
+    const redirectUrl = `https://www.ed-library.app/auth/callback`;
 
     await account.createOAuth2Session(
       OAuthProvider.Google,
