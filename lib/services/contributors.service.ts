@@ -180,3 +180,45 @@ export async function toggleFollowContributorService(
     return false;
   }
 }
+
+export async function fetchTopContributorsCoursesService(limit = 10, offset = 0) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    CONTRIBUTORS_COLLECTION,
+    [
+      Query.orderDesc("followers"),
+      Query.limit(limit),
+      Query.offset(offset),
+    ]
+  );
+
+  return res.documents.map(mapContributor);
+}
+
+
+export async function searchContributorsService(query: string) {
+  const base = [
+    Query.orderDesc("$updatedAt"),
+    Query.limit(30),
+  ];
+
+  const [title, code, ] = await Promise.all([
+    databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
+      Query.search("username", query),
+      ...base,
+    ]),
+    databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
+      Query.search("institution", query),
+      ...base,
+    ]),
+  ]);
+
+  const map = new Map();
+
+
+[...title.documents, ...code.documents].forEach((doc: any) => {
+  map.set(doc.$id, doc);
+});
+
+  return Array.from(map.values()).map(mapContributor);
+}

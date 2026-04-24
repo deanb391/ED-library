@@ -3,10 +3,12 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const BRAND_BLUE = "#1C64F2";
 
 export default function SubscriptionFailedPage() {
+  const router = useRouter()
   return (
     <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-3 font-sans">
 
@@ -36,14 +38,15 @@ export default function SubscriptionFailedPage() {
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-3">
-          <Link href="/subscribe" className="w-full">
+
             <button
               className="w-full text-white font-bold text-lg py-4 px-4 rounded-xl shadow-sm transition-transform active:scale-[0.98] leading-tight"
               style={{ backgroundColor: BRAND_BLUE }}
+              onClick={() => router.back()}
             >
               Try Again
             </button>
-          </Link>
+
 
           <Link href="/home" className="w-full">
             <button className="w-full bg-[#F3F4F6] hover:bg-[#E5E7EB] text-gray-900 font-extrabold text-lg py-4 rounded-xl transition-colors active:scale-[0.98]">

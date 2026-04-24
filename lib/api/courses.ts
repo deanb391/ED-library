@@ -173,10 +173,52 @@ export async function fetchRecentCourses(): Promise<Course[]> {
   return res.json();
 }
 
-export async function fetchCoursesForUser(user: any): Promise<{
-  forYou: Course[];
-  others: Course[];
-}> {
+export async function fetchCoursesForUser(user: any): Promise<
+  Course[]
+> {
+  const res = await fetch("/api/courses/for-user", {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify({ user }),
+  });
+
+  return res.json();
+}
+
+
+export async function fetchPopularCourses(limit = 10, offset = 0) {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+
+  const res = await fetch(`/api/courses/popular?${query}`);
+  return res.json();
+}
+
+export async function fetchNewCourses(limit = 10, offset = 0) {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+
+  const res = await fetch(`/api/courses/new?${query}`);
+  return res.json();
+}
+
+export async function fetchFreeCourses(limit = 10, offset = 0) {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+
+  const res = await fetch(`/api/courses/free?${query}`);
+  return res.json();
+}
+
+export async function fetchRelatedCourse(user: any): Promise<
+  Course[]
+> {
   const res = await fetch("/api/courses/for-user", {
     method: "POST",
     headers: jsonHeaders,

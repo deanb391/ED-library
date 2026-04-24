@@ -1,11 +1,21 @@
 import { databases } from "@/lib/appwrite/server";
 import { ID, Query } from "appwrite";
+import { fetchUserLibraryCoursesService } from "./course.service";
 
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COLLECTION_ID = "library";
 
 type AccessType = "one-time" | "subscription";
+
+export type Library = {
+  $id: string,
+  user: string,
+  oneTime: string,
+  subscription: string,
+  $createdAt: string,
+  $updatedAt: string,
+}
 
 export async function addCourseToLibraryService(
   courseId: string,
@@ -99,4 +109,16 @@ export async function fetchLibraryByUserService(userId: string){
   if (res.documents.length === 0) return null;
 
   return res.documents[0];
+}
+
+export async function fetchLibraryCoursesService(user_id: string) {
+  const library = await fetchLibraryByUserService(user_id);
+
+  if(!library) return;
+
+  const course_ids = [...(JSON.parse(library?.oneTime || "[]")), ...(JSON.parse(library?.subscription || "[]"))]
+
+  const response = await fetchUserLibraryCoursesService(course_ids)
+
+  return response;
 }

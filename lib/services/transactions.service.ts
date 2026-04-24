@@ -8,6 +8,7 @@ export type TransactionType =
   | "deposit"
   | "deposit_fee"
   | "earning"
+  | "debit"
   | "platform_cut"
   | "withdrawal"
   | "withdrawal_fee"

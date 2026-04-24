@@ -32,7 +32,7 @@ export async function fetchContributorEarningsService(contributorId: string) {
   const res = await databases.listDocuments(
     DATABASE_ID,
     EARNINGS_COLLECTION,
-    [Query.equal("contributors", contributorId)]
+    [Query.equal("contributors", contributorId), Query.orderDesc("$createdAt")]
   );
 
   return res.documents;

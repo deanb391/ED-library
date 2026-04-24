@@ -671,7 +671,7 @@ const handleFollow = async () => {
         <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700" style={{backgroundColor: "#fb2c36", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
           Paid ({priceMeta?.type})
         </span>
-        <span className="px-2 py-0.5 rounded-full bg-gray-100">
+        <span className="px-2 py-0.5 rounded-full bg-gray-100" style={{backgroundColor: "#f3f4f6", paddingTop: 5, paddingBottom: 5, }}>
           {priceMeta?.currency} { ( priceMeta.type === "one-time" ? (course?.pageCount || 0) * priceMeta?.amount : priceMeta.amount)}
         </span>
       </>

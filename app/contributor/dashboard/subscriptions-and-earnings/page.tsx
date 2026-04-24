@@ -243,7 +243,7 @@ export default function EarningsPage() {
               Total Earnings: NGN {totalEarnings.toLocaleString()}
             </p>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2">
+            <button className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2" onClick={() => router.push("/contributor/payments/withdraw")}>
               <Wallet size={18} />
               Withdraw Funds
             </button>
@@ -274,14 +274,29 @@ export default function EarningsPage() {
                       )}
                     </div>
 
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {tx.description || "Earning"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {tx.courses || "Course purchase"}
-                      </p>
-                    </div>
+                    <div style={{ minWidth: 0 }}>
+  <p
+    style={{
+      fontSize: "14px",
+      fontWeight: 600,
+      overflowWrap: "break-word",
+      wordBreak: "break-word",
+    }}
+  >
+    {tx.description || "Earning"}
+  </p>
+
+  <p
+    style={{
+      fontSize: "12px",
+      color: "#6B7280",
+      overflowWrap: "break-word",
+      wordBreak: "break-word",
+    }}
+  >
+    {tx.courses || "Course purchase"}
+  </p>
+</div>
                   </div>
 
                   <div className="text-right">

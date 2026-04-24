@@ -56,7 +56,7 @@ function CourseSection({
             : null;
 
           const isFree = priceData?.isFree;
-          const amount = priceData?.amount;
+          const amount = priceData?.type === "subscription" ? priceData?.amount : (priceData?.amount * (course?.pageCount as any));
           const currency = priceData?.currency || "₦";
 
           return (
@@ -111,8 +111,8 @@ function CourseSection({
                     color: "#fff",
                   }}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>
-                    {isFree ? "Free" : `${currency}${amount}`}
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>
+                    {isFree ? "Free" : `${currency} ${amount}`}
                   </div>
 
                   {!isFree && (

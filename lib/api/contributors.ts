@@ -83,6 +83,30 @@ export async function getContributor(contributorId: string): Promise<Contributor
   return data.contributor;
 }
 
+export async function searchContributors(q: string) {
+  const res = await fetch(`/api/contributors/search?q=${encodeURIComponent(q)}`);
+  return res.json();
+}
+
+export async function getTopContributors(limit = 10, offset = 0): Promise<Contributor[] | []> {
+
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const res = await fetch(`/api/contributors/top-contributor?${query}`, {
+    method: "GET",
+    headers: jsonHeaders,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch contributor status");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
 export async function hasContributorAccount(userId: string): Promise<boolean> {
   try {
     const contributor = await getMyContributor(userId);

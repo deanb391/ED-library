@@ -127,7 +127,7 @@ export async function searchCoursesService(query: string) {
     Query.limit(30),
   ];
 
-  const [title, code, dept] = await Promise.all([
+  const [title, code, dept, university] = await Promise.all([
     databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
       Query.search("title", query),
       ...base,
@@ -140,11 +140,15 @@ export async function searchCoursesService(query: string) {
       Query.search("department", query),
       ...base,
     ]),
+    databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
+      Query.search("university", query),
+      ...base,
+    ]),
   ]);
 
   const map = new Map();
 
-  [...title.documents, ...code.documents, ...dept.documents].forEach((doc: any) => {
+  [...title.documents, ...code.documents, ...dept.documents, ...university.documents].forEach((doc: any) => {
     map.set(doc.$id, doc);
   });
 
@@ -282,32 +286,20 @@ export async function fetchRecentCoursesService() {
   return fetchCoursesService(queries);
 }
 
-export async function fetchCoursesForUserService(user: any) {
-  const all = await databases.listDocuments(
+export async function fetchForYouCoursesService(user: any, limit = 10, offset = 0) {
+  const res = await databases.listDocuments(
     DATABASE_ID,
     COURSE_COLLECTION,
-    [Query.orderDesc("$updatedAt"), Query.limit(100)]
+    [
+      Query.equal("department", user.department),
+      Query.equal("level", user.level),
+      Query.limit(limit),
+      Query.offset(offset),
+      Query.orderDesc("$updatedAt"),
+    ]
   );
 
-  const forYou: any[] = [];
-  const others: any[] = [];
-
-  all.documents.forEach((doc: any) => {
-    const course = mapCourse(doc);
-
-    if (
-      course.department === user.department &&
-      course.level === user.level
-    ) {
-      forYou.push(course);
-    } else {
-      if (others.length < 11) {
-        others.push(course);
-      }
-    }
-  });
-
-  return { forYou, others };
+  return res.documents.map(mapCourse);
 }
 
 /* ================= ANALYTICS ================= */
@@ -366,4 +358,84 @@ export async function recordCourseVisitService(courseId: string, userId: string)
     courseId,
     { analytics: JSON.stringify(analytics) }
   );
+}
+
+
+
+export async function fetchNewCoursesService(limit = 10, offset = 0) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    [
+      Query.orderDesc("$createdAt"),
+      Query.limit(limit),
+      Query.offset(offset),
+    ]
+  );
+
+  return res.documents.map(mapCourse);
+}
+
+export async function fetchPopularCoursesService(limit = 10, offset = 0) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    [
+      Query.orderDesc("rating"), // crude for now, we’ll refine later
+      Query.limit(limit),
+      Query.offset(offset),
+    ]
+  );
+
+  return res.documents.map(mapCourse);
+}
+
+export async function fetchFreeCoursesService(limit = 10, offset = 0) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    [
+      Query.equal("isFree", true),
+      Query.limit(limit),
+      Query.offset(offset),
+      Query.orderDesc("$createdAt"),
+    ]
+  );
+
+  return res.documents.map(mapCourse);
+}
+
+export async function fetchRelatedCoursesService({
+  department,
+  level,
+  limit = 10,
+  offset = 0,
+}: any) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    [
+      Query.equal("department", department),
+      Query.equal("level", level),
+      Query.limit(limit),
+      Query.offset(offset),
+      Query.orderDesc("$updatedAt"),
+    ]
+  );
+
+  return res.documents.map(mapCourse);
+}
+
+export async function fetchUserLibraryCoursesService(courseIds: string[]) {
+  if (!courseIds.length) return [];
+
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    COURSE_COLLECTION,
+    [
+      Query.equal("$id", courseIds),
+    ]
+  );
+
+  return res.documents.map(mapCourse);
 }

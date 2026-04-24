@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { fetchWallet } from "@/lib/api/wallet";
-import { Plus, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { fetchWallet, fetchWalletHistory } from "@/lib/api/wallet";
+import { Plus, ArrowDownLeft, ArrowUpRight, ArrowUp, ArrowDown } from "lucide-react";
 
 const BRAND_BLUE = "#2563EB";
 
@@ -13,6 +13,7 @@ export default function WalletPage() {
   const router = useRouter();
 
   const [wallet, setWallet] = useState<any>(null);
+  const [walletHistory, setWalletHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +24,19 @@ export default function WalletPage() {
         setLoading(true);
         if (!user) return;
 
-        const walletRes = await fetchWallet(user.$id);
+
+
+        const [walletRes, walletHistoryRes] = await Promise.all([
+          fetchWallet(user.$id),
+          fetchWalletHistory(user.$id)
+        ])
 
         if (!walletRes.wallet) (
           router.replace("/wallet/create")
         )
+
         setWallet(walletRes.wallet);
+        setWalletHistory(walletHistoryRes)
       } catch (err) {
         console.error("Wallet load failed:", err);
       } finally {
@@ -126,7 +134,61 @@ export default function WalletPage() {
         Top Up Wallet
       </button>
     </div>
+
+    <div className="bg-white rounded-3xl p-6" style={{ margin: 10, marginTop: 20}}> 
+            <h3 className="text-lg font-bold mb-6" style={{color: "#6b7280"}}>
+              Recent Transactions
+            </h3>
+
+            <div className="space-y-6">
+              {
+  walletHistory.length === 0 ? (
+    <div className="text-center py-10 text-gray-500 text-sm">
+      No transactions yet
+    </div>
+  ) : (
+    walletHistory.map((tx) => (
+      <div key={tx.$id} className="flex justify-between">
+        <div className="flex gap-4">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+            {tx.type === "credit" ? (
+              <ArrowDown size={20} />
+            ) : (
+              <ArrowUp size={20} />
+            )}
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
+              }}
+            >
+              {tx.description || "---"}
+            </p>
+          </div>
+        </div>
+
+        <div className="text-right">
+          <p className="font-bold">
+            {`${tx.type === "credit" ? "+" : "-"} NGN ${tx.amount?.toLocaleString()}`}
+          </p>
+          <p className="text-xs text-gray-400">
+            {new Date(tx.$createdAt).toLocaleDateString()}
+          </p>
+        </div>
+      </div>
+    ))
+  )
+}
+            </div>
+          </div>
   </div>
+
+  
 </div>
   );
 }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { creditWalletService } from "@/lib/services/wallet.service"; // adjust import
 import { verifyFlutterwaveTransaction } from "@/lib/services/flutterwave.service"; // adjust import
 import { getPaymentById, updatePaymentStatus } from "@/lib/services/payments.service"; // adjust import
+import { createTransactionService } from "@/lib/services/transactions.service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,8 +33,19 @@ export async function GET(request: Request) {
       // 4. Mark payment as successful in the database
       await updatePaymentStatus(paymentId, "successful");
 
+      const flutter_fee = 0.02 * payment.amount
+      const ed_fee = 0.03 * payment.amount
+
+      const balance = payment.amount - (0.05 * payment.amount)
+
+      await  createTransactionService({user: payment.user, type: 'deposit', direction: "credit", amount: payment.amount, reference: payment.description})
+      
+      await  createTransactionService({user: "admin", type: "deposit_fee", direction: "debit", amount: ed_fee, reference: payment.description})
+      
+      await  createTransactionService({user: "admin", type: "payment_processing_fee", direction: "debit", amount: flutter_fee, reference: payment.description})
+
       // 5. Actually top up the user's wallet!
-      await creditWalletService(payment.user, payment.amount);
+      await creditWalletService(payment.user, balance);
 
       return NextResponse.json({ success: true });
     } else {

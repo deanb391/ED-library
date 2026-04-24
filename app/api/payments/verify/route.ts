@@ -6,6 +6,7 @@ import { createEarningService } from "@/lib/services/earnings.service";
 import { addCourseToLibraryService } from "@/lib/services/library.service";
 import { creditWalletService } from "@/lib/services/wallet.service";
 import { fetchContributorService } from "@/lib/services/contributors.service";
+import { createTransactionService } from "@/lib/services/transactions.service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -59,11 +60,29 @@ try {
 const contributor = await fetchContributorService(contributorId);
 if (!contributor) throw new Error("Contributor not found");
 
+const flutter_fee = 0.02 * payment.amount
+const ed_fee = 0.03 * payment.amount
+
+const balance = payment.amount - (0.05 * payment.amount)
+
+const rev = 0.85 * balance;
+const cut = 0.15 * balance;
+
 // ✅ update payment
 await updatePaymentStatus(paymentId, "successful");
 
-// ✅ revenue
-const rev = 0.85 * payment.amount;
+await creditWalletService(contributor.user, rev);
+
+await  createTransactionService({user: payment.user, type: 'deposit', direction: "credit", amount: payment.amount, reference: payment.description})
+
+await  createTransactionService({user: "admin", type: "deposit_fee", direction: "debit", amount: ed_fee, reference: payment.description})
+
+await  createTransactionService({user: "admin", type: "payment_processing_fee", direction: "debit", amount: flutter_fee, reference: payment.description})
+
+await  createTransactionService({user: "admin", type: 'platform_cut', direction: "debit", amount: cut, reference: payment.description})
+
+await  createTransactionService({user: contributor.$id, type: 'earning', direction: "credit", amount: rev, reference: payment.description})
+
 
 // ✅ earning record
 await createEarningService({
@@ -80,7 +99,7 @@ for (const courseId of courseIds) {
 }
 
 // ✅ wallet credit
-await creditWalletService(contributor.user, rev);
+
 
 return NextResponse.json({ success: true });
   } catch (error) {

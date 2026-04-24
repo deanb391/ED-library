@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchCoursesForUserService } from "@/lib/services/course.service";
+import { fetchForYouCoursesService } from "@/lib/services/course.service";
 
 export async function POST(req: NextRequest) {
   const { user } = await req.json();
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "user is required" }, { status: 400 });
   }
 
-  const result = await fetchCoursesForUserService(user);
+  const result = await fetchForYouCoursesService(user);
 
   return NextResponse.json(result);
 }

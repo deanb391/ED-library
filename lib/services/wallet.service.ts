@@ -2,9 +2,11 @@ import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { createPaymentService } from "./payments.service";
 import { initFlutterwavePayment } from "./flutterwave.service";
+import { processWithdrawal } from "./withdrawals.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const WALLET_COLLECTION = "wallet";
+const WALLET_HISTORY_COLLECTION = "wallet_history"
 
 export type Wallet = {
   $id: string;
@@ -69,6 +71,15 @@ export async function fetchWalletByUserService(userId: string): Promise<Wallet |
   return mapWallet(res.documents[0]);
 }
 
+export async function fetchWalletHistoryByUserService(userId: string) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    WALLET_HISTORY_COLLECTION,
+    [Query.equal("user", userId)]
+  );
+  return res.documents;
+}
+
 
 
 
@@ -121,6 +132,8 @@ export async function debitWalletService(
     }
   );
 
+  await recordWalletHistory(wallet?.user, "debit", amount, "Payment For Course")
+
   return mapWallet(updated);
 }
 
@@ -144,5 +157,89 @@ export async function creditWalletService(
     }
   );
 
+  await recordWalletHistory(wallet?.user, "credit", amount, "Top Up")
+
   return mapWallet(updated);
+}
+
+export async function recordWalletHistory(
+  userId: string,
+  type: string,
+  amount: number,
+  description: string
+) {
+
+  return await databases.createDocument(
+    DATABASE_ID, 
+    WALLET_HISTORY_COLLECTION,
+    ID.unique(),
+    {
+      user: userId,
+      type: type,
+      amount: amount,
+      description: description
+    }
+  )
+}
+
+
+export async function updateCashoutAccountService(params: {
+  userId: string;
+  number: string;
+  bank: string;
+  name: string;
+}): Promise<Wallet> {
+  const wallet = await fetchWalletByUserService(params.userId);
+
+  if (!wallet) {
+    throw new Error("Wallet not found");
+  }
+
+  const accountPayload = {
+    number: params.number,
+    bank: params.bank,
+    name: params.name,
+  };
+
+  const updated = await databases.updateDocument(
+    DATABASE_ID,
+    WALLET_COLLECTION,
+    wallet.$id,
+    {
+      cashout_account: JSON.stringify(accountPayload),
+    }
+  );
+
+  return mapWallet(updated);
+}
+
+
+function parseCashoutAccount(cashout?: string) {
+  try {
+    return cashout ? JSON.parse(cashout) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function withdrawWalletService(userId: string, amount: string) {
+  try {
+    const wallet = await fetchWalletByUserService(userId);
+
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+
+    const account = parseCashoutAccount(wallet.cashout_account);
+
+    if (!account) {
+      throw new Error("No cashout account set");
+    }
+
+    const res = await processWithdrawal({userId: userId, amount: Number(amount), account_number: account.number, account_bank: account.bank})
+
+    // later: create withdrawal record + call flutterwave transfer
+  } catch (error) {
+    throw new Error(`Withdrawal Failed: ${(error as Error).message}`);
+  }
 }

@@ -7,6 +7,8 @@ import deskImg from "@/assets/images/desk.webp";
 import { Course, fetchCoursesByAdmin } from "@/lib/api/courses";
 import { useParams, useRouter } from "next/navigation";
 import { getContributor } from "@/lib/api/contributors";
+import { fetchLibrary } from "@/lib/api/library";
+import { useUser } from "@/context/UserContext";
 
 const BRAND_BLUE = "#2563EB";
 
@@ -22,6 +24,7 @@ export default function SubscribeToCreatorPage() {
   const [courses, setCourses] = useState<SelectableCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [contributor, setContributor] = useState<any>(null);
+  const { user } = useUser()
 
   const router = useRouter();
 
@@ -29,11 +32,13 @@ export default function SubscribeToCreatorPage() {
   const fetch_contributor_courses = async () => {
     try {
       setLoading(true);
+      if (!user) return;
 
       const contributorRes = await getContributor(slug);
       setContributor(contributorRes);
 
       if (!contributorRes) return;
+      
 
       const courseRes = await fetchCoursesByAdmin(contributorRes.user);
 
@@ -42,7 +47,8 @@ export default function SubscribeToCreatorPage() {
 
       try {
         // ⚠️ Replace with your actual service
-        // library = await fetchUserLibrary(user.$id);
+        
+        library = (await fetchLibrary(user.$id)).wallet;
       } catch {
         library = null;
       }
@@ -57,6 +63,7 @@ export default function SubscribeToCreatorPage() {
         oneTime = [];
         subscription = [];
       }
+
 
       const normalizedCourses: SelectableCourse[] = (courseRes || [])
         // ===== FILTER ONLY ONGOING =====
@@ -80,8 +87,8 @@ export default function SubscribeToCreatorPage() {
     }
   };
 
-  if (slug) fetch_contributor_courses();
-}, [slug]);
+  if (slug && user) fetch_contributor_courses();
+}, [slug, user]);
 
   const hasSelectedCourses = courses.some((c) => c.included);
 

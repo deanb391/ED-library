@@ -1,3 +1,12 @@
+export type Wallet = {
+  $id: string;
+  user: string;
+  balance: number;
+  cashout_account?: string;
+  $createdAt: string;
+  $updatedAt: string;
+};
+
 export async function createWallet(userId: string) {
   const res = await fetch("/api/wallet/create", {
   method: "POST",
@@ -15,6 +24,11 @@ export async function fetchWallet(userId: string) {
   return res.json();
 }
 
+export async function fetchWalletHistory(userId: string) {
+  const res = await fetch(`/api/wallet/fetchHistory?userId=${userId}`);
+  return res.json();
+}
+
 export async function topUpWallet(userId: string, amount: number, email: string) {
   const res = await fetch("/api/wallet/topup", {
     method: "POST",
@@ -22,6 +36,15 @@ export async function topUpWallet(userId: string, amount: number, email: string)
     "Content-Type": "application/json",
   },
     body: JSON.stringify({ userId, amount, email }),
+  });
+
+  return res.json();
+}
+
+export async function updateWalletAccount(userId: string, number: string, bank: string, name: string) {
+  const res = await fetch("/api/wallet/updateAccount", {
+    method: "POST",
+    body: JSON.stringify({ userId, number, bank, name }),
   });
 
   return res.json();
@@ -56,4 +79,13 @@ export async function verifyPayment(paymentId: string) {
 
   const data = await res.json();
   return data;
+}
+
+export async function withdraw(userId: string, amount: string) {
+   const res = await fetch("/api/wallet/withdraw", {
+    method: "POST",
+    body: JSON.stringify({ userId, amount }),
+  });
+
+  return res.json();
 }

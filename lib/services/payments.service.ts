@@ -7,6 +7,7 @@ import { verifyFlutterwaveTransaction } from "./flutterwave.service";
 import { createEarningService } from "./earnings.service";
 import { addCourseToLibraryService } from "./library.service";
 import { fetchContributorService } from "./contributors.service";
+import { createTransactionService } from "./transactions.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const PAYMENTS_COLLECTION = "payments";
@@ -94,7 +95,11 @@ export async function payForCourseService(params: {
     const course = await fetchCourseByIdService(id);
 
     const priceData = course?.price ? JSON.parse(course.price) : null;
-    const amount = priceData?.isFree ? 0 : priceData?.amount || 0;
+    let amount = priceData?.isFree ? 0 : priceData?.amount || 0;
+    
+    if ( priceData.type === "one-time"){
+      amount = amount * course.pageCount;
+    }
 
     total += amount;
 
@@ -131,9 +136,24 @@ export async function payForCourseService(params: {
       transactionId: "WALLET_" + payment.$id,
     });
 
+    
     const rev = 0.85 * payment.amount;
+    const cut = 0.15 * payment.amount
+
+    const Contributor = await fetchContributorService(params.contributorId)
+
+    
+    await creditWalletService(Contributor.user, rev)
+
+    
 
     await createEarningService({amount: rev, description: payment.description, courses: payment.courses, type: payment.type, contributorId: params.contributorId});
+
+    await  createTransactionService({user: params.userId, type: "debit", direction: "debit", amount: payment.amount, reference: payment.description})
+
+    await  createTransactionService({user: "admin", type: 'platform_cut', direction: "debit", amount: cut, reference: payment.description})
+
+    await  createTransactionService({user: params.contributorId, type: 'earning', direction: "credit", amount: rev, reference: payment.description})
     
 
     const courseIds = JSON.parse(payment.courses)
@@ -141,10 +161,7 @@ export async function payForCourseService(params: {
       await addCourseToLibraryService(course, payment.user.$id, payment.type)
     }
 
-    const Contributor = await fetchContributorService(params.contributorId)
 
-    
-    await creditWalletService(Contributor.user, rev)
 
     return {
       type: "wallet",

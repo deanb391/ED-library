@@ -50,3 +50,52 @@ export async function verifyFlutterwaveTransaction(tx_ref: string) {
 
   return res.json();
 }
+
+
+export async function createTransferRecipient(params: {
+  account_number: string;
+  account_bank: string;
+  name: string;
+}) {
+  const res = await fetch(`${FLW_BASE}/beneficiaries`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      account_number: params.account_number,
+      account_bank: params.account_bank,
+      beneficiary_name: params.name,
+    }),
+  });
+
+  const data = await res.json();
+  return data;
+}
+
+
+export async function initiateWithdrawal(params: {
+  amount: number;
+  account_number: string;
+  account_bank: string;
+  narration: string;
+  reference: string;
+}) {
+  const res = await fetch(`${FLW_BASE}/transfers`, {
+    method: "POST",
+    headers: getHeaders(),
+    body: JSON.stringify({
+      account_bank: params.account_bank, // e.g. "044"
+      account_number: params.account_number,
+      amount: params.amount,
+      currency: "NGN",
+      narration: params.narration,
+      reference: params.reference,
+      debit_currency: "NGN",
+    }),
+  });
+
+  const data = await res.json();
+
+  console.log("Flutterwave transfer:", data);
+
+  return data;
+}
