@@ -8,7 +8,7 @@ export const metadata = {
     title: "ED Library – Learn Smarter, Faster",
     description:
       "Explore structured courses, lecture notes, and top contributors across your field.",
-    url: "https://ed-library-dev.onrender.com",
+    url: "https://www.ed-library.app/",
     siteName: "ED Library",
     images: [
       {
