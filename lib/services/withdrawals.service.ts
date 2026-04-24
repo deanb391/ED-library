@@ -1,5 +1,5 @@
 import { databases } from "@/lib/appwrite/server";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 import { fetchCourseByIdService } from "@/lib/services/course.service";
 import {  creditWalletService, debitWalletService, fetchWalletByUserService } from "@/lib/services/wallet.service";
 import { initFlutterwavePayment, initiateWithdrawal } from "./flutterwave.service";
@@ -16,6 +16,63 @@ const WITHDRAWAL_SERVICE = "withdrawals";
 
 export type WithdrawalStatus = "pending" | "successful" | "failed";
 export type WithdrawalType = "subscription" | "one-time" | "wallet_topup" | "withdrawal" | "debit";
+
+
+const bankCodes: Record<string, string> = {
+  "Access Bank": "044",
+  "Citibank": "023",
+  "Ecobank": "050",
+  "Fidelity Bank": "070",
+  "First Bank of Nigeria": "011",
+  "First City Monument Bank (FCMB)": "214",
+  "Guaranty Trust Bank (GTBank)": "058",
+  "Heritage Bank": "030",
+  "Keystone Bank": "082",
+  "Lotus Bank": "303",
+  "Moniepoint": "526",
+  "OPay": "999992",
+  "PalmPay": "999991",
+  "Premium Trust Bank": "105",
+  "Polaris Bank": "076",
+  "Stanbic IBTC Bank": "221",
+  "Standard Chartered Bank": "068",
+  "Sterling Bank": "232",
+  "SunTrust Bank": "100",
+  "Union Bank": "032",
+  "United Bank for Africa (UBA)": "033",
+  "Unity Bank": "215",
+  "VFD Microfinance Bank": "090110",
+  "Wema Bank": "035",
+  "Zenith Bank": "057",
+};
+
+export function getBankCode(bankName: string): string | null {
+  const code = bankCodes[bankName];
+  if (!code) {
+    console.warn(`Bank code not found for: "${bankName}"`);
+    return null;
+  }
+  return code;
+}
+
+const bankNamesByCode: Record<string, string> = Object.entries(bankCodes).reduce(
+  (acc, [name, code]) => {
+    acc[code] = name;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+export function getBankName(bankCode: string): string | null {
+  const name = bankNamesByCode[bankCode];
+
+  if (!name) {
+    console.warn(`Bank name not found for code: "${bankCode}"`);
+    return null;
+  }
+
+  return name;
+}
 
 export interface WithdrawalPayload {
   amount: number;
@@ -90,7 +147,7 @@ export async function processWithdrawal({
   account_bank: string;
 }) {
   // 1. Create withdrawal record
-  const withdrawal = await createWIthdrawalService({
+  let withdrawal = await createWIthdrawalService({
     amount,
     status: "pending",
     user: userId,
@@ -107,10 +164,17 @@ export async function processWithdrawal({
         return { success: false, error: "Bad Request: Balance Insufficient"}
     }
 
-    const ed_cut = 0.10 * amount;
-    const before_cut = 0.90 * amount;
-    const flutter_charge = 100
+    const ed_cut = 0.05 * amount;
+    const before_cut = 0.95 * amount;
+    let flutter_charge = 10.8;
+    if (((before_cut - flutter_charge) > 5000) && ((before_cut - flutter_charge) < 50000) ) {
+      flutter_charge = 26.9
+    } else if ((before_cut - flutter_charge > 50000)) {
+      flutter_charge = 53.8
+    }
     const balance = before_cut - flutter_charge
+
+    const bank_opay = "044"
 
     // 2. Debit wallet first
 
@@ -119,10 +183,11 @@ export async function processWithdrawal({
     const flw = await initiateWithdrawal({
       amount: balance,
       account_number,
-      account_bank,
+      account_bank: bank_opay,
       narration: "ED-Library Withdrawal",
       reference: withdrawal.$id,
     });
+    
 
 
     if (flw.status !== "success") {
@@ -130,7 +195,7 @@ export async function processWithdrawal({
     }
 
     // 4. Mark success
-    await updateWithdrawalStatus(withdrawal.$id, "successful");
+    // await updateWithdrawalStatus(withdrawal.$id, "successful");
 
     await debitWalletService(userId, amount, "Withdrawal");
 
@@ -140,13 +205,83 @@ export async function processWithdrawal({
 
     await  createTransactionService({user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: ed_cut, reference: "FlutterWave Charge"})
 
-    return { success: true };
+    if (flw.message === "Transfer Queued Successfully") {
+      withdrawal = await updateWithdrawalStatus(withdrawal.$id, "successful");
+    }
+
+    return { success: true, receipt: withdrawal };
 
   } catch (err) {
     console.error(err);
 
-    await updateWithdrawalStatus(withdrawal.$id, "failed");
+    const receipt = await updateWithdrawalStatus(withdrawal.$id, "failed");
+    // await refundUser(withdrawal.user, withdrawal.amount);
 
-    return { success: false };
+    return { success: false, receipt };
+  }
+}
+
+
+export async function refundUser (userId: string, amount: number) {
+  await creditWalletService(userId, amount, "refund")
+}
+
+
+export async function fetchWithdrawalHistoryByUserService(userId: string) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    WITHDRAWAL_SERVICE,
+    [Query.equal("user", userId), Query.orderDesc("$createdAt"), Query.limit(10)]
+  );
+  return res.documents;
+}
+
+
+interface VerifyAccountParams {
+  account_number: string;
+  account_bank: string;
+}
+
+interface VerifyAccountResponse {
+  success: boolean;
+  account_name?: string;
+  account_number?: string;
+  message?: string;
+}
+
+export async function verifyAccount(params: VerifyAccountParams): Promise<VerifyAccountResponse> {
+  try {
+    const response = await fetch("https://api.flutterwave.com/v3/accounts/resolve", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        account_number: params.account_number,
+        account_bank: params.account_bank,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("Data: ", data)
+
+    if (data.status === "success") {
+      return {
+        success: true,
+        account_name: data.data.account_name,
+        account_number: data.data.account_number,
+      };
+    }
+
+    return {
+      success: false,
+      message: data.message || "Account verification failed.",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "An error occurred while verifying the account.",
+    };
   }
 }

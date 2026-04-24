@@ -29,6 +29,12 @@ export async function fetchWalletHistory(userId: string) {
   return res.json();
 }
 
+
+export async function fetchWithdrawalHistory(userId: string) {
+  const res = await fetch(`/api/wallet/fetchWithdrawalHistory?userId=${userId}`);
+  return res.json();
+}
+
 export async function topUpWallet(userId: string, amount: number, email: string) {
   const res = await fetch("/api/wallet/topup", {
     method: "POST",
@@ -36,6 +42,18 @@ export async function topUpWallet(userId: string, amount: number, email: string)
     "Content-Type": "application/json",
   },
     body: JSON.stringify({ userId, amount, email }),
+  });
+
+  return res.json();
+}
+
+export async function verifyAccount(account_number: string, account_bank: string) {
+  const res = await fetch("/api/wallet/verifyAccount", {
+    method: "POST",
+    headers: {
+    "Content-Type": "application/json",
+  },
+    body: JSON.stringify({ account_number, account_bank }),
   });
 
   return res.json();

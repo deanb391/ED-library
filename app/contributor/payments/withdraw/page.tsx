@@ -14,7 +14,7 @@ import {
   Banknote 
 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
-import { fetchWallet, updateWalletAccount, Wallet as WalletType, withdraw } from '@/lib/api/wallet';
+import { fetchWallet, fetchWithdrawalHistory, updateWalletAccount, Wallet as WalletType, withdraw } from '@/lib/api/wallet';
 
 // --- Dummy Data ---
 const RECENT_WITHDRAWALS = [
@@ -42,12 +42,70 @@ const RECENT_WITHDRAWALS = [
 ];
 
 
+
+const bankCodes: Record<string, string> = {
+  "Access Bank": "044",
+  "Citibank": "023",
+  "Ecobank": "050",
+  "Fidelity Bank": "070",
+  "First Bank of Nigeria": "011",
+  "First City Monument Bank (FCMB)": "214",
+  "Guaranty Trust Bank (GTBank)": "058",
+  "Heritage Bank": "030",
+  "Keystone Bank": "082",
+  "Lotus Bank": "303",
+  "Moniepoint": "526",
+  "OPay": "999992",
+  "PalmPay": "999991",
+  "Premium Trust Bank": "105",
+  "Polaris Bank": "076",
+  "Stanbic IBTC Bank": "221",
+  "Standard Chartered Bank": "068",
+  "Sterling Bank": "232",
+  "SunTrust Bank": "100",
+  "Union Bank": "032",
+  "United Bank for Africa (UBA)": "033",
+  "Unity Bank": "215",
+  "VFD Microfinance Bank": "090110",
+  "Wema Bank": "035",
+  "Zenith Bank": "057",
+};
+
+export function getBankCode(bankName: string): string | null {
+  const code = bankCodes[bankName];
+  if (!code) {
+    console.warn(`Bank code not found for: "${bankName}"`);
+    return null;
+  }
+  return code;
+}
+
+const bankNamesByCode: Record<string, string> = Object.entries(bankCodes).reduce(
+  (acc, [name, code]) => {
+    acc[code] = name;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
+ function getBankName(bankCode: string): string | null {
+  const name = bankNamesByCode[bankCode];
+
+  if (!name) {
+    console.warn(`Bank name not found for code: "${bankCode}"`);
+    return null;
+  }
+
+  return name;
+}
+
+
 const BRAND_BLUE = "#2563EB";
 
 export default function WithdrawPage() {
-  const [amount, setAmount] = useState('1000');
+  const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
-
+type WithdrawalStatus = "pending" | "successful" | "failed";
   const [wallet, setWallet] = useState<WalletType | null>(null);
 const [loading, setLoading] = useState(true);
 const [showModal, setShowModal] = useState(false);
@@ -55,10 +113,15 @@ const [accountName, setAccountName] = useState("");
 const [accountNumber, setAccountNumber] = useState("");
 const [bank, setBank] = useState("");
 const [withdrawing, setWithdrawing] = useState(false);
+const [receipt, setReceipt] = useState<any>()
+const [showReceipt, setShowReceipt] = useState(false);
+const [history, setHistory] = useState<any[]>([]);
+const [ showFailedVerification, setShowFailedVerification] = useState(false);
+
 
 const MIN_WITHDRAWAL = 100;
 
-const isValidAmount = Number(amount) >= MIN_WITHDRAWAL;
+let isValidAmount =( Number(amount) >= MIN_WITHDRAWAL); 
 
   const { user } = useUser()
 
@@ -67,9 +130,17 @@ useEffect(() => {
     if (!user?.$id) return;
 
     try {
-      const res = await fetchWallet(user.$id);
-      setWallet(res.wallet);
-      const account = JSON.parse(res.wallet.cashout_account);
+
+      const [res1, ses2] = await Promise.all(
+        [
+          fetchWallet(user.$id),
+          fetchWithdrawalHistory(user.$id)
+        ]
+      )
+      setWallet(res1.wallet);
+      setHistory(ses2)
+      
+      const account = JSON.parse(res1.wallet.cashout_account);
       setBank(account.bank);
       setAccountName(account.name)
       setAccountNumber(account.number)
@@ -83,6 +154,17 @@ useEffect(() => {
   loadWallet();
 }, [user]);
 
+const parsedAmount = Number(amount);
+
+const hasValidAmount =
+  !isNaN(parsedAmount) &&
+  parsedAmount >= MIN_WITHDRAWAL &&
+  wallet?.balance &&
+  parsedAmount <= wallet.balance;
+
+const feeBreakdown =
+  hasValidAmount ? calculateWithdrawal(parsedAmount) : null;
+
 const handleWithdraw = async () => {
   if (!user?.$id || !amount) return;
 
@@ -92,9 +174,39 @@ const handleWithdraw = async () => {
       user?.$id,
       amount
     )
+    console.log("Response: ", response.wallet)
+    const { success, receipt} = response.wallet;
+    if (!receipt) return;
+    setWithdrawing(false)
+    setReceipt(receipt)
+    setShowReceipt(true)
   } catch (error) {
     setWithdrawing(false);
   }
+}
+
+function calculateWithdrawal(amount: number) {
+  const ed_cut = 0.05 * amount;
+  const before_cut = 0.95 * amount;
+
+  let flutter_charge = 10.8;
+
+  if (before_cut - flutter_charge > 5000 && before_cut - flutter_charge < 50000) {
+    flutter_charge = 26.9;
+  } else if (before_cut - flutter_charge > 50000) {
+    flutter_charge = 53.8;
+  }
+
+  const charges = flutter_charge + ed_cut;
+  const net = before_cut - flutter_charge;
+
+  return {
+    ed_cut,
+    flutter_charge,
+    charges,
+    net,
+    before_cut,
+  };
 }
 
 const handleSaveAccount = async () => {
@@ -103,12 +215,19 @@ const handleSaveAccount = async () => {
   const payload = JSON.stringify({
     name: accountName,
     number: accountNumber,
-    bank,
+    bank: getBankName(bank),
   });
 
   try {
     setSaving(true);
-    await updateWalletAccount(user.$id, accountNumber, bank, accountName);
+    setShowFailedVerification(false);
+    const res = await updateWalletAccount(user.$id, accountNumber, bank, accountName);
+
+    if (!res.wallet.success) {
+      console.log(res)
+      setShowFailedVerification(true)
+      return;
+    }
 
     setWallet((prev) =>
       prev ? { ...prev, cashout_account: payload } : prev
@@ -126,11 +245,56 @@ const cashout = wallet?.cashout_account
   ? JSON.parse(wallet.cashout_account)
   : null;
 
-if (loading) {
+
+  const getStatusMeta = (status: WithdrawalStatus) => {
+  switch (status) {
+    case "pending":
+      return {
+        title: "Processing Withdrawal",
+        color: "#f59e0b",
+        message:
+          "Your transaction is being processed. Please wait. If it fails, the amount will be refunded to your wallet.",
+      };
+
+    case "successful":
+      return {
+        title: "Withdrawal Successful",
+        color: "#16a34a",
+        message:
+          "Your specified account has been credited successfully.",
+      };
+
+    case "failed":
+      return {
+        title: "Withdrawal Failed",
+        color: "#dc2626",
+        message:
+          "Your transaction failed. The amount has been refunded to your wallet.",
+      };
+
+    default:
+      return {
+        title: "Withdrawal",
+        color: "#6b7280",
+        message: "",
+      };
+  }
+};
+
+if (loading ) {
     return (
   <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
     <p className="text-gray-700 text-sm">Loading, please wait...</p>
+  </div>
+);
+   }
+
+   if (withdrawing ) {
+    return (
+  <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+    <p className="text-gray-700 text-sm">Processing, please wait...</p>
   </div>
 );
    }
@@ -352,6 +516,55 @@ if (loading) {
               Withdraw All
             </button>
           </div>
+
+          {feeBreakdown && (
+  <div
+    style={{
+      marginTop: "0.75rem",
+      padding: "0.75rem",
+      borderRadius: "0.75rem",
+      backgroundColor: "#f9fafb",
+      border: "1px solid #e5e7eb",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.4rem",
+    }}
+  >
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>
+        Amount
+      </span>
+      <strong style={{ fontSize: "0.85rem" }}>
+        ₦{parsedAmount.toLocaleString()}
+      </strong>
+    </div>
+
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>
+        Charges
+      </span>
+      <strong style={{ fontSize: "0.85rem", color: "#dc2626" }}>
+        -₦{feeBreakdown.charges.toLocaleString()}
+      </strong>
+    </div>
+
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        paddingTop: "0.25rem",
+        borderTop: "1px solid #e5e7eb",
+      }}
+    >
+      <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+        You receive
+      </span>
+      <strong style={{ fontSize: "0.9rem", color: "#16a34a" }}>
+        ₦{feeBreakdown.net.toLocaleString()}
+      </strong>
+    </div>
+  </div>
+)}
         </div>
 
         {/* Destination Selector */}
@@ -420,10 +633,10 @@ if (loading) {
         {/* Submit Button */}
         <button
           onClick={() => handleWithdraw()}
-          disabled={!isValidAmount || !wallet?.cashout_account}
+          disabled={!hasValidAmount || !wallet?.cashout_account}
           style={{
             width: "100%",
-            backgroundColor: (!isValidAmount || !wallet?.cashout_account) ? "#9ca3af" : (BRAND_BLUE || "#2563eb"),
+            backgroundColor: (!hasValidAmount || !wallet?.cashout_account) ? "#9ca3af" : (BRAND_BLUE || "#2563eb"),
             color: "#ffffff",
             fontWeight: "700",
             padding: "0.875rem",
@@ -509,21 +722,26 @@ if (loading) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        {RECENT_WITHDRAWALS.map((tx) => (
-          <div key={tx.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {history?.map((tx)  => (
+          <div key={tx.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+          onClick={() => {
+            setReceipt(tx);
+            setShowReceipt(true)
+          }}
+          >
             <div>
-              <p style={{ fontSize: "0.875rem", fontWeight: "600", color: "#111827", margin: 0 }}>
-                {tx.type}
+              <p style={{ fontSize: "1.1rem", fontWeight: "600", color: "#111827", margin: 0 }}>
+                Withdrawal
               </p>
               <p style={{ fontSize: "0.75rem", color: "#6b7280", margin: "0.125rem 0 0 0" }}>
-                {tx.date}
+               {new Date(tx.$createdAt).toLocaleDateString()}
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "0.875rem", fontWeight: "700", color: "#111827", margin: 0 }}>
+              <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#111827", margin: 0 }}>
                 {tx.amount}
               </p>
-              <p style={{ fontSize: "10px", fontWeight: "600", color: "#059669", margin: "0.125rem 0 0 0" }}>
+              <p style={{ fontSize: "10px", fontWeight: "600", color: tx.status === "successful" ? "#059669" : "red", margin: "0.125rem 0 0 0" }}>
                 {tx.status}
               </p>
             </div>
@@ -618,8 +836,41 @@ if (loading) {
         >
           <option value="">Select Bank</option>
 
-          <option value="opay">Opay</option>
+          <option value="044">Access Bank</option>
+<option value="023">Citibank</option>
+<option value="050">Ecobank</option>
+<option value="070">Fidelity Bank</option>
+<option value="011">First Bank of Nigeria</option>
+<option value="214">First City Monument Bank (FCMB)</option>
+<option value="058">Guaranty Trust Bank (GTBank)</option>
+<option value="030">Heritage Bank</option>
+<option value="082">Keystone Bank</option>
+<option value="303">Lotus Bank</option>
+<option value="526">Moniepoint</option>
+<option value="999992">OPay</option>
+<option value="999991">PalmPay</option>
+<option value="105">Premium Trust Bank</option>
+<option value="076">Polaris Bank</option>
+<option value="221">Stanbic IBTC Bank</option>
+<option value="068">Standard Chartered Bank</option>
+<option value="232">Sterling Bank</option>
+<option value="100">SunTrust Bank</option>
+<option value="032">Union Bank</option>
+<option value="033">United Bank for Africa (UBA)</option>
+<option value="215">Unity Bank</option>
+<option value="090110">VFD Microfinance Bank</option>
+<option value="035">Wema Bank</option>
+<option value="057">Zenith Bank</option>
+
         </select>
+
+        {
+          showFailedVerification && (
+            <div style={{padding: 5, color: "red", fontSize: 12}}>
+          We couldn't verify this account, please check your details or try a different account.
+          </div>
+          )
+        }
 
         <button
   onClick={handleSaveAccount}
@@ -643,6 +894,146 @@ if (loading) {
       </div>
     </div>
   )}
+
+  {showReceipt && receipt && (() => {
+  const meta = getStatusMeta(receipt.status);
+
+
+  const amount = receipt.amount ?? 0;
+  const ed_cut = 0.05 * amount;
+    const before_cut = 0.95 * amount;
+    let flutter_charge = 10.8;
+    if (((before_cut - flutter_charge) > 5000) && ((before_cut - flutter_charge) < 50000) ) {
+      flutter_charge = 26.9
+    } else if ((before_cut - flutter_charge > 50000)) {
+      flutter_charge = 53.8
+    }
+    const net = before_cut - flutter_charge
+  const charges = flutter_charge + ed_cut;
+
+  return (
+    <div
+      onClick={() => setShowModal(false)}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 50,
+        padding: "1rem",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "1rem",
+          padding: "1.5rem",
+          width: "100%",
+          maxWidth: "384px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+          boxSizing: "border-box",
+          boxShadow:
+            "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+        }}
+      >
+        {/* Header */}
+        <div>
+          <h3 style={{ fontWeight: 700, fontSize: "1.125rem", margin: 0 }}>
+            {meta.title}
+          </h3>
+
+          <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: meta.color }}>
+            {receipt.status.toUpperCase()}
+          </p>
+        </div>
+
+        {/* Amount section */}
+        <div
+          style={{
+            padding: "0.75rem",
+            borderRadius: "0.75rem",
+            backgroundColor: "#f9fafb",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.4rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Amount</span>
+            <strong>₦{amount.toLocaleString()}</strong>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Charges</span>
+            <strong>₦{charges.toLocaleString()}</strong>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Net</span>
+            <strong>₦{net.toLocaleString()}</strong>
+          </div>
+        </div>
+
+        {/* Description (optional field) */}
+        {receipt.description && (
+          <div style={{ fontSize: "0.9rem", color: "#6b7280" }}>
+            {receipt.description}
+          </div>
+        )}
+
+        {/* Status message block */}
+        <div
+          style={{
+            padding: "0.75rem",
+            borderRadius: "0.75rem",
+            backgroundColor:
+              receipt.status === "pending"
+                ? "#fffbeb"
+                : receipt.status === "successful"
+                ? "#ecfdf5"
+                : "#fef2f2",
+            fontSize: "0.85rem",
+            lineHeight: 1.4,
+          }}
+        >
+          {meta.message}
+        </div>
+
+        {/* Timestamp */}
+        <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
+          {new Date(receipt.$createdAt).toLocaleString()}
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={() => setShowReceipt(false)}
+          style={{
+            width: "100%",
+            backgroundColor: "#2563eb",
+            color: "#ffffff",
+            padding: "0.75rem",
+            borderRadius: "0.5rem",
+            border: "none",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+})()}
 </div>
   );
 }
