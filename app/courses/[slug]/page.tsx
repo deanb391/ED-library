@@ -22,7 +22,7 @@ export async function generateMetadata({
     description: course.description,
     openGraph: {
       title: course.title,
-      description: course.description,
+      description: `${course.description} - ${course.department} - ${course.level} ${course.session}`,
       images: [
         {
           url: course.thumbnailUrl,
