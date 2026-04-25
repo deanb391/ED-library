@@ -21,8 +21,8 @@ export async function generateMetadata({
     title: `${course.title} | ED Library`,
     description: course.description,
     openGraph: {
-      title: course.title,
-      description: `${course.description} - ${course.department} - ${course.level} ${course.session}`,
+      title: `${course.code} - ${course.title}`,
+      description: `${course.description} - ${course.department} - ${course.level} - ${course.session}`,
       images: [
         {
           url: course.thumbnailUrl,
