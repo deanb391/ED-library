@@ -18,11 +18,13 @@ export async function generateMetadata({
     };
   }
 
+  const followers = contributor.followers || 0
+
   return {
     title: `${contributor.username} | ED Library`,
     description: contributor.bio || "Contributor on ED-Library platform.",
     openGraph: {
-      title: contributor.username,
+      title: `${contributor.username} - ${contributor.followers} ${ followers > 1 ? "followers" : "follower"}`,
       description: contributor.bio || "Explore courses by this contributor.",
       images: [
         {
