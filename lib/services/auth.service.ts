@@ -227,3 +227,28 @@ export async function handleOAuthSignIn(userId: string, secret: string) {
   }
 }
 
+
+
+export async function createUserProfile(authUser: any, data: {
+  username: string;
+  level: number;
+  department: string;
+}) {
+  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    data.username
+  )}&background=random&color=fff`;
+
+  return await databases.createDocument(
+    DATABASE_ID,
+    USER_COLLECTION,
+    authUser.$id,
+    {
+      username: data.username,
+      email: authUser.email,
+      level: data.level,
+      department: data.department,
+      avatar,
+      isAdmin: false,
+    }
+  );
+}

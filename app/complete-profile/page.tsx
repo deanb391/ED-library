@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { account, databases } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
+import { createUserProfile } from "@/lib/services/auth.service";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -56,23 +57,12 @@ export default function CompleteProfilePage() {
     setIsLoading(true);
 
     try {
-      const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        username
-      )}&background=random&color=fff`;
 
-      await databases.createDocument(
-        "69617e75000c6c010a75",
-        "user",
-        authUser.$id,
-        {
-          username,
-          email: authUser.email,
-          level: Number(level),
-          department,
-          avatar,
-          isAdmin: false,
-        }
-      );
+      await createUserProfile(authUser, {
+        username,
+        level: Number(level),
+        department,
+      });
 
       await refreshUser();
       router.replace("/");

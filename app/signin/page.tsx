@@ -10,7 +10,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {  signIn, sendPasswordRecovery, googleSignIn } from "@/lib/appwrite";
+import {  signIn, sendPasswordRecovery, googleSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";
 
 export default function AdminLoginPage() {
@@ -172,7 +172,7 @@ export default function AdminLoginPage() {
               await googleSignIn();
             } catch (err) {
               console.error(err);
-              alert("Google sign-in failed");
+              // alert(`Google sign-in failed ${err}`);
             }
           }}
           type="button"

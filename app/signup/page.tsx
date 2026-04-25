@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { createUser, googleSignIn } from "@/lib/appwrite";
+import { createUser, googleSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";
 
 export default function SignUpPage() {
@@ -238,7 +238,7 @@ const DEPARTMENTS = [
               await googleSignIn();
             } catch (err) {
               console.error(err);
-              alert("Google sign-in failed");
+              // alert("Google sign-in failed");
             }
           }}
           type="button"

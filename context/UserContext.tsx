@@ -8,7 +8,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { getCurrentUser, updateUser } from "@/lib/appwrite";
+import { getCurrentUser, updateUser } from "@/lib/services/auth.service";
 import { BannerOrSquareAdItem, fetchSquareAds } from "@/lib/api/ads";
 import { getMyContributor } from "@/lib/api/contributors";
 import type { Contributor } from "@/lib/services/contributors.service";
