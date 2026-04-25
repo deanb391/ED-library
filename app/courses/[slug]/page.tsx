@@ -1,8 +1,14 @@
 import { fetchCourseById } from "@/lib/courses";
 import CourseDetailsClient from "./CourseDetailsClient";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const course = await fetchCourseById(params.slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const course = await fetchCourseById(slug);
 
   if (!course) {
     return {
@@ -28,6 +34,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function Page({ params }: { params: { slug: string } }) {
-  return <CourseDetailsClient courseId={params.slug} />;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  return <CourseDetailsClient courseId={slug} />;
 }

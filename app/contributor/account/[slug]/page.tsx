@@ -1,8 +1,15 @@
-import { getContributor } from "@/lib/api/contributors";
+import { getContributorService } from "@/lib/api/contributors";
 import CreatorProfileClient from "./CreatorProfileClient";
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const contributor = await getContributor(params.slug);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const contributor = await getContributorService(slug);
 
   if (!contributor) {
     return {
@@ -28,6 +35,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function Page({ params }: { params: { slug: string } }) {
-  return <CreatorProfileClient slug={params.slug} />;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  return <CreatorProfileClient slug={slug} />;
 }

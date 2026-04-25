@@ -83,6 +83,22 @@ export async function getContributor(contributorId: string): Promise<Contributor
   return data.contributor;
 }
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+export async function getContributorService(contributorId: string): Promise<Contributor | null> {
+  const res = await fetch(`${baseUrl}/api/contributors/fetch_contributor?contributorId=${encodeURIComponent(contributorId)}`, {
+    method: "GET",
+    headers: jsonHeaders,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch contributor status");
+  }
+
+  const data = await res.json();
+  return data.contributor;
+}
+
 export async function searchContributors(q: string) {
   const res = await fetch(`/api/contributors/search?q=${encodeURIComponent(q)}`);
   return res.json();
