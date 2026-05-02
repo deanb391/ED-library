@@ -79,12 +79,12 @@ const [viewerIndex, setViewerIndex] = useState(0);
   };
 
   // ⚠️ COUNTS (honest version)
-  const counts = useMemo(() => {
+  const counts: Record<StatusFilter, number> = useMemo(() => {
     return {
       all: contributors.length,
       pending:
         filter === "pending" ? contributors.length : 0,
-      approved:
+      live:
         filter === "live" ? contributors.length : 0,
       rejected:
         filter === "rejected" ? contributors.length : 0,
@@ -256,7 +256,7 @@ const [viewerIndex, setViewerIndex] = useState(0);
         >
           {contributors.map((c) => {
             // Helper for semantic badge colors
-            const getBadgeStyles = (status) => {
+            const getBadgeStyles = (status: string) => {
               if (status === "live" || status === "approved") return { bg: "#dcfce7", text: "#166534" };
               if (status === "pending") return { bg: "#fef9c3", text: "#854d0e" };
               if (status === "rejected") return { bg: "#fee2e2", text: "#991b1b" };
