@@ -2,14 +2,14 @@
 
 import React from 'react';
 import deskImg from "@/assets/images/desk.webp";
-import { 
-  Bell, 
-  BookOpen, 
-  Banknote, 
-  Wallet, 
-  ShieldCheck, 
-  Lock, 
-  TrendingUp 
+import {
+  Bell,
+  BookOpen,
+  Banknote,
+  Wallet,
+  ShieldCheck,
+  Lock,
+  TrendingUp
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -17,26 +17,26 @@ export default function BecomeContributorPage() {
   const router = useRouter()
   return (
     <div className="min-h-screen bg-[#F8F9FB] font-sans text-gray-900 flex flex-col py-5">
-      
+
       {/* --- Main Content --- */}
       <main
         className="flex-grow max-w-6xl mx-auto px-6 lg:px-10 py-16 md:py-20 w-full space-y-20"
         style={{ marginTop: 20 }}
       >
-        
+
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto space-y-6" style={{ marginBottom: 20 }}>
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
             Become a Contributor
           </h1>
           <p className="text-lg md:text-xl text-gray-500 leading-relaxed">
-            Share your knowledge, create structured courses, and earn from your notes. 
+            Share your knowledge, create structured courses, and earn from your notes.
             Join a community of elite scholars and monetize your academic expertise.
           </p>
         </div>
 
         {/* Value Proposition Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1 */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col items-start text-left hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
@@ -66,7 +66,7 @@ export default function BecomeContributorPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Transparent Fees</h3>
             <p className="text-gray-500 text-sm leading-relaxed">
-              Keep the lion's share. ED-Library takes a flat 15% platform fee and a nominal ₦50 transaction fee per sale.
+              Keep the lion's share. ED-Library takes a flat 15% platform fee from money earned on your courses and a nominal 5% transaction fee per withdrawal.
             </p>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function BecomeContributorPage() {
             paddingTop: 32
           }}
         >
-          
+
           {/* Left: Image */}
           <div
             style={{
@@ -97,7 +97,7 @@ export default function BecomeContributorPage() {
               marginBottom: 50
             }}
           >
-            <img 
+            <img
               src={deskImg.src}
               alt="Desk lamp illuminating a study area"
               style={{
@@ -110,7 +110,7 @@ export default function BecomeContributorPage() {
             />
 
             <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent"></div>
-            
+
             <div className="absolute bottom-0 left-0 p-8">
               <h4 className="text-white text-2xl font-bold mb-2">Knowledge is Value</h4>
               <p className="text-gray-300 text-sm font-medium">Start your journey today.</p>
@@ -194,26 +194,26 @@ export default function BecomeContributorPage() {
               border: "none",
               cursor: "pointer",
               transition: "transform 120ms ease, box-shadow 10ms ease",
-      willChange: "transform"
+              willChange: "transform"
             }}
-            onClick={ () => 
+            onClick={() =>
               router.push("/onboarding/step-1")
             }
             onMouseDown={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
-    }}
-    onMouseUp={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
-    onMouseLeave={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
-    onTouchStart={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
-    }}
-    onTouchEnd={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
+            }}
+            onMouseUp={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
+            onTouchStart={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
           >
             Start Application
           </button>
@@ -232,23 +232,23 @@ export default function BecomeContributorPage() {
               marginTop: 25,
               marginBottom: 10,
               transition: "transform 120ms ease",
-      willChange: "transform"
+              willChange: "transform"
             }}
             onMouseDown={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
-    }}
-    onMouseUp={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
-    onMouseLeave={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
-    onTouchStart={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.90)";
-    }}
-    onTouchEnd={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-    }}
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
+            }}
+            onMouseUp={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
+            onTouchStart={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.90)";
+            }}
+            onTouchEnd={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
           >
             Learn how earnings work
           </button>

@@ -721,7 +721,7 @@ export default function OnboardingFlow() {
             transform: `translateX(-${step * 33.333333333}%)`,
           }}
         >
-          <div className="w-full shrink-0 flex justify-center">
+          <div className="w-1/3 shrink-0 flex justify-center">
             <Step1
               next={() => setStep(1)}
               draft={draft}
@@ -731,7 +731,7 @@ export default function OnboardingFlow() {
             />
           </div>
 
-          <div className="w-full shrink-0 flex justify-center">
+          <div className="w-1/3 shrink-0 flex justify-center">
             <Step2
               next={() => setStep(2)}
               back={() => setStep(0)}
@@ -740,7 +740,7 @@ export default function OnboardingFlow() {
             />
           </div>
 
-          <div className="w-full shrink-0 flex justify-center">
+          <div className="w-1/3 shrink-0 flex justify-center">
             <Step3
               back={() => setStep(1)}
               onSubmit={() => setIsOpen(true)}
