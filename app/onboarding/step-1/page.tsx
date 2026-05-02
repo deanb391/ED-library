@@ -478,6 +478,8 @@ function Step3({
     updateDraft({ reviewImages: updated });
   };
 
+  const allImagesSelected = draft.reviewImages.every(img => img && img.trim() !== "");
+
   return (
     <div className="w-full flex flex-col items-center px-4 py-6">
       <div className="w-full max-w-5xl space-y-6">
@@ -558,7 +560,11 @@ function Step3({
           <ArrowLeft size={16} /> Back
         </button>
 
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2" onClick={onSubmit}>
+        <button 
+          className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
+          onClick={onSubmit}
+          disabled={!allImagesSelected}
+        >
           Submit <Send size={16} />
         </button>
         </div>

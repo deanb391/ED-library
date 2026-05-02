@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function ApplicationUnderReviewPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col text-gray-900">
-      <main className="grow flex flex-col items-center justify-center px-4 w-full max-w-3xl mx-auto" style={{paddingTop: 40}}>
+      <main className="grow flex flex-col items-center justify-center px-4 w-full max-w-3xl mx-auto" style={{ paddingTop: 40 }}>
 
 
         {/* HEADER */}
@@ -19,19 +19,19 @@ export default function ApplicationUnderReviewPage() {
         </div>
 
         {/* CARD */}
-        <div className="w-full bg-white border border-gray-100 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm" style={{marginTop: 25}}>
-          
+        <div className="w-full bg-white border border-gray-100 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm" style={{ marginTop: 25 }}>
+
           {/* STATUS HEADER */}
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold tracking-widest text-blue-600 uppercase">
               Verification Status
             </span>
-            <div style={{backgroundColor: 'yellow', paddingRight: 10, paddingLeft: 10, paddingTop: 1, paddingBottom: 2, borderRadius: 20}}>
+            <div style={{ backgroundColor: 'yellow', paddingRight: 10, paddingLeft: 10, paddingTop: 1, paddingBottom: 2, borderRadius: 20 }}>
               <span className="text-sm font-medium text-gray-600">
-              pending
-            </span>
+                pending
+              </span>
             </div>
-            
+
           </div>
 
           {/* PROGRESS BAR */}
@@ -51,7 +51,7 @@ export default function ApplicationUnderReviewPage() {
                 Review Timeline
               </h4>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Reviews typically take <span className="text-gray-900 font-medium">24–72 hours</span>.  
+                Reviews typically take <span className="text-gray-900 font-medium">24–72 hours</span>.
                 You’ll be notified once your application is approved.
               </p>
             </div>
@@ -60,8 +60,8 @@ export default function ApplicationUnderReviewPage() {
 
         {/* ACTIONS */}
         <div className="w-full flex flex-col items-center gap-4 mt-10">
-          
-          <Link href="/dashboard" className="w-full max-w-65">
+
+          <Link href="/contributor/dashboard" className="w-full max-w-65">
             <button className="w-full bg-blue-600 text-white text-sm font-medium py-3 rounded-xl hover:bg-blue-700 active:scale-[0.90] transition-all">
               Return to Dashboard
             </button>

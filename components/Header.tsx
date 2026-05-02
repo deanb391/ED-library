@@ -83,23 +83,9 @@ export default function Header() {
       {user?.isAdmin && (
         <>
           <MenuItem
-            icon={Plus}
-            label="Create Course"
-            href="/contributor/dashboard/create-course"
-            onSelect={onSelect}
-          />
-          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
-          <MenuItem
-            icon={Upload}
-            label="Upload"
-            href="/admin/upload"
-            onSelect={onSelect}
-          />
-          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
-          <MenuItem
-            icon={Megaphone}
-            label="Ads"
-            href="/admin/ads"
+            icon={User}
+            label="Admin"
+            href="/admin"
             onSelect={onSelect}
           />
         </>
@@ -172,6 +158,12 @@ export default function Header() {
                 Become A Contributor
               </Link>
             )
+          )}
+
+          {user?.isAdmin && (
+            <Link href="/admin" className="hover:text-blue-600">
+              Admin
+            </Link>
           )}
 
           {

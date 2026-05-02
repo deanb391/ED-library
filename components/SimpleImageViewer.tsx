@@ -97,24 +97,25 @@ export default function SimpleImageViewer({
         </button>
 
         {/* IMAGE */}
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center p-4">
           {loading && (
-            <div className="absolute flex items-center justify-center">
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="h-10 w-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
             </div>
           )}
 
-          <Image
-            src={images[currentIndex]}
-            alt="preview"
-            width={800}
-            height={1000}
-            className={`object-contain max-h-full max-w-full transition-opacity duration-200 ${
-              loading ? "opacity-0" : "opacity-100"
-            }`}
-            onLoadingComplete={() => setLoading(false)}
-            priority
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={images[currentIndex]}
+              alt="preview"
+              fill
+              className={`object-contain transition-opacity duration-200 ${
+                loading ? "opacity-0" : "opacity-100"
+              }`}
+              onLoadingComplete={() => setLoading(false)}
+              priority
+            />
+          </div>
         </div>
       </div>
     </div>
