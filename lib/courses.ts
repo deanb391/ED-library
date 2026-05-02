@@ -34,6 +34,7 @@ export type Course = {
     reached: string[];
     visits_per_day: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
   };
+
 };
 
 
@@ -456,7 +457,8 @@ export async function createPost(
 export async function editPost(
   postId: string,
   data: Partial<{
-    description: string
+    description: string,
+    images: string[]
   }>
 ) {
   try {
@@ -497,6 +499,7 @@ export async function fetchCourseById(courseId: string) {
       analytics: course.analytics,
       price: course.price,
       pageCount: course.pageCount,
+      university: course.university,
     })
 }
 

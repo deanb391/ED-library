@@ -27,12 +27,13 @@ export async function createContributor(
 
 export async function editContributor(
   contributorId: string,
-  updates: Partial<ContributorDraft>
+  updates: Partial<ContributorDraft>,
+  type?: string,
 ): Promise<any> {
   const res = await fetch("/api/contributors/edit", {
     method: "POST",
     headers: jsonHeaders,
-    body: JSON.stringify({ contributorId, updates }),
+    body: JSON.stringify({ contributorId, updates, type }),
   });
 
   if (!res.ok) {
@@ -149,4 +150,25 @@ export async function toggleFollowContributor(
 
   const data = await res.json();
   return data.success;
+}
+
+export async function fetchContributors(
+  limit = 20,
+  status?: string,
+  cursor?: string,
+  search?: string
+) {
+  const query = new URLSearchParams();
+
+  query.append("limit", String(limit));
+
+  if (status) query.append("status", status);
+  if (cursor) query.append("cursor", cursor);
+  if (search) query.append("search", search);
+
+  const res = await fetch(`/api/contributors/fetch?${query}`);
+
+  if (!res.ok) throw new Error("Failed");
+
+  return res.json();
 }

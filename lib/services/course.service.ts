@@ -98,6 +98,7 @@ export async function advancedSearchCoursesService(filters: any) {
   const queries: any[] = [
     Query.orderDesc("$updatedAt"),
     Query.limit(30),
+    Query.equal("status", "live"),
   ];
 
   if (filters.department) {
@@ -130,18 +131,22 @@ export async function searchCoursesService(query: string) {
   const [title, code, dept, university] = await Promise.all([
     databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
       Query.search("title", query),
+      Query.equal("status", "live"),
       ...base,
     ]),
     databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
       Query.search("code", query),
+      Query.equal("status", "live"),
       ...base,
     ]),
     databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
       Query.search("department", query),
+      Query.equal("status", "live"),
       ...base,
     ]),
     databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
       Query.search("university", query),
+      Query.equal("status", "live"),
       ...base,
     ]),
   ]);
@@ -168,6 +173,7 @@ export async function fetchCoursesByDepartmentService({
       Query.limit(limit),
       Query.offset(offset),
       Query.orderDesc("$createdAt"),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -296,6 +302,7 @@ export async function fetchForYouCoursesService(user: any, limit = 10, offset = 
       Query.limit(limit),
       Query.offset(offset),
       Query.orderDesc("$updatedAt"),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -370,6 +377,7 @@ export async function fetchNewCoursesService(limit = 10, offset = 0) {
       Query.orderDesc("$createdAt"),
       Query.limit(limit),
       Query.offset(offset),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -384,6 +392,7 @@ export async function fetchPopularCoursesService(limit = 10, offset = 0) {
       Query.orderDesc("rating"), // crude for now, we’ll refine later
       Query.limit(limit),
       Query.offset(offset),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -399,6 +408,7 @@ export async function fetchFreeCoursesService(limit = 10, offset = 0) {
       Query.limit(limit),
       Query.offset(offset),
       Query.orderDesc("$createdAt"),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -420,6 +430,7 @@ export async function fetchRelatedCoursesService({
       Query.limit(limit),
       Query.offset(offset),
       Query.orderDesc("$updatedAt"),
+      Query.equal("status", "live"),
     ]
   );
 
@@ -434,6 +445,7 @@ export async function fetchUserLibraryCoursesService(courseIds: string[]) {
     COURSE_COLLECTION,
     [
       Query.equal("$id", courseIds),
+      Query.equal("status", "live"),
     ]
   );
 

@@ -99,3 +99,16 @@ export async function initiateWithdrawal(params: {
 
   return data;
 }
+
+export async function verifyFlutterwaveTransfer(reference: string) {
+  const res = await fetch(`${FLW_BASE}/transfers?reference=${reference}`, {
+    method: "GET",
+    headers: getHeaders(),
+  });
+
+  const data = await res.json();
+  
+  console.log("Flutterwave verify transfer:", data);
+
+  return data;
+}

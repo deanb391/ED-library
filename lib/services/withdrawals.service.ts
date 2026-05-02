@@ -146,7 +146,14 @@ export async function processWithdrawal({
   account_number: string;
   account_bank: string;
 }) {
-  // 1. Create withdrawal record
+  const wallet = await fetchWalletByUserService(userId);
+  if (!wallet) return { success: false, error: "Wallet not found" };
+
+  if (wallet.balance < amount) {
+    return { success: false, error: "Bad Request: Balance Insufficient" };
+  }
+
+  // 1. Create withdrawal record (Pending)
   let withdrawal = await createWIthdrawalService({
     amount,
     status: "pending",
@@ -155,69 +162,57 @@ export async function processWithdrawal({
   });
 
   try {
-
-    // 
-    const wallet = await fetchWalletByUserService(userId)
-    if(!wallet) return;
-
-    if (wallet.balance < amount) {
-        return { success: false, error: "Bad Request: Balance Insufficient"}
-    }
-
     const ed_cut = 0.05 * amount;
     const before_cut = 0.95 * amount;
     let flutter_charge = 10.8;
-    if (((before_cut - flutter_charge) > 5000) && ((before_cut - flutter_charge) < 50000) ) {
-      flutter_charge = 26.9
-    } else if ((before_cut - flutter_charge > 50000)) {
-      flutter_charge = 53.8
+    if (before_cut - flutter_charge > 5000 && before_cut - flutter_charge < 50000) {
+      flutter_charge = 26.9;
+    } else if (before_cut - flutter_charge > 50000) {
+      flutter_charge = 53.8;
     }
-    const balance = before_cut - flutter_charge
+    const balance = before_cut - flutter_charge;
 
-    const bank_opay = "044"
+    const bankCode = getBankCode(account_bank) || account_bank;
 
-    // 2. Debit wallet first
-
+    // 2. Debit wallet first (Pessimistic approach to prevent double-debits)
+    await debitWalletService(userId, amount, "Withdrawal");
+    await createTransactionService({ user: userId, type: "withdrawal", direction: "debit", amount: amount, reference: "Withdrawal" });
+    await createTransactionService({ user: "admin", type: "withdrawal_fee", direction: "debit", amount: ed_cut, reference: "Earning from withdrawal" });
+    await createTransactionService({ user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: ed_cut, reference: "FlutterWave Charge" });
 
     // 3. Call Flutterwave
     const flw = await initiateWithdrawal({
       amount: balance,
       account_number,
-      account_bank: bank_opay,
+      account_bank: bankCode,
       narration: "ED-Library Withdrawal",
       reference: withdrawal.$id,
     });
-    
 
-
-    if (flw.status !== "success") {
-      throw new Error("Transfer failed");
+    if (flw.status === "error") {
+      // Synchronous definitive failure from Flutterwave
+      throw new Error(`Flutterwave error: ${flw.message}`);
     }
 
-    // 4. Mark success
-    // await updateWithdrawalStatus(withdrawal.$id, "successful");
-
-    await debitWalletService(userId, amount, "Withdrawal");
-
-    await  createTransactionService({user: userId, type: "withdrawal", direction: "debit", amount: amount, reference: "Withdrawal"})
-
-    await  createTransactionService({user: "admin", type: "withdrawal_fee", direction: "debit", amount: ed_cut, reference: "Earning from withdrawal"})
-
-    await  createTransactionService({user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: ed_cut, reference: "FlutterWave Charge"})
-
-    if (flw.message === "Transfer Queued Successfully") {
-      withdrawal = await updateWithdrawalStatus(withdrawal.$id, "successful");
-    }
-
-    return { success: true, receipt: withdrawal };
+    // Queued or Successful. Leave as pending for webhook to mark successful.
+    return { success: true, receipt: withdrawal, message: flw.message || "Transfer processing" };
 
   } catch (err) {
-    console.error(err);
+    console.error("processWithdrawal Error:", err);
+    
+    // Determine if it was a network error/timeout (fetch failed) vs an API rejection
+    const errorMessage = (err as Error).message || "";
+    const isNetworkError = errorMessage.includes("fetch failed") || (err as Error).name === "TypeError";
 
-    const receipt = await updateWithdrawalStatus(withdrawal.$id, "failed");
-    // await refundUser(withdrawal.user, withdrawal.amount);
+    if (!isNetworkError) {
+      // Explicit failure: Safe to refund immediately
+      await refundUser(userId, amount);
+      const receipt = await updateWithdrawalStatus(withdrawal.$id, "failed");
+      return { success: false, receipt, error: errorMessage };
+    }
 
-    return { success: false, receipt };
+    // Network timeout: Do NOT refund. Leave as pending.
+    return { success: true, receipt: withdrawal, message: "Transfer is taking longer than expected. Status is pending." };
   }
 }
 
@@ -284,4 +279,13 @@ export async function verifyAccount(params: VerifyAccountParams): Promise<Verify
       message: "An error occurred while verifying the account.",
     };
   }
+}
+
+export async function fetchPendingWithdrawalsService() {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    WITHDRAWAL_SERVICE,
+    [Query.equal("status", "pending"), Query.limit(50)]
+  );
+  return res.documents;
 }

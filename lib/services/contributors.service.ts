@@ -1,5 +1,6 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -72,7 +73,8 @@ export async function createContributorService(
 
 export async function editContributorService(
   contributorId: string,
-  updates: Partial<ContributorDraft>
+  updates: Partial<ContributorDraft>,
+  type?: string,
 ): Promise<Contributor> {
   const now = new Date().toISOString();
 
@@ -87,6 +89,19 @@ export async function editContributorService(
     contributorId,
     payload
   );
+
+  if (type) {
+    let status = "";
+    if (type === "approval") status = "live";
+    else if (type === "reject") status = "not-live"
+    console.log("DOC USER: ", doc.user.$id)
+    const courses = await fetchCoursesByAdminService(doc.user.$id);
+    courses.map( async (course) => {
+      await updateCourseService(course.id, {
+        status: status
+      })
+    })
+  }
 
   return mapContributor(doc);
 }
@@ -221,4 +236,66 @@ export async function searchContributorsService(query: string) {
 });
 
   return Array.from(map.values()).map(mapContributor);
+}
+
+
+export async function fetchContributorsService(
+  type?: string,
+  limit = 5,
+  cursor?: string,
+  search?: string
+): Promise<{
+  contributors: Contributor[];
+  nextCursor?: string;
+  hasMore: boolean;
+}> {
+
+
+  const queries: any[] = [
+    Query.orderDesc("$createdAt"),
+    Query.limit(limit),
+  ];
+
+  if (type) {
+    queries.push(Query.equal("status", type))
+  }
+
+  if (cursor) {
+    queries.push(Query.cursorAfter(cursor));
+  }
+  if (search) {
+    queries.push(Query.contains("username", search))
+  }
+
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    CONTRIBUTORS_COLLECTION,
+    queries
+  );
+
+
+  const contributors = res.documents.map(mapContributor);
+  const nextCursor =
+    res.documents.length === limit
+      ? res.documents[res.documents.length - 1].$id
+      : undefined;
+
+  // // Hydrate user data
+  // const userIds = [...new Set(reviews.map(review => review.user as string))];
+  // const userPromises = userIds.map(userId => getUserById(userId));
+  // const users = await Promise.all(userPromises);
+  // const userMap = new Map(userIds.map((id, index) => [id, users[index]]));
+
+  // reviews.forEach(review => {
+  //   const userDoc = userMap.get(review.user as string);
+  //   if (userDoc) {
+  //     review.user = userDoc;
+  //   }
+  // });
+
+  return {
+    contributors,
+    nextCursor,
+    hasMore: Boolean(nextCursor),
+  };
 }

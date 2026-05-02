@@ -75,7 +75,7 @@ export type Course = {
   thumbnailUrl: string;
   files?: string[];
   user?: any;
-  isOnGoing: Boolean;
+  isOnGoing: boolean;
   session: string;
   level: Number;
   department: string;
@@ -418,11 +418,6 @@ function pickRandom<T>(arr: T[]): T | null {
       setTotalReach(data.reached?.length || 0);
     }
 
-    
-
-
-    
-
     setLoading(false);
   };
 
@@ -593,25 +588,30 @@ const handleFollow = async () => {
   }
 };
 
-  const handleSaveEdit = async (value: string) => {
-    if (!activePost) return;
+  const handleSaveEdit = async (data: { description: string; images: string[] }) => {
+  if (!activePost) return;
 
-    try {
-      setSavingEdit(true);
-      await editPost(activePost.id, { description: value });
+  try {
+    setSavingEdit(true);
 
-      setPosts(prev =>
-        prev.map(p =>
-          p.id === activePost.id ? { ...p, description: value } : p
-        )
-      );
+    await editPost(activePost.id, {
+      description: data.description,
+      images: data.images,
+    });
 
-      setShowEdit(false);
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-  console.log(course)
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === activePost.id
+          ? { ...p, description: data.description, images: data.images }
+          : p
+      )
+    );
+
+    setShowEdit(false);
+  } finally {
+    setSavingEdit(false);
+  }
+};
 
 
    if (lloading || loading) {
@@ -712,7 +712,7 @@ const handleFollow = async () => {
         </div>
 
         {
-      isOwner && (
+      !isOwner && (
         <div className="flex items-center gap-3 mb-3">
 
           {/* Avatar */}
@@ -1031,6 +1031,29 @@ const handleFollow = async () => {
         }}
         course_user={course?.user}
       />
+
+      {(course?.user === user?.$id || user?.isAdmin) && (
+
+
+    <button
+  onClick={() => {
+    if (!user?.isAdmin) return;
+
+    const found = posts.find(p => p.id === post.id);
+    if (!found) return;
+
+    setActivePost(found);
+    setShowActions(true);
+    setPostId(post.id);
+  }}
+  className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+>
+  <Pencil size={14} />
+  Edit
+</button>
+
+
+)}
       {!hasAccess && (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <span className="text-xs bg-black/40 text-white px-2 py-1 rounded">
@@ -1148,6 +1171,7 @@ const handleFollow = async () => {
 <EditPostModal
   isOpen={showEdit}
   initialValue={activePost?.description}
+  initialImages={activePost?.images}
   loading={savingEdit}
   onClose={() => setShowEdit(false)}
   onSave={handleSaveEdit}
@@ -1236,6 +1260,8 @@ const handleFollow = async () => {
       lecturer: course.lecturer,
       thumbnailId: course.thumbnailId,
       thumbnailUrl: course.thumbnailUrl,
+      isOngoing: course.isOnGoing,
+      price: course.price,
     }}
     onUpdated={(updated) =>
       setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)

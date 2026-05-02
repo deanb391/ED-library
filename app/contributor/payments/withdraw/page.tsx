@@ -14,7 +14,7 @@ import {
   Banknote 
 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
-import { fetchWallet, fetchWithdrawalHistory, updateWalletAccount, Wallet as WalletType, withdraw } from '@/lib/api/wallet';
+import { fetchWallet, fetchWithdrawalHistory, updateWalletAccount, Wallet as WalletType, withdraw, verifyPendingWithdrawals } from '@/lib/api/wallet';
 
 // --- Dummy Data ---
 const RECENT_WITHDRAWALS = [
@@ -174,13 +174,48 @@ const handleWithdraw = async () => {
       user?.$id,
       amount
     )
-    console.log("Response: ", response.wallet)
-    const { success, receipt} = response.wallet;
-    if (!receipt) return;
+    console.log("Response: ", response);
+    
+    if (response.error) {
+      alert("Error: " + response.error);
+      setWithdrawing(false);
+      return;
+    }
+
+    const { success, receipt, error, message } = response.wallet || {};
+    
+    if (error && !receipt) {
+      alert("Error: " + error);
+      setWithdrawing(false);
+      return;
+    }
+
+    if (!receipt) {
+      alert("Unknown error occurred");
+      setWithdrawing(false);
+      return;
+    }
+
+    // Optional: display message if any
+    if (message) {
+      console.log("Status Message:", message);
+    }
+
     setWithdrawing(false)
     setReceipt(receipt)
     setShowReceipt(true)
+
+    // Optional: Refresh wallet balance and history
+    const [walletRes, historyRes] = await Promise.all([
+      fetchWallet(user.$id),
+      fetchWithdrawalHistory(user.$id)
+    ]);
+    if (walletRes.wallet) setWallet(walletRes.wallet);
+    if (historyRes) setHistory(historyRes);
+    
   } catch (error) {
+    console.error(error);
+    alert("An unexpected error occurred. Please try again.");
     setWithdrawing(false);
   }
 }
@@ -1013,6 +1048,43 @@ if (loading ) {
         <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
           {new Date(receipt.$createdAt).toLocaleString()}
         </div>
+
+        {receipt.status === "pending" && (
+          <button
+            onClick={async () => {
+              setWithdrawing(true); 
+              try {
+                await verifyPendingWithdrawals();
+                const [walletRes, historyRes] = await Promise.all([
+                  fetchWallet(user?.$id || ""),
+                  fetchWithdrawalHistory(user?.$id || "")
+                ]);
+                if (walletRes.wallet) setWallet(walletRes.wallet);
+                if (historyRes) {
+                  setHistory(historyRes);
+                  const updatedReceipt = historyRes.find((r: any) => r.$id === receipt.$id);
+                  if (updatedReceipt) setReceipt(updatedReceipt);
+                }
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setWithdrawing(false);
+              }
+            }}
+            style={{
+              width: "100%",
+              backgroundColor: "#f59e0b",
+              color: "#ffffff",
+              padding: "0.75rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Refresh Status
+          </button>
+        )}
 
         {/* Close button */}
         <button

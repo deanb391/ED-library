@@ -107,3 +107,10 @@ export async function withdraw(userId: string, amount: string) {
 
   return res.json();
 }
+
+export async function verifyPendingWithdrawals() {
+  const res = await fetch("/api/wallet/verify-pending", {
+    method: "POST"
+  });
+  return res.json();
+}

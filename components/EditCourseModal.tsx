@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { uploadThumbnail } from "@/lib/courses";
 import { editCourse } from "@/lib/courses";
+import { bool } from "aws-sdk/clients/signer";
+import { Currency } from "lucide-react";
 
 interface EditCourseModalProps {
   isOpen: boolean;
@@ -16,6 +18,8 @@ interface EditCourseModalProps {
     lecturer?: string;
     thumbnailId?: string;
     thumbnailUrl?: string;
+    isOngoing?: boolean;
+    price?: string;
   };
   onUpdated?: (updated: Partial<any>) => void;
 }
@@ -33,17 +37,50 @@ export default function EditCourseModal({
   const [lecturer, setLecturer] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOnGoing, setIsOnGoing] = useState(false);
+const [amount, setAmount] = useState(0);
+const [isFree,setIsFree] = useState(false);
+const [parse, setParsed] = useState<any>({})
+
 
   useEffect(() => {
-    if (!isOpen) return;
+  if (!isOpen) return;
 
-    setTitle(course.title);
-    setCode(course.code);
-    setDescription(course.description);
-    setUniversity(course.university || "");
-    setLecturer(course.lecturer || "");
-    setThumbnail(null);
-  }, [isOpen, course]);
+  setTitle(course.title);
+  setCode(course.code);
+  setDescription(course.description);
+  setUniversity(course.university || "");
+  setLecturer(course.lecturer || "");
+  setIsOnGoing(course.isOngoing || true)
+
+  try {
+    const parsed = JSON.parse((course as any).price || "{}");
+    console.log("Parsed: ", parsed)
+    setParsed(parsed);
+
+    setIsOnGoing(parsed?.type === "subscription");
+    setIsFree(parsed.isFree)
+
+    if (parsed?.type === "subscription") {
+      
+      setAmount(parsed.amount || 0);
+    } else {
+      setAmount(parsed.amount || 0);
+    }
+  } catch {
+    setIsOnGoing(false);
+    setAmount(0);
+  }
+
+}, [isOpen, course]);
+
+const increase = () => {
+  setAmount((p) => isOnGoing ? Math.min(150, p + 10) : Math.min(15, p + 1));
+};
+
+const decrease = () => {
+  setAmount((p) => isOnGoing ? Math.max(0, p - 10) : Math.max(0, p - 1));
+};
 
   if (!isOpen) return null;
 
@@ -58,6 +95,15 @@ export default function EditCourseModal({
         description,
         university,
         lecturer: lecturer || undefined,
+        isOnGoing,
+        price: JSON.stringify(
+          {
+            type: isOnGoing ? "subscription" : "one_time",
+            currency: parse.currency,
+            isFree: amount > 0 ? false : true,
+            amount: amount,
+          }
+        )
       };
 
       if (thumbnail) {
@@ -79,91 +125,161 @@ export default function EditCourseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-sm border border-gray-200 relative">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 rounded-t-3xl" />
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(0,0,0,0.4)",
+      padding: "16px",
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "520px",
+        height: "80vh",
+        backgroundColor: "#fff",
+        borderRadius: "24px",
+        border: "1px solid #e5e7eb",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: "24px",
+          borderBottom: "1px solid #e5e7eb",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            color: "#111827",
+          }}
+        >
+          Edit course
+        </h2>
+      </div>
 
-        <div className="p-8">
-          <h2 className="text-xl font-semibold text-gray-900 text-center">
-            Edit course
-          </h2>
-          <p className="text-sm text-gray-500 text-center mt-1 mb-6">
-            Update course details
-          </p>
+      {/* Scrollable Content */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "20px",
+          minHeight: 0,
+        }}
+      >
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          {/* Title */}
+          <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Course title
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
+                marginTop: "6px",
+              }}
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course title
-              </label>
-              <input
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          {/* Code */}
+          <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Course code
+            </label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
+                marginTop: "6px",
+              }}
+            />
+          </div>
 
-            {/* Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course code
-              </label>
-              <input
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          {/* Description */}
+          <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Description
+            </label>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
+                marginTop: "6px",
+                resize: "none",
+              }}
+            />
+          </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 resize-none
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          {/* University */}
+          <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              University
+            </label>
+            <input
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
+                marginTop: "6px",
+              }}
+            />
+          </div>
 
-            {/* University */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                University
-              </label>
-              <input
-                required
-                value={university}
-                onChange={(e) => setUniversity(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          {/* Lecturer */}
+          <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Lecturer
+            </label>
+            <input
+              value={lecturer}
+              onChange={(e) => setLecturer(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
+                marginTop: "6px",
+              }}
+            />
+          </div>
 
-            {/* Lecturer */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Lecturer <span className="text-gray-400">(optional)</span>
-              </label>
-              <input
-                value={lecturer}
-                onChange={(e) => setLecturer(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300
-                           focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Thumbnail */}
-            <div>
+          {/* File */}
+          <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Change thumbnail <span className="text-gray-400">(optional)</span>
               </label>
@@ -180,27 +296,191 @@ export default function EditCourseModal({
               />
             </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4">
+          {/* Toggle */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: "14px", fontWeight: 500 }}>
+              Is Ongoing
+            </span>
+            <input
+              type="checkbox"
+              checked={isOnGoing}
+              onChange={(e) => {
+                  setIsOnGoing(e.target.checked)
+                  setAmount(0)
+                }}
+            />
+          </div>
+
+          {/* Price */}
+          {
+            !isOnGoing && (
+              <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Price Per Page (NGN)
+            </label>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "12px",
+                marginTop: "10px",
+              }}
+            >
               <button
                 type="button"
-                onClick={onClose}
-                className="text-sm text-gray-500"
+                onClick={decrease}
+                disabled={amount <= 0}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "#f3f4f6",
+                  cursor: "pointer",
+                }}
               >
-                Cancel
+                −
               </button>
 
-              <button
-                disabled={isLoading}
-                className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm
-                           disabled:opacity-60"
+              <div
+                style={{
+                  minWidth: "100px",
+                  textAlign: "center",
+                  padding: "12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                }}
               >
-                {isLoading ? "Saving…" : "Save changes"}
+                ₦ { amount}
+              </div>
+
+              <button
+                type="button"
+                onClick={increase}
+                disabled={ amount >= 15}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "#f3f4f6",
+                  cursor: "pointer",
+                }}
+              >
+                +
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+            )
+          }
+
+          {
+            isOnGoing && (
+              <div>
+            <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              Subscription Price (NGN)
+            </label>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "12px",
+                marginTop: "10px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={decrease}
+                disabled={ amount <= 0}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "#f3f4f6",
+                  cursor: "pointer",
+                }}
+              >
+                −
+              </button>
+
+              <div
+                style={{
+                  minWidth: "100px",
+                  textAlign: "center",
+                  padding: "12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "12px",
+                  fontWeight: 600,
+                }}
+              >
+                ₦ {amount}
+              </div>
+
+              <button
+                type="button"
+                onClick={increase}
+                disabled={amount >= 150}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "#f3f4f6",
+                  cursor: "pointer",
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
+            )
+          }
+
+          <div
+        style={{
+          padding: "16px",
+          borderTop: "1px solid #e5e7eb",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "12px",
+        }}
+      >
+        <button onClick={onClose} style={{ color: "#6b7280" }}>
+          Cancel
+        </button>
+
+        <button
+  type="submit"
+  disabled={isLoading}
+  style={{
+    background: "#2563eb",
+    color: "#fff",
+    padding: "10px 16px",
+    borderRadius: "10px",
+    border: "none",
+  }}
+>
+  {isLoading ? "Saving…" : "Save"}
+</button>
+
       </div>
+        </form>
+      </div>
+
+
     </div>
-  );
+  </div>
+);
 }
