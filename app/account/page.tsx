@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
+import ContributorSection from "@/components/ContributorSection";
 
 export default function AccountScreen() {
   const { user, loading } = useUser();
@@ -79,6 +80,8 @@ export default function AccountScreen() {
             value={user.lastTime ? formatDate(user.lastTime) : "—"}
           /> */}
         </div>
+        
+        <ContributorSection userId={user.$id} />
       </div>
     </div>
   );

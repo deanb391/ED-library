@@ -157,9 +157,11 @@ export default function Header() {
           <Link href="/" className="text-gray-900 hover:text-blue-600">
             Home
           </Link>
-          <Link href="/account" className="hover:text-blue-600">
-            Account
-          </Link>
+          {user && (
+            <Link href="/account" className="hover:text-blue-600">
+              Account
+            </Link>
+          )}
           {showContributorMenu && (
             hasContributorAccount ? (
               <Link href={contributorDashboardHref} className="hover:text-blue-600">
