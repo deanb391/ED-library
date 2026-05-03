@@ -32,6 +32,7 @@ export default function SecureCheckoutPage() {
   const type = searchParams.get("type");
   const courseIds = idsParam ? idsParam.split(",") : [];
 
+
   const [courses, setCourses] = useState<CheckoutCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +40,7 @@ export default function SecureCheckoutPage() {
   const [showFreeModal, setShowFreeModal] = React.useState(false);
   const [wallet, setWallet] = useState<any>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"wallet" | "flutterwave">("flutterwave");
-  const {user} = useUser()
+  const { user } = useUser()
   const [contributor, setContributor] = useState<Contributor>()
   const [showPaymentTransferModal, setShowPaymentTransferModal] = useState(false)
 
@@ -53,37 +54,41 @@ export default function SecureCheckoutPage() {
         const results: CheckoutCourse[] = [];
 
         for (const id of courseIds) {
-  try {
-    const course = await fetchCourse(id);
+          try {
+            const course = await fetchCourse(id);
 
-    const priceData = course?.price
-      ? JSON.parse(course.price)
-      : null;
+            const priceData = course?.price
+              ? JSON.parse(course.price)
+              : null;
 
-    let finalPrice = priceData?.isFree ? 0 : priceData?.amount || 0;
-    finalPrice = finalPrice * ( course?.pageCount || 0 )
 
-    // 👉 ONLY APPLY THIS LOGIC FOR ONE-TIME COURSES
-   
+            let finalPrice = priceData?.isFree ? 0 : priceData?.amount || 0;
 
-    results.push({
-      id: course.id,
-      title: course.title,
-      price: finalPrice,
-      user: course.user
-    });
+            if (priceData.type === "one-time") {
+              finalPrice = finalPrice * (course?.pageCount || 0)
+            }
 
-  } catch (err) {
-    console.error("Failed to fetch course:", id, err);
-  }
-}
+
+
+
+            results.push({
+              id: course.id,
+              title: course.title,
+              price: finalPrice,
+              user: course.user
+            });
+
+          } catch (err) {
+            console.error("Failed to fetch course:", id, err);
+          }
+        }
         setCourses(results);
 
         const res = await getMyContributor(results[0].user)
         if (!res) return;
         setContributor(res);
 
-        
+
       } catch (err) {
         console.error("Checkout fetch failed:", err);
         setCourses([]);
@@ -116,10 +121,10 @@ export default function SecureCheckoutPage() {
   const isFreeFlow = total === 0;
 
   const handleShowModel = async () => {
-    if(isFreeFlow) {
+    if (isFreeFlow) {
       setShowFreeModal(true);
       if (!user) return;
-      if(!type) return;
+      if (!type) return;
       const ids = courses.map((c) => c.id);
       await addCourseToLibrary(user.$id, ids, type)
       return;
@@ -133,43 +138,43 @@ export default function SecureCheckoutPage() {
 
   }
 
-const handleConfirm = async () => {
-  if (courses.length === 0 || !user?.$id || !user?.email) return;
+  const handleConfirm = async () => {
+    if (courses.length === 0 || !user?.$id || !user?.email) return;
 
-  try {
-    setShowPaymentTransferModal(false);
-    setLoading(true);
-    const ids = courses.map((c) => c.id);
+    try {
+      setShowPaymentTransferModal(false);
+      setLoading(true);
+      const ids = courses.map((c) => c.id);
 
 
-    if (!contributor) return;
-    if (!type) return;
+      if (!contributor) return;
+      if (!type) return;
 
-    
 
-    if (selectedPaymentMethod === "wallet") {
-      setShowPaymentModal(true);
-      const res = await payForCourse(ids, user.$id, user.email, "wallet", type, contributor.$id);
-      if (res.success) {
-        router.push("/subscribe/usbscribe-to-contributor/success");
+
+      if (selectedPaymentMethod === "wallet") {
+        setShowPaymentModal(true);
+        const res = await payForCourse(ids, user.$id, user.email, "wallet", type, contributor.$id);
+        if (res.success) {
+          router.push("/subscribe/usbscribe-to-contributor/success");
+        } else {
+          router.push("/subscribe/usbscribe-to-contributor/failed");
+        }
+        setShowPaymentModal(false);
       } else {
-        router.push("/subscribe/usbscribe-to-contributor/failed");
+        const res = await payForCourse(ids, user.$id, user.email, "flutterwave", type, contributor.$id);
+        if (res.checkoutUrl) {
+          window.location.href = res.checkoutUrl;
+        }
       }
+    } catch (err) {
+      console.error("Payment failed:", err);
       setShowPaymentModal(false);
-    } else {
-      const res = await payForCourse(ids, user.$id, user.email, "flutterwave", type, contributor.$id);
-      if (res.checkoutUrl) {
-        window.location.href = res.checkoutUrl;
-      }
+      router.push("/subscribe/usbscribe-to-contributor/failed");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Payment failed:", err);
-    setShowPaymentModal(false);
-    router.push("/subscribe/usbscribe-to-contributor/failed");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -198,7 +203,7 @@ const handleConfirm = async () => {
               Checkout
             </h1>
             <p className="text-sm text-gray-500">
-              ED-Library { type === "subscription" ? "Subscription" : "Course Payment"}
+              ED-Library {type === "subscription" ? "Subscription" : "Course Payment"}
             </p>
           </div>
         </div>
@@ -213,11 +218,10 @@ const handleConfirm = async () => {
             {courses.map((course, index) => (
               <div
                 key={course.id}
-                className={`flex items-center justify-between px-4 py-4 ${
-                  index !== courses.length - 1
-                    ? "border-b border-gray-100"
-                    : ""
-                }`}
+                className={`flex items-center justify-between px-4 py-4 ${index !== courses.length - 1
+                  ? "border-b border-gray-100"
+                  : ""
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
@@ -229,7 +233,7 @@ const handleConfirm = async () => {
                       {course.title}
                     </p>
                     <p className="text-xs text-gray-500">
-                      { type === "subscription" ? "Monthly access" : "FullTime Access"}
+                      {type === "subscription" ? "Monthly access" : "FullTime Access"}
                     </p>
                   </div>
                 </div>
@@ -261,300 +265,300 @@ const handleConfirm = async () => {
 
         {/* Payment Method */}
         <div
-  style={{
-    backgroundColor: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "16px",
-    padding: "1.5rem",
-    display: "flex",
-    flexDirection: "column",
-    gap: "1.25rem",
-    boxSizing: "border-box",
-    width: "100%",
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  }}
->
-  <h3
-    style={{
-      fontSize: "0.875rem",
-      fontWeight: "600",
-      color: "#374151",
-      margin: 0,
-      textTransform: "uppercase",
-      letterSpacing: "0.05em"
-    }}
-  >
-    Payment Method
-  </h3>
-
-  {/* Wallet Option */}
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      padding: "1rem",
-      border: selectedPaymentMethod === "wallet" ? "2px solid #2563eb" : "1px solid #e5e7eb",
-      borderRadius: "12px",
-      backgroundColor: selectedPaymentMethod === "wallet" ? "#eff6ff" : "transparent",
-      opacity: (!wallet || wallet.balance < total) ? 0.75 : 1,
-      transition: "all 0.2s ease-in-out"
-    }}
-  >
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.75rem",
-        cursor: (!wallet || wallet.balance < total) ? "not-allowed" : "pointer",
-        margin: 0
-      }}
-    >
-      <input
-        type="radio"
-        name="paymentMethod"
-        value="wallet"
-        checked={selectedPaymentMethod === "wallet"}
-        onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
-        disabled={!wallet || wallet.balance < total}
-        style={{
-          width: "18px",
-          height: "18px",
-          cursor: "inherit",
-          accentColor: "#2563eb"
-        }}
-      />
-      <span
-        style={{
-          fontSize: "0.95rem",
-          fontWeight: "600",
-          color: "#111827"
-        }}
-      >
-        Wallet
-      </span>
-    </label>
-
-    {wallet ? (
-      <div
-        style={{
-          marginLeft: "30px", // Align perfectly with the label text, skipping the radio button
-          marginTop: "0.5rem",
-          fontSize: "0.85rem",
-          color: "#4b5563",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem"
-        }}
-      >
-        <div>
-          Balance: ₦{wallet?.balance?.toLocaleString()}
-          {wallet?.balance < total && (
-            <span
-              style={{
-                color: "#dc2626",
-                fontWeight: "600",
-                marginLeft: "0.5rem",
-                backgroundColor: "#fef2f2",
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "0.75rem"
-              }}
-            >
-              Insufficient balance
-            </span>
-          )}
-        </div>
-        
-        {wallet?.balance < total && (
-          <div>
-            <button
-              onClick={() => router.push("/wallet/topup")}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#2563eb",
-                padding: 0,
-                fontSize: "0.85rem",
-                fontWeight: "600",
-                cursor: "pointer",
-                textAlign: "left",
-                textDecoration: "underline",
-                textUnderlineOffset: "3px"
-              }}
-            >
-              Top Up Wallet
-            </button>
-          </div>
-        )}
-      </div>
-    ) : (
-      <div
-        style={{
-          marginLeft: "30px",
-          marginTop: "0.5rem"
-        }}
-      >
-        <button
-          onClick={() => router.push("/wallet/create")}
           style={{
-            background: "none",
-            border: "none",
-            color: "#2563eb",
-            padding: 0,
-            fontSize: "0.85rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            textAlign: "left",
-            textDecoration: "underline",
-            textUnderlineOffset: "3px"
+            backgroundColor: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "16px",
+            padding: "1.5rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.25rem",
+            boxSizing: "border-box",
+            width: "100%",
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
           }}
         >
-          Create Wallet
-        </button>
-      </div>
-    )}
-  </div>
+          <h3
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: "600",
+              color: "#374151",
+              margin: 0,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em"
+            }}
+          >
+            Payment Method
+          </h3>
 
-  {/* Flutterwave Option */}
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      padding: "1rem",
-      border: selectedPaymentMethod === "flutterwave" ? "2px solid #2563eb" : "1px solid #e5e7eb",
-      borderRadius: "12px",
-      backgroundColor: selectedPaymentMethod === "flutterwave" ? "#eff6ff" : "transparent",
-      transition: "all 0.2s ease-in-out"
-    }}
-  >
-    <label
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.75rem",
-        cursor: "pointer",
-        margin: 0
-      }}
-    >
-      <input
-        type="radio"
-        name="paymentMethod"
-        value="flutterwave"
-        checked={selectedPaymentMethod === "flutterwave"}
-        onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
-        style={{
-          width: "18px",
-          height: "18px",
-          cursor: "inherit",
-          accentColor: "#2563eb"
-        }}
-      />
-      <span
-        style={{
-          fontSize: "0.95rem",
-          fontWeight: "600",
-          color: "#111827"
-        }}
-      >
-        Card / Bank Transfer
-      </span>
-    </label>
-  </div>
-</div>
+          {/* Wallet Option */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              padding: "1rem",
+              border: selectedPaymentMethod === "wallet" ? "2px solid #2563eb" : "1px solid #e5e7eb",
+              borderRadius: "12px",
+              backgroundColor: selectedPaymentMethod === "wallet" ? "#eff6ff" : "transparent",
+              opacity: (!wallet || wallet.balance < total) ? 0.75 : 1,
+              transition: "all 0.2s ease-in-out"
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                cursor: (!wallet || wallet.balance < total) ? "not-allowed" : "pointer",
+                margin: 0
+              }}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="wallet"
+                checked={selectedPaymentMethod === "wallet"}
+                onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
+                disabled={!wallet || wallet.balance < total}
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  cursor: "inherit",
+                  accentColor: "#2563eb"
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: "600",
+                  color: "#111827"
+                }}
+              >
+                Wallet
+              </span>
+            </label>
+
+            {wallet ? (
+              <div
+                style={{
+                  marginLeft: "30px", // Align perfectly with the label text, skipping the radio button
+                  marginTop: "0.5rem",
+                  fontSize: "0.85rem",
+                  color: "#4b5563",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem"
+                }}
+              >
+                <div>
+                  Balance: ₦{wallet?.balance?.toLocaleString()}
+                  {wallet?.balance < total && (
+                    <span
+                      style={{
+                        color: "#dc2626",
+                        fontWeight: "600",
+                        marginLeft: "0.5rem",
+                        backgroundColor: "#fef2f2",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        fontSize: "0.75rem"
+                      }}
+                    >
+                      Insufficient balance
+                    </span>
+                  )}
+                </div>
+
+                {wallet?.balance < total && (
+                  <div>
+                    <button
+                      onClick={() => router.push("/wallet/topup")}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#2563eb",
+                        padding: 0,
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        textDecoration: "underline",
+                        textUnderlineOffset: "3px"
+                      }}
+                    >
+                      Top Up Wallet
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  marginLeft: "30px",
+                  marginTop: "0.5rem"
+                }}
+              >
+                <button
+                  onClick={() => router.push("/wallet/create")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#2563eb",
+                    padding: 0,
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "3px"
+                  }}
+                >
+                  Create Wallet
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Flutterwave Option */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              padding: "1rem",
+              border: selectedPaymentMethod === "flutterwave" ? "2px solid #2563eb" : "1px solid #e5e7eb",
+              borderRadius: "12px",
+              backgroundColor: selectedPaymentMethod === "flutterwave" ? "#eff6ff" : "transparent",
+              transition: "all 0.2s ease-in-out"
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                cursor: "pointer",
+                margin: 0
+              }}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="flutterwave"
+                checked={selectedPaymentMethod === "flutterwave"}
+                onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  cursor: "inherit",
+                  accentColor: "#2563eb"
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: "600",
+                  color: "#111827"
+                }}
+              >
+                Card / Bank Transfer
+              </span>
+            </label>
+          </div>
+        </div>
 
         {showPaymentModal && (
           <div
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    backdropFilter: "blur(4px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "1rem",
-    zIndex: 1000,
-    boxSizing: "border-box",
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  }}
->
-  <div
-    style={{
-      width: "100%",
-      maxWidth: "400px",
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      padding: "2rem",
-      textAlign: "center",
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      boxSizing: "border-box",
-    }}
-  >
-    {/* Self-contained animated SVG spinner */}
-    <svg
-      style={{
-        margin: "0 auto 1.25rem auto",
-        width: "40px",
-        height: "40px",
-      }}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="#e5e7eb"
-        strokeWidth="4"
-      ></circle>
-      <path
-        fill={BRAND_BLUE}
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      >
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="0 12 12"
-          to="360 12 12"
-          dur="1s"
-          repeatCount="indefinite"
-        />
-      </path>
-    </svg>
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(4px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1rem",
+              zIndex: 1000,
+              boxSizing: "border-box",
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "2rem",
+                textAlign: "center",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                boxSizing: "border-box",
+              }}
+            >
+              {/* Self-contained animated SVG spinner */}
+              <svg
+                style={{
+                  margin: "0 auto 1.25rem auto",
+                  width: "40px",
+                  height: "40px",
+                }}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#e5e7eb"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  fill={BRAND_BLUE}
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 12 12"
+                    to="360 12 12"
+                    dur="1s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+              </svg>
 
-    <h2
-      style={{
-        fontSize: "1.25rem",
-        fontWeight: "600",
-        color: "#111827",
-        marginTop: 0,
-        marginBottom: "0.5rem"
-      }}
-    >
-      Processing Payment
-    </h2>
-    
-    <p
-      style={{
-        fontSize: "0.875rem",
-        color: "#4b5563",
-        margin: 0,
-        lineHeight: 1.5
-      }}
-    >
-      Please wait while we process your wallet payment...
-    </p>
-  </div>
-</div>
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#111827",
+                  marginTop: 0,
+                  marginBottom: "0.5rem"
+                }}
+              >
+                Processing Payment
+              </h2>
+
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "#4b5563",
+                  margin: 0,
+                  lineHeight: 1.5
+                }}
+              >
+                Please wait while we process your wallet payment...
+              </p>
+            </div>
+          </div>
         )}
 
         {showPaymentTransferModal && (
           <div
-          onClick={() => setShowPaymentTransferModal(false)}
+            onClick={() => setShowPaymentTransferModal(false)}
             style={{
               position: "fixed",
               inset: 0,
@@ -580,7 +584,7 @@ const handleConfirm = async () => {
               </h2>
 
               <p className="text-sm text-gray-600 mb-4">
-                You will be redirected to complete your payment.  
+                You will be redirected to complete your payment.
                 If you are paying via bank transfer, the account name may appear as:
               </p>
 
@@ -591,7 +595,7 @@ const handleConfirm = async () => {
               </div>
 
               <p className="text-xs text-gray-500 mb-5">
-                This is the official payment account for ED-Library.  
+                This is the official payment account for ED-Library.
                 Please proceed only if the details match.
               </p>
 
@@ -608,80 +612,80 @@ const handleConfirm = async () => {
 
         {showFreeModal && (
           <div
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    backdropFilter: "blur(4px)", // Adds a professional blur effect to the background
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "1rem",
-    zIndex: 1000,
-    boxSizing: "border-box",
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  }}
->
-  <div
-    style={{
-      width: "100%",
-      maxWidth: "400px",
-      backgroundColor: "#ffffff",
-      borderRadius: "16px",
-      padding: "2rem",
-      textAlign: "center",
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-      boxSizing: "border-box",
-    }}
-  >
-    <h2
-      style={{
-        fontSize: "1.25rem",
-        fontWeight: "600",
-        color: "#111827",
-        marginTop: 0,
-        marginBottom: "0.5rem"
-      }}
-    >
-      You're Good to Go
-    </h2>
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(4px)", // Adds a professional blur effect to the background
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1rem",
+              zIndex: 1000,
+              boxSizing: "border-box",
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                backgroundColor: "#ffffff",
+                borderRadius: "16px",
+                padding: "2rem",
+                textAlign: "center",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                boxSizing: "border-box",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "600",
+                  color: "#111827",
+                  marginTop: 0,
+                  marginBottom: "0.5rem"
+                }}
+              >
+                You're Good to Go
+              </h2>
 
-    <p
-      style={{
-        fontSize: "0.875rem",
-        color: "#4b5563",
-        margin: "0 0 1.5rem 0",
-        lineHeight: 1.5
-      }}
-    >
-      The selected course{courses.length > 1 ? "s are" : " is"} free.  
-      You can start learning immediately.
-    </p>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "#4b5563",
+                  margin: "0 0 1.5rem 0",
+                  lineHeight: 1.5
+                }}
+              >
+                The selected course{courses.length > 1 ? "s are" : " is"} free.
+                You can start learning immediately.
+              </p>
 
-    <button
-      onClick={() => {
-        setShowFreeModal(false);
-      }}
-      style={{
-        width: "100%",
-        padding: "0.875rem",
-        borderRadius: "12px",
-        color: "#ffffff",
-        fontWeight: "600",
-        fontSize: "1rem",
-        backgroundColor: BRAND_BLUE,
-        border: "none",
-        cursor: "pointer",
-        transition: "opacity 0.2s ease-in-out"
-      }}
-    >
-      Go to Courses
-    </button>
-  </div>
-</div>
+              <button
+                onClick={() => {
+                  setShowFreeModal(false);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "0.875rem",
+                  borderRadius: "12px",
+                  color: "#ffffff",
+                  fontWeight: "600",
+                  fontSize: "1rem",
+                  backgroundColor: BRAND_BLUE,
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "opacity 0.2s ease-in-out"
+                }}
+              >
+                Go to Courses
+              </button>
+            </div>
+          </div>
         )}
 
         {/* CTA */}

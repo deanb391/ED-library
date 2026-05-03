@@ -116,8 +116,18 @@ export async function GET(request: Request) {
     }
 
     for (const courseId of courseIds) {
-      // Add to library
+      // Add to library (existing behavior)
       await addCourseToLibraryService(courseId, userId, payment.type);
+
+      // ✅ If subscription-based, create/renew subscription document
+      if (payment.type === "subscription") {
+        try {
+          const { handleSubscriptionService } = await import("@/lib/services/subscriptions.service");
+          await handleSubscriptionService(userId, courseId);
+        } catch (err) {
+          console.error("Failed to handle subscription for course:", courseId, err);
+        }
+      }
 
       // Send email if possible
       if (contributorUserDoc?.email && sendPurchaseNotificationEmail) {

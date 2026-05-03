@@ -43,7 +43,9 @@ export default function EditPostModal({
         uploading: false,
       }))
     );
-  }, [initialValue, initialImages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValue, (initialImages || []).join(",")]);
+
 
   if (!isOpen) return null;
 

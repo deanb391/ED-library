@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import TrackPageView from "@/components/TrackPageView";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
+import { PHProvider } from "@/app/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,39 +23,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <UserProvider>
-      <html lang="en">
-        <head>
-          {/* Google AdSense */}
-          <Script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904837010680652"
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
+    <html lang="en">
+      <head>
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904837010680652"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
 
-          {/* Adsterra 
+        {/* Adsterra
           <Script
             src="https://pl28536403.effectivegatecpm.com/5d/f2/b5/5df2b541a3eac4751ebd6c025764badb.js"
             strategy="afterInteractive"
           />
 */}
-        </head>
+      </head>
 
-        <body
-          className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}
-        >
-          <Header />
+      <body
+        className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}
+      >
+        <PHProvider>
+          <UserProvider>
+            <Header />
 
-          <main className="flex-grow w-full">
-            <GoogleAnalytics />
-            <TrackPageView />
-            {children}
-          </main>
+            <main className="flex-grow w-full">
+              <GoogleAnalytics />
+              <TrackPageView />
+              {children}
+            </main>
 
-          <Footer />
-        </body>
-      </html>
-    </UserProvider>
+            <Footer />
+          </UserProvider>
+        </PHProvider>
+      </body>
+    </html>
   );
 }
