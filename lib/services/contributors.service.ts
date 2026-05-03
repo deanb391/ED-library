@@ -1,6 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
+import { sendContributorUnderReviewEmail, sendContributorApprovedEmail } from "@/lib/email/events";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -68,6 +69,16 @@ export async function createContributorService(
     payload
   );
 
+  // Fetch user to get email for notification
+  try {
+    const userDoc = await databases.getDocument(DATABASE_ID, "user", user);
+    if (userDoc.email) {
+      sendContributorUnderReviewEmail(userDoc.email, draft.username);
+    }
+  } catch (err) {
+    console.error("Failed to fetch user for email notification", err);
+  }
+
   return mapContributor(doc);
 }
 
@@ -94,13 +105,25 @@ export async function editContributorService(
     let status = "";
     if (type === "approval") status = "live";
     else if (type === "reject") status = "not-live"
-    console.log("DOC USER: ", doc.user.$id)
-    const courses = await fetchCoursesByAdminService(doc.user.$id);
+    console.log("DOC USER: ", doc.user.$id || doc.user)
+    const courses = await fetchCoursesByAdminService(doc.user.$id || doc.user);
     courses.map( async (course) => {
       await updateCourseService(course.id, {
         status: status
       })
     })
+
+    if (type === "approval") {
+      try {
+        const userId = typeof doc.user === 'string' ? doc.user : doc.user.$id;
+        const userDoc = await databases.getDocument(DATABASE_ID, "user", userId);
+        if (userDoc.email) {
+          sendContributorApprovedEmail(userDoc.email, doc.username || "Contributor");
+        }
+      } catch (err) {
+        console.error("Failed to fetch user for approval email notification", err);
+      }
+    }
   }
 
   return mapContributor(doc);

@@ -67,6 +67,10 @@ export async function createUser({
       }
     );
 
+    // Create wallet for the new user
+    const { createWalletService } = await import('./wallet.service');
+    await createWalletService(userAccount.$id);
+
     return userDoc;
   } catch (error) {
     throw error;
@@ -238,7 +242,7 @@ export async function createUserProfile(authUser: any, data: {
     data.username
   )}&background=random&color=fff`;
 
-  return await databases.createDocument(
+  const userDoc = await databases.createDocument(
     DATABASE_ID,
     USER_COLLECTION,
     authUser.$id,
@@ -251,4 +255,9 @@ export async function createUserProfile(authUser: any, data: {
       isAdmin: false,
     }
   );
+
+  const { createWalletService } = await import('./wallet.service');
+  await createWalletService(authUser.$id);
+
+  return userDoc;
 }

@@ -47,6 +47,17 @@ export async function GET(request: Request) {
       // 5. Actually top up the user's wallet!
       await creditWalletService(payment.user, balance);
 
+      try {
+        const { databases } = await import("@/lib/appwrite/server");
+        const userDoc = await databases.getDocument("69617e75000c6c010a75", "user", payment.user);
+        if (userDoc.email) {
+          const { sendDepositSuccessEmail } = await import("@/lib/email/events");
+          sendDepositSuccessEmail(userDoc.email, userDoc.username || "User", balance);
+        }
+      } catch (err) {
+        console.error("Failed to send deposit email:", err);
+      }
+
       return NextResponse.json({ success: true });
     } else {
       // Handle failed Flutterwave verification

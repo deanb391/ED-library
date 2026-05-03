@@ -112,6 +112,7 @@ export default function DashboardUnderReviewPage() {
     contributor,
     contributorLoading,
     refetchContributor,
+    hasWallet,
   } = useUser();
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -175,6 +176,28 @@ export default function DashboardUnderReviewPage() {
             My Dashboard
           </div>
           <div className="max-w-5xl mx-auto space-y-8">
+
+            {/* Missing Wallet Banner */}
+            {
+              !hasWallet && (
+                <div className="bg-[#FFF8E6] border border-orange-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-0.5 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white shrink-0">
+                      <Info size={16} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 mb-1">You don't have a Wallet</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
+                        Create a wallet to manage your earnings, track payments, and get paid for your contributions.
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/wallet/create" className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold py-3 px-6 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-md">
+                    Create Wallet
+                  </Link>
+                </div>
+              )
+            }
 
             {/* Alert Banner */}
             {

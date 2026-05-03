@@ -33,6 +33,17 @@ export async function POST(req: Request) {
         if (statusLower === "successful") {
           await updateWithdrawalStatus(withdrawal.$id, "successful");
           results.push({ id: withdrawal.$id, new_status: "successful" });
+          
+          try {
+            const { databases } = await import("@/lib/appwrite/server");
+            const userDoc = await databases.getDocument("69617e75000c6c010a75", "user", withdrawal.user);
+            if (userDoc.email) {
+              const { sendWithdrawalSuccessEmail } = await import("@/lib/email/events");
+              sendWithdrawalSuccessEmail(userDoc.email, userDoc.username || "User", withdrawal.amount);
+            }
+          } catch (err) {
+            console.error("Failed to send withdrawal email:", err);
+          }
         } else if (statusLower === "failed") {
           await refundUser(withdrawal.user, withdrawal.amount);
           await updateWithdrawalStatus(withdrawal.$id, "failed");

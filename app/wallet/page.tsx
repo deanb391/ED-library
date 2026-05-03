@@ -31,9 +31,10 @@ export default function WalletPage() {
           fetchWalletHistory(user.$id)
         ])
 
-        if (!walletRes.wallet) (
-          router.replace("/wallet/create")
-        )
+        if (!walletRes.wallet) {
+          router.replace("/wallet/create");
+          return;
+        }
 
         setWallet(walletRes.wallet);
         setWalletHistory(walletHistoryRes)

@@ -103,7 +103,7 @@ export default function Header() {
       }
 
       {
-        hasWallet && (
+        user && (
           <>
           <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
@@ -175,7 +175,7 @@ export default function Header() {
           }
 
           {
-            hasWallet && (
+            user && (
               <Link href="/wallet" className="hover:text-blue-600">
             Wallet
           </Link>
