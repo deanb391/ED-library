@@ -11,7 +11,7 @@ export async function sendEmail({
 }) {
   try {
     const { data, error } = await resend.emails.send({
-      from: "ED-Library <noreply@ed-library.com>",
+      from: "ED-Library <noreply@mail.ed-library.app>",
       to,
       subject,
       html,
