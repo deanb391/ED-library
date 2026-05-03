@@ -8,6 +8,7 @@ import { Course, fetchCoursesByAdmin } from "@/lib/api/courses";
 import { useParams, useRouter } from "next/navigation";
 import { getContributor } from "@/lib/api/contributors";
 import { fetchLibrary } from "@/lib/api/library";
+import { checkSubscriptionAccess } from "@/lib/api/subscriptions";
 import { useUser } from "@/context/UserContext";
 
 const BRAND_BLUE = "#2563EB";
@@ -65,19 +66,28 @@ export default function SubscribeToCreatorPage() {
       }
 
 
-      const normalizedCourses: SelectableCourse[] = (courseRes || [])
-        // ===== FILTER ONLY ONGOING =====
-        .filter((c: Course) => c.isOnGoing === true)
-        .map((c: Course) => {
-          const alreadyOwned =
-            oneTime.includes(c.id) || subscription.includes(c.id);
+      const normalizedCourses: SelectableCourse[] = await Promise.all(
+        (courseRes || [])
+          // ===== FILTER ONLY ONGOING =====
+          .filter((c: Course) => c.isOnGoing === true)
+          .map(async (c: Course) => {
+            let alreadyOwned = false;
 
-          return {
-            ...c,
-            included: alreadyOwned ? false : true,
-            alreadyOwned, // <-- new field
-          };
-        });
+            if (oneTime.includes(c.id)) {
+              // One-time purchase → permanently owned
+              alreadyOwned = true;
+            } else if (subscription.includes(c.id)) {
+              // Subscription in library → only blocked if still active
+              alreadyOwned = await checkSubscriptionAccess(user.$id, c.id).catch(() => false);
+            }
+
+            return {
+              ...c,
+              included: alreadyOwned ? false : true,
+              alreadyOwned,
+            };
+          })
+      );
 
       setCourses(normalizedCourses);
     } catch (error) {

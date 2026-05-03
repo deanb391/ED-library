@@ -16,6 +16,8 @@ import { getContributor, getMyContributor } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
 import { fetchAllPosts } from "@/lib/api/courses";
 import { addCourseToLibrary } from "@/lib/api/library";
+import { fetchLibrary } from "@/lib/api/library";
+import { checkSubscriptionAccess } from "@/lib/api/subscriptions";
 
 const BRAND_BLUE = "#1C64F2";
 
@@ -24,6 +26,7 @@ type CheckoutCourse = {
   title: string;
   price: number;
   user: string;
+  alreadyOwned?: boolean; // true if already paid/actively subscribed
 };
 
 export default function SecureCheckoutPage() {
@@ -75,13 +78,38 @@ export default function SecureCheckoutPage() {
               id: course.id,
               title: course.title,
               price: finalPrice,
-              user: course.user
+              user: course.user,
+              alreadyOwned: false, // resolved below
             });
 
           } catch (err) {
             console.error("Failed to fetch course:", id, err);
           }
         }
+
+        // ✅ Guardrail: check if user already owns/has active sub for each course
+        if (user?.$id) {
+          try {
+            const lib = (await fetchLibrary(user.$id)).wallet;
+            const oneTimeIds: string[] = lib?.oneTime ? JSON.parse(lib.oneTime) : [];
+            const subIds: string[] = lib?.subscription ? JSON.parse(lib.subscription) : [];
+
+            for (const c of results) {
+              if (type === "one-time") {
+                c.alreadyOwned = oneTimeIds.includes(c.id);
+              } else if (type === "subscription") {
+                if (subIds.includes(c.id)) {
+                  // Only blocked if subscription doc is still active
+                  const isActive = await checkSubscriptionAccess(user.$id, c.id).catch(() => false);
+                  c.alreadyOwned = isActive;
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Ownership check failed:", err);
+          }
+        }
+
         setCourses(results);
 
         const res = await getMyContributor(results[0].user)
@@ -238,11 +266,17 @@ export default function SecureCheckoutPage() {
                   </div>
                 </div>
 
-                <span className="text-sm font-semibold text-gray-900">
-                  {course.price === 0
-                    ? "Free"
-                    : `₦${course?.price?.toLocaleString()}`}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  {course.alreadyOwned ? (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#dcfce7", color: "#166534" }}>
+                      {type === "subscription" ? "Active" : "Owned"}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-semibold text-gray-900">
+                      {course.price === 0 ? "Free" : `₦${course?.price?.toLocaleString()}`}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -689,18 +723,32 @@ export default function SecureCheckoutPage() {
         )}
 
         {/* CTA */}
-        <button
-          onClick={handleShowModel}
-          disabled={courses.length === 0}
-          className="w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition"
-          style={{
-            backgroundColor: courses.length === 0 ? "#D1D5DB" : BRAND_BLUE,
-            cursor: courses.length === 0 ? "not-allowed" : "pointer",
-          }}
-        >
-          <CheckCircle2 size={18} />
-          Confirm Payment
-        </button>
+        {(() => {
+          const allOwned = courses.length > 0 && courses.every((c) => c.alreadyOwned);
+          return (
+            <>
+              {allOwned && (
+                <div className="text-center text-sm font-medium rounded-xl py-3 px-4" style={{ backgroundColor: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }}>
+                  {type === "subscription"
+                    ? "You already have an active subscription for all selected courses."
+                    : "You already own all selected courses."}
+                </div>
+              )}
+              <button
+                onClick={handleShowModel}
+                disabled={courses.length === 0 || allOwned}
+                className="w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition"
+                style={{
+                  backgroundColor: (courses.length === 0 || allOwned) ? "#D1D5DB" : BRAND_BLUE,
+                  cursor: (courses.length === 0 || allOwned) ? "not-allowed" : "pointer",
+                }}
+              >
+                <CheckCircle2 size={18} />
+                Confirm Payment
+              </button>
+            </>
+          );
+        })()}
 
         {/* Cancel */}
         <button className="w-full py-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition">
