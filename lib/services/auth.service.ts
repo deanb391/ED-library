@@ -38,6 +38,7 @@ export async function createUser({
   department: string;
 }) {
   try {
+    console.log("Creating user...")
     // 1. Create auth account
     const userAccount = await account.create(
       ID.unique(),
@@ -67,9 +68,13 @@ export async function createUser({
       }
     );
 
-    // Create wallet for the new user
-    const { createWalletService } = await import('./wallet.service');
-    await createWalletService(userAccount.$id);
+    // Create wallet for the new user via API
+    try {
+      const { createWallet } = await import('@/lib/api/wallet');
+      await createWallet(userAccount.$id);
+    } catch (err) {
+      console.error("Wallet creation error:", err);
+    }
 
     return userDoc;
   } catch (error) {
@@ -178,10 +183,10 @@ export async function completePasswordRecovery(
 //     throw error;
 //   }
 // };
-
+// process.env.NEXT_PUBLIC_BASE_URL
 export async function googleSignIn() {
   try {
-    const redirectUrl = `https://www.ed-library.app/auth/callback`;
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`;
 
     const response = await account.createOAuth2Token(
       OAuthProvider.Google,
@@ -191,10 +196,10 @@ export async function googleSignIn() {
 
     // Redirect manually
     if (!response) {
-  throw new Error("OAuth URL was not returned");
-}
+      throw new Error("OAuth URL was not returned");
+    }
 
-window.location.href = response;
+    window.location.href = response;
 
   } catch (error) {
     console.error("Error during Google sign-in:", error);
@@ -256,8 +261,13 @@ export async function createUserProfile(authUser: any, data: {
     }
   );
 
-  const { createWalletService } = await import('./wallet.service');
-  await createWalletService(authUser.$id);
+  try {
+    const { createWallet } = await import('@/lib/api/wallet');
+    console.log("creating wallet for user: ", authUser.$id);
+    await createWallet(authUser.$id);
+  } catch (err) {
+    console.error("Wallet creation error:", err);
+  }
 
   return userDoc;
 }
