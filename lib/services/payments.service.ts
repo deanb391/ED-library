@@ -157,11 +157,69 @@ export async function payForCourseService(params: {
     
 
     const courseIds = JSON.parse(payment.courses)
-    for (const course of courseIds) {
-      await addCourseToLibraryService(course, payment.user.$id, payment.type)
+
+    // ✅ Fetch email prerequisites (non-blocking setup)
+    let contributorUserDoc: any = null;
+    let studentName = "A student";
+    let sendPurchaseNotificationEmail: any, sendSubscriptionNotificationEmail: any;
+
+    try {
+      const userDoc = await databases.getDocument(DATABASE_ID, "user", Contributor.user);
+      contributorUserDoc = userDoc;
+
+      if (contributorUserDoc?.email) {
+        const events = await import("@/lib/email/events");
+        sendPurchaseNotificationEmail = events.sendPurchaseNotificationEmail;
+        sendSubscriptionNotificationEmail = events.sendSubscriptionNotificationEmail;
+
+        const studentDoc = await databases.getDocument(DATABASE_ID, "user", payment.user.$id).catch(() => null);
+        if (studentDoc?.username) studentName = studentDoc.username;
+      }
+    } catch (err) {
+      console.error("[Wallet] Failed to fetch email prerequisites:", err);
     }
 
+    for (const courseId of courseIds) {
+      // ✅ Add to library
+      await addCourseToLibraryService(courseId, payment.user.$id, payment.type);
 
+      // ✅ If subscription-based, create/renew subscription document
+      if (payment.type === "subscription") {
+        try {
+          const { handleSubscriptionService } = await import("@/lib/services/subscriptions.service");
+          await handleSubscriptionService(payment.user.$id, courseId);
+        } catch (err) {
+          console.error("[Wallet] Failed to handle subscription for course:", courseId, err);
+        }
+      }
+
+      // ✅ Send email notification
+      if (contributorUserDoc?.email && sendPurchaseNotificationEmail) {
+        try {
+          const courseDoc = await databases.getDocument(DATABASE_ID, "courses", courseId).catch(() => null);
+          const courseTitle = courseDoc?.title || "A course";
+
+          if (payment.type === "subscription") {
+            sendSubscriptionNotificationEmail(
+              contributorUserDoc.email,
+              Contributor.username || "Contributor",
+              studentName,
+              courseTitle
+            );
+          } else {
+            const parsedPrice = JSON.parse(courseDoc?.price || "{}");
+            sendPurchaseNotificationEmail(
+              contributorUserDoc.email,
+              Contributor.username || "Contributor",
+              courseTitle,
+              parsedPrice.amount
+            );
+          }
+        } catch (e) {
+          console.error("[Wallet] Failed to send email for course:", courseId, e);
+        }
+      }
+    }
 
     return {
       type: "wallet",

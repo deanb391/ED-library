@@ -9,12 +9,12 @@ const BRAND_BLUE = "#2563EB";
 
 const MIN_AMOUNT = 100;
 
-const getFeePercent = (amount: number) => {
-  if (amount >= 100 && amount <= 999) return 0.05;
-  if (amount >= 1000 && amount <= 4999) return 0.04;
-  if (amount >= 5000) return 0.03;
-  return 0;
+const getFeePercent = (amount: number): number => {
+  if (amount >= 100 && amount <= 1000) return 0.0575;  // 5.75%
+  if (amount >= 1001 && amount <= 5000) return 0.0475; // 4.75%
+  return 0.0375;                                        // 3.75% for 5001+
 };
+
 
 export default function TopUpPage() {
   const [amount, setAmount] = useState<number | undefined>();

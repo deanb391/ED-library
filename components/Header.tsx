@@ -11,9 +11,11 @@ import {
   Plus,
   Upload,
   Megaphone,
-  Info,
   Phone,
   Home,
+  BookMarked,
+  Wallet,
+  CircleHelp,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
@@ -96,7 +98,7 @@ export default function Header() {
           <>
           <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
-      <MenuItem icon={Info} label="Library" href="/library" onSelect={onSelect} />
+      <MenuItem icon={BookMarked} label="Library" href="/library" onSelect={onSelect} />
           </>
           
         )
@@ -107,7 +109,7 @@ export default function Header() {
           <>
           <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
-      <MenuItem icon={Info} label="Wallet" href="/wallet" onSelect={onSelect} />
+      <MenuItem icon={Wallet} label="Wallet" href="/wallet" onSelect={onSelect} />
           </>
           
         )
@@ -115,7 +117,7 @@ export default function Header() {
 
       <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
 
-      <MenuItem icon={Info} label="About" href="/about" onSelect={onSelect} />
+      <MenuItem icon={CircleHelp} label="About" href="/about" onSelect={onSelect} />
 
       <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
 
