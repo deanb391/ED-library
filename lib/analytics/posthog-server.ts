@@ -1,60 +1,7 @@
 // lib/analytics/posthog-server.ts
 // SERVER-ONLY PostHog tracking logic.
-import "server-only";
 import { PostHog } from "posthog-node";
-
-
-
-// ─── Event name union ────────────────────────────────────────────────────────
-
-export type AnalyticsEvent =
-  // Auth
-  | "USER_SIGNED_UP"
-  | "USER_SIGNED_IN"
-  | "AUTH_FAILED"
-  // Contributor lifecycle
-  | "CONTRIBUTOR_APPLIED"
-  | "CONTRIBUTOR_APPROVED"
-  | "CONTRIBUTOR_REJECTED"
-  | "CONTRIBUTOR_FOLLOWED"
-  // Payments
-  | "PAYMENT_INITIATED"
-  | "PAYMENT_SUCCESS"
-  | "PAYMENT_FAILED"
-  | "PAYMENT_REFUNDED"
-  // Subscriptions
-  | "SUBSCRIPTION_CREATED"
-  | "SUBSCRIPTION_RENEWED"
-  | "SUBSCRIPTION_EXPIRED"
-  | "SUBSCRIPTION_ACCESS_DENIED"
-  // Course access
-  | "COURSE_VIEWED"
-  | "COURSE_ACCESSED"
-  | "COURSE_ACCESS_DENIED"
-  // Wallet
-  | "WALLET_CREATED"
-  | "WALLET_DEPOSIT"
-  | "WALLET_WITHDRAWAL_INITIATED"
-  | "WALLET_WITHDRAWAL_SUCCESS"
-  | "WALLET_WITHDRAWAL_FAILED"
-  | "WALLET_WITHDRAWAL_REFUNDED"
-  | "WALLET_INSUFFICIENT_BALANCE"
-  // Emails
-  | "EMAIL_SENT"
-  | "EMAIL_FAILED"
-  // System
-  | "API_ERROR";
-
-// ─── Payload type ─────────────────────────────────────────────────────────────
-
-export interface EventPayload {
-  /** Required by PostHog — use userId when authenticated, a stable anonymous id otherwise */
-  distinctId: string;
-  /** Optional copy of userId for filtering in PostHog */
-  userId?: string;
-  /** Arbitrary event-specific metadata */
-  metadata?: Record<string, string | number | boolean | null | undefined>;
-}
+import type { AnalyticsEvent, EventPayload } from "./types";
 
 // ─── Lazy singleton client ────────────────────────────────────────────────────
 
@@ -65,15 +12,12 @@ function getClient(): PostHog | null {
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
   if (!key) {
-    // Key not set — silently skip tracking (e.g. local dev without env var)
     return null;
   }
 
   if (!_client) {
     _client = new PostHog(key, {
       host: host ?? "https://us.i.posthog.com",
-      // Disable automatic flushing — we flush manually so the serverless
-      // function doesn't close before events are delivered.
       flushAt: 1,
       flushInterval: 0,
     });
@@ -106,11 +50,9 @@ export function trackServerEvent(event: AnalyticsEvent, payload: EventPayload): 
         },
       });
 
-      // Flush immediately so serverless functions don't drop the event
       await client.flush();
     })
     .catch((err: unknown) => {
-      // Log internally but never propagate
       console.error("[Analytics] Failed to track event:", event, err);
     });
 }
