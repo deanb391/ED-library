@@ -1,7 +1,8 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
-import { sendContributorUnderReviewEmail, sendContributorApprovedEmail } from "@/lib/email/events";
+import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -79,6 +80,12 @@ export async function createContributorService(
     console.error("Failed to fetch user for email notification", err);
   }
 
+  trackEvent("CONTRIBUTOR_APPLIED", {
+    distinctId: user,
+    userId: user,
+    metadata: { username: draft.username, institution: draft.institution }
+  });
+
   return mapContributor(doc);
 }
 
@@ -124,6 +131,11 @@ export async function editContributorService(
         console.error("Failed to fetch user for approval email notification", err);
       }
     }
+
+    trackEvent(type === "approval" ? "CONTRIBUTOR_APPROVED" : "CONTRIBUTOR_REJECTED", {
+      distinctId: typeof doc.user === 'string' ? doc.user : doc.user.$id,
+      metadata: { contributorId, username: doc.username }
+    });
   }
 
   return mapContributor(doc);
@@ -211,6 +223,29 @@ export async function toggleFollowContributorService(
         followersIds: JSON.stringify(followersIds),
       }
     );
+
+    // Send email only when it is a new follow, not an unfollow
+    if (!isFollowing) {
+      try {
+        const followerDoc = await databases.getDocument(DATABASE_ID, "user", userId);
+        const contributorUserDoc = await databases.getDocument(DATABASE_ID, "user", contributor.user);
+        if (contributorUserDoc?.email) {
+          sendNewFollowerEmail(
+            contributorUserDoc.email,
+            contributor.username || "Contributor",
+            followerDoc?.username || "A user"
+          );
+        }
+      } catch (err) {
+        console.error("Failed to send new follower email:", err);
+      }
+
+      trackEvent("CONTRIBUTOR_FOLLOWED", {
+        distinctId: userId,
+        userId,
+        metadata: { contributorId, username: contributor.username }
+      });
+    }
 
     return true;
   } catch (err) {

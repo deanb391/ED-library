@@ -1,9 +1,10 @@
 // app/api/payments/verify/route.ts
 import { NextResponse } from "next/server";
-import { creditWalletService } from "@/lib/services/wallet.service"; // adjust import
+import { creditWalletService, walletDepositSuccess } from "@/lib/services/wallet.service"; // adjust import
 import { verifyFlutterwaveTransaction } from "@/lib/services/flutterwave.service"; // adjust import
 import { getPaymentById, updatePaymentStatus } from "@/lib/services/payments.service"; // adjust import
 import { createTransactionService } from "@/lib/services/transactions.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -46,6 +47,9 @@ export async function GET(request: Request) {
 
       // 5. Actually top up the user's wallet!
       await creditWalletService(payment.user, balance);
+      
+      // Track deposit success
+      await walletDepositSuccess(payment.user, balance, paymentId);
 
       try {
         const { databases } = await import("@/lib/appwrite/server");
@@ -64,8 +68,12 @@ export async function GET(request: Request) {
       await updatePaymentStatus(paymentId, "failed");
       return NextResponse.json({ success: false, error: "Payment verification failed at provider" });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Payment verification error:", error);
+    trackEvent("API_ERROR", {
+      distinctId: paymentId || "unknown",
+      metadata: { route: "/api/wallet/verify", error: error.message }
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

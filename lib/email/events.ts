@@ -5,6 +5,7 @@ import { purchaseNotificationTemplate } from "./templates/purchaseNotification";
 import { subscriptionNotificationTemplate } from "./templates/subscriptionNotification";
 import { withdrawalSuccessTemplate } from "./templates/withdrawalSuccess";
 import { depositSuccessTemplate } from "./templates/depositSuccess";
+import { newFollowerTemplate } from "./templates/newFollower";
 
 export function sendContributorUnderReviewEmail(to: string, name: string) {
   sendEmail({
@@ -51,5 +52,13 @@ export function sendDepositSuccessEmail(to: string, name: string, amount: number
     to,
     subject: "Deposit Successful - ED-Library",
     html: depositSuccessTemplate(name, amount),
+  }).catch(console.error);
+}
+
+export function sendNewFollowerEmail(to: string, contributorName: string, followerName: string) {
+  sendEmail({
+    to,
+    subject: "New Follower - ED-Library",
+    html: newFollowerTemplate(contributorName, followerName),
   }).catch(console.error);
 }

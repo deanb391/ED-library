@@ -21,12 +21,12 @@ export default function VerifyPaymentPage() {
       if (!paymentId) {
         router.replace("/subscribe/usbscribe-to-contributor/failed");
         return;
-      } 
+      }
       if (!contributorId) return;
 
-      if (status === "cancelled" || "failed") {
-          router.push("/subscribe/usbscribe-to-contributor/failed");
-        } 
+      if (status === "cancelled" || status === "failed") {
+        router.push("/subscribe/usbscribe-to-contributor/failed");
+      }
 
       try {
         const res = await fetch(
@@ -39,12 +39,12 @@ export default function VerifyPaymentPage() {
         const data = await res.json();
 
         if (!res.ok) {
-            throw new Error(data?.error || "Verification failed");
-          }
+          throw new Error(data?.error || "Verification failed");
+        }
 
-          if (!data.success) {
-  throw new Error(data?.error || "Payment not successful");
-}
+        if (!data.success) {
+          throw new Error(data?.error || "Payment not successful");
+        }
 
         if (data?.success) {
           setMessage("Payment verified. Redirecting...");

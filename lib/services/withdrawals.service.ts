@@ -8,6 +8,7 @@ import { createEarningService } from "./earnings.service";
 import { addCourseToLibraryService } from "./library.service";
 import { fetchContributorService } from "./contributors.service";
 import { createTransactionService } from "./transactions.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 import { use } from "react";
 import { error } from "console";
 
@@ -161,6 +162,12 @@ export async function processWithdrawal({
     description: "Withdrawal",
   });
 
+  trackEvent("WALLET_WITHDRAWAL_INITIATED", {
+    distinctId: userId,
+    userId: userId,
+    metadata: { withdrawalId: withdrawal.$id, amount }
+  });
+
   try {
     const ed_cut = 0.05 * amount;
     const before_cut = 0.95 * amount;
@@ -195,6 +202,11 @@ export async function processWithdrawal({
     }
 
     // Queued or Successful. Leave as pending for webhook to mark successful.
+    trackEvent("WALLET_WITHDRAWAL_SUCCESS", {
+      distinctId: userId,
+      userId: userId,
+      metadata: { withdrawalId: withdrawal.$id, amount, status: flw.status }
+    });
     return { success: true, receipt: withdrawal, message: flw.message || "Transfer processing" };
 
   } catch (err) {
@@ -208,6 +220,11 @@ export async function processWithdrawal({
       // Explicit failure: Safe to refund immediately
       await refundUser(userId, amount);
       const receipt = await updateWithdrawalStatus(withdrawal.$id, "failed");
+      trackEvent("WALLET_WITHDRAWAL_FAILED", {
+        distinctId: userId,
+        userId: userId,
+        metadata: { withdrawalId: withdrawal.$id, amount, error: errorMessage }
+      });
       return { success: false, receipt, error: errorMessage };
     }
 
@@ -219,6 +236,11 @@ export async function processWithdrawal({
 
 export async function refundUser (userId: string, amount: number) {
   await creditWalletService(userId, amount, "refund")
+  trackEvent("WALLET_WITHDRAWAL_REFUNDED", {
+    distinctId: userId,
+    userId: userId,
+    metadata: { amount }
+  });
 }
 
 

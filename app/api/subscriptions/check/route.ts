@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkSubscriptionAccessService } from "@/lib/services/subscriptions.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,6 +16,13 @@ export async function GET(request: Request) {
 
   try {
     const hasAccess = await checkSubscriptionAccessService(userId, courseId);
+    
+    trackEvent(hasAccess ? "COURSE_ACCESSED" : "COURSE_ACCESS_DENIED", {
+      distinctId: userId,
+      userId: userId,
+      metadata: { courseId, reason: hasAccess ? "active_subscription" : "subscription_expired_or_missing" }
+    });
+
     return NextResponse.json({ hasAccess });
   } catch (error) {
     console.error("Check subscription access error:", error);

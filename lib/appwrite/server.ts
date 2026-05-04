@@ -22,6 +22,6 @@ export async function getUserById(userId: string) {
     return userDoc;
   } catch (error) {
     console.error("Error fetching user by ID:", error);
-    throw error; // Handle errors gracefully, no silent failures
+    return null; // Return null instead of throwing to avoid breaking callers
   }
 }

@@ -3,6 +3,7 @@ import { databases } from "@/lib/appwrite/server";
 import { createPaymentService } from "./payments.service";
 import { initFlutterwavePayment } from "./flutterwave.service";
 import { getBankName, processWithdrawal, verifyAccount } from "./withdrawals.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const WALLET_COLLECTION = "wallet";
@@ -111,6 +112,14 @@ export async function topUpWalletService(params: {
   };
 }
 
+export async function walletDepositSuccess(userId: string, amount: number, paymentId: string) {
+  trackEvent("WALLET_DEPOSIT", {
+    distinctId: userId,
+    userId: userId,
+    metadata: { amount, paymentId }
+  });
+}
+
 
 
 export async function debitWalletService(
@@ -121,7 +130,14 @@ export async function debitWalletService(
   const wallet = await fetchWalletByUserService(userId);
 
   if (!wallet) throw new Error("Wallet not found");
-  if (wallet.balance < amount) throw new Error("Insufficient balance");
+  if (wallet.balance < amount) {
+    trackEvent("WALLET_INSUFFICIENT_BALANCE", {
+      distinctId: userId,
+      userId: userId,
+      metadata: { balance: wallet.balance, amountNeeded: amount }
+    });
+    throw new Error("Insufficient balance");
+  }
 
   const updated = await databases.updateDocument(
     DATABASE_ID,

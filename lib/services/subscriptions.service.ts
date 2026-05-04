@@ -1,5 +1,6 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const SUBSCRIPTION_COLLECTION = "subscriptions";
@@ -54,7 +55,13 @@ export async function handleSubscriptionService(
         status: "active",
       }
     );
-    return mapSubscription(updated as unknown as Record<string, unknown>);
+    const sub = mapSubscription(updated as unknown as Record<string, unknown>);
+    trackEvent("SUBSCRIPTION_RENEWED", {
+      distinctId: userId,
+      userId,
+      metadata: { subscriptionId: sub.$id, courseId }
+    });
+    return sub;
   }
 
   const created = await databases.createDocument(
@@ -69,7 +76,13 @@ export async function handleSubscriptionService(
       status: "active",
     }
   );
-  return mapSubscription(created as unknown as Record<string, unknown>);
+  const sub = mapSubscription(created as unknown as Record<string, unknown>);
+  trackEvent("SUBSCRIPTION_CREATED", {
+    distinctId: userId,
+    userId,
+    metadata: { subscriptionId: sub.$id, courseId }
+  });
+  return sub;
 }
 
 export async function fetchSubscriptionService(
@@ -132,6 +145,11 @@ export async function expireSubscriptionsCronService(): Promise<number> {
       doc.$id,
       { status: "expired" }
     );
+    trackEvent("SUBSCRIPTION_EXPIRED", {
+      distinctId: doc.user as string,
+      userId: doc.user as string,
+      metadata: { subscriptionId: doc.$id, courseId: doc.courses as string }
+    });
     expiredCount++;
   }
 

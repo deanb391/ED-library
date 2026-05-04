@@ -83,14 +83,21 @@ export async function fetchReviewsService(
       ? res.documents[res.documents.length - 1].$id
       : undefined;
 
-  // Hydrate user data
-  const userIds = [...new Set(reviews.map(review => review.user as string))];
-  const userPromises = userIds.map(userId => getUserById(userId));
+  // Hydrate user data — only for reviews that have a valid string user ID
+  const validUserIds = [
+    ...new Set(
+      reviews
+        .map((review) => review.user)
+        .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+    ),
+  ];
+  const userPromises = validUserIds.map((userId) => getUserById(userId));
   const users = await Promise.all(userPromises);
-  const userMap = new Map(userIds.map((id, index) => [id, users[index]]));
+  const userMap = new Map(validUserIds.map((id, index) => [id, users[index]]));
 
-  reviews.forEach(review => {
-    const userDoc = userMap.get(review.user as string);
+  reviews.forEach((review) => {
+    if (typeof review.user !== "string") return; // skip object/invalid stored values
+    const userDoc = userMap.get(review.user);
     if (userDoc) {
       review.user = userDoc;
     }

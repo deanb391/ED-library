@@ -7,6 +7,7 @@ import { addCourseToLibraryService } from "@/lib/services/library.service";
 import { creditWalletService } from "@/lib/services/wallet.service";
 import { fetchContributorService } from "@/lib/services/contributors.service";
 import { createTransactionService } from "@/lib/services/transactions.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -160,8 +161,12 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Payment verification error:", error);
+    trackEvent("API_ERROR", {
+      distinctId: paymentId || "unknown",
+      metadata: { route: "/api/payments/verify", error: error.message }
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

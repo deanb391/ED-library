@@ -2,6 +2,7 @@
 
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COURSE_COLLECTION = "courses";
@@ -155,6 +156,11 @@ export async function searchCoursesService(query: string) {
 
   [...title.documents, ...code.documents, ...dept.documents, ...university.documents].forEach((doc: any) => {
     map.set(doc.$id, doc);
+  });
+
+  trackEvent("SEARCH_PERFORMED", {
+    distinctId: "anonymous",
+    metadata: { query, resultsCount: map.size }
   });
 
   return Array.from(map.values()).map(mapCourse);
@@ -319,36 +325,52 @@ export async function recordCourseVisitService(courseId: string, userId: string)
     courseId
   );
 
-  // Parse analytics, initialize if missing
-  let analytics = courseDoc.analytics;
-  if (!analytics) {
-    analytics = {
-      avg_rating: 0,
-      reached: [],
-      visits_per_day: {
-        mon: 0,
-        tue: 0,
-        wed: 0,
-        thu: 0,
-        fri: 0,
-        sat: 0,
-        sun: 0
-      }
-    };
+  // analytics is stored as a JSON string in Appwrite — always parse it
+  const defaultAnalytics = {
+    avg_rating: 0,
+    reached: [] as string[],
+    visits_per_day: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 },
+  };
+
+  let analytics = defaultAnalytics;
+
+  if (courseDoc.analytics) {
+    try {
+      const parsed = typeof courseDoc.analytics === "string"
+        ? JSON.parse(courseDoc.analytics)
+        : courseDoc.analytics;
+
+      // Merge parsed value with defaults so missing keys are always present
+      analytics = {
+        avg_rating: parsed.avg_rating ?? 0,
+        reached: Array.isArray(parsed.reached) ? parsed.reached : [],
+        visits_per_day: {
+          ...defaultAnalytics.visits_per_day,
+          ...(parsed.visits_per_day ?? {}),
+        },
+      };
+    } catch {
+      // Corrupted analytics string — fall back to defaults
+      analytics = defaultAnalytics;
+    }
   }
 
-  // Update reached: add userId if not present
-  if (!analytics?.reached?.includes(userId)) {
-    analytics?.reached?.push(userId);
+  // Update reached: add userId if not already present
+  if (!analytics.reached.includes(userId)) {
+    analytics.reached.push(userId);
   }
 
   // Update visits_per_day: increment current day
   const now = new Date();
-  const day = new Intl.DateTimeFormat('en-NG', { weekday: 'short' }).format(now).toLowerCase(); // 'mon', 'tue', etc.
-  if (analytics.visits_per_day[day] !== undefined) {
-    analytics.visits_per_day[day] += 1;
-    // If updating on Monday, reset other days to 0 for weekly reset
-    if (day === 'mon') {
+  const day = new Intl.DateTimeFormat("en-NG", { weekday: "short" })
+    .format(now)
+    .toLowerCase(); // 'mon', 'tue', etc.
+
+  if (day in analytics.visits_per_day) {
+    (analytics.visits_per_day as Record<string, number>)[day] += 1;
+
+    // Reset other days to 0 on Monday (weekly reset)
+    if (day === "mon") {
       analytics.visits_per_day.tue = 0;
       analytics.visits_per_day.wed = 0;
       analytics.visits_per_day.thu = 0;
@@ -358,13 +380,19 @@ export async function recordCourseVisitService(courseId: string, userId: string)
     }
   }
 
-  // Update the course document with new analytics
+  // Persist updated analytics back as a JSON string
   await databases.updateDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
     courseId,
     { analytics: JSON.stringify(analytics) }
   );
+
+  trackEvent("COURSE_VIEWED", {
+    distinctId: userId,
+    userId: userId,
+    metadata: { courseId, title: courseDoc.title }
+  });
 }
 
 

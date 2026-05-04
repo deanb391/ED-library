@@ -8,6 +8,7 @@ import { createEarningService } from "./earnings.service";
 import { addCourseToLibraryService } from "./library.service";
 import { fetchContributorService } from "./contributors.service";
 import { createTransactionService } from "./transactions.service";
+import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const PAYMENTS_COLLECTION = "payments";
@@ -121,6 +122,18 @@ export async function payForCourseService(params: {
     provider: params?.paymentMethod as "wallet" || "flutterwave",
   });
 
+  trackEvent("PAYMENT_INITIATED", {
+    distinctId: params.userId,
+    userId: params.userId,
+    metadata: {
+      paymentId: payment.$id,
+      amount: total,
+      type: params.type,
+      method: params.paymentMethod,
+      courseCount: params.courseIds.length
+    }
+  });
+
   // =========================
   // WALLET FLOW
   // =========================
@@ -221,6 +234,17 @@ export async function payForCourseService(params: {
       }
     }
 
+    trackEvent("PAYMENT_SUCCESS", {
+      distinctId: params.userId,
+      userId: params.userId,
+      metadata: {
+        paymentId: payment.$id,
+        amount: total,
+        type: params.type,
+        method: "wallet"
+      }
+    });
+
     return {
       type: "wallet",
       success: true,
@@ -281,6 +305,16 @@ export async function verifyPaymentService(paymentId: string) {
   await updatePaymentService(paymentId, {
     status: "successful",
     transactionId: tx.id?.toString(),
+  });
+
+  trackEvent("PAYMENT_SUCCESS", {
+    distinctId: tx.customer?.email || paymentId,
+    metadata: {
+      paymentId,
+      amount: tx.amount,
+      currency: tx.currency,
+      method: "flutterwave"
+    }
   });
 
   return { success: true };

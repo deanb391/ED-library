@@ -457,17 +457,20 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     rating: number;
     comment: string;
   }) => {
+    // Guard: both user and course must be present before submitting
+    if (!user?.$id || !course?.id) {
+      console.error("CREATE REVIEW: missing user or course ID");
+      return;
+    }
 
     try {
       setIsReviewSaving(true);
-      const newReview = await createReview(
-        {
-          user: user?.$id || {},
-          courses: course?.id || {},
-          rating: rating,
-          review: comment
-        }
-      );
+      const newReview = await createReview({
+        user: user.$id,
+        courses: course.id,
+        rating,
+        review: comment,
+      });
 
       setReviews((prev) => [newReview, ...prev]);
       setReviewModalOpen(false);
