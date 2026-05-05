@@ -277,14 +277,16 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   }, [courseId, user, course]);
 
   useEffect(() => {
+    if (loading) return;
+
     const init = async () => {
       if (user?.isAdmin) setIsAdmin(true);
-      if (courseBannerAds.length === 0) return;
-      if (course?.user === user?.$id) setActiveTab("information")
 
-      const value = showAdCourse()
-      setBannerAdOpen(value)
-      setCurrentBanner(pickRandom(courseBannerAds))
+      if (courseBannerAds.length > 0) {
+        const value = showAdCourse()
+        setBannerAdOpen(value)
+        setCurrentBanner(pickRandom(courseBannerAds))
+      }
 
       const { searchAds, topAds, middleAds } = await fetchSmallAds()
 
@@ -300,6 +302,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
       const courseDoc = await fetchCourseById(courseId);
       setCourse(courseDoc);
+
+      if (courseDoc.user === user?.$id) setActiveTab("information");
 
       // ===== COURSE LOCKING LOGIC =====
       try {
@@ -434,7 +438,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     };
 
     init();
-  }, [courseId, courseBannerAds.length]);
+  }, [courseId, courseBannerAds.length, user, loading]);
 
   const isOwner = course?.user === user?.$id;
 
