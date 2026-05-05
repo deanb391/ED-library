@@ -105,6 +105,8 @@ function CourseSection({
   );
 }
 
+import AccessWall from '@/components/AccessWall';
+
 export default function DashboardUnderReviewPage() {
   const {
     user,
@@ -117,6 +119,23 @@ export default function DashboardUnderReviewPage() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
+
+  if (userLoading || contributorLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
+
+  if (!contributor) {
+    return <AccessWall type="contributor" />;
+  }
 
   const isContributorActive = contributor?.status === "live";
   const followerCount = contributor?.followers ?? 0;
@@ -151,13 +170,11 @@ export default function DashboardUnderReviewPage() {
     loadDashboard();
   }, [user?.$id, contributor, contributorLoading, refetchContributor]);
 
-  const isPageLoading = userLoading || contributorLoading || dashboardLoading;
-
-  if (isPageLoading) {
+  if (dashboardLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 text-sm">Loading dashboard data...</p>
       </div>
     );
   }
@@ -335,7 +352,7 @@ export default function DashboardUnderReviewPage() {
                 title="Upload Assets"
                 desc="Batch upload notes and course assets for published classes."
                 enabled={isContributorActive}
-                link="/admin/upload"
+                link="/contributor/dashboard/upload"
                 index={1}
               />
 

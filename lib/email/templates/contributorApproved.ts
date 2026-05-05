@@ -87,7 +87,7 @@ export function contributorApprovedTemplate(name: string) {
                 <!-- CTA BUTTON -->
                 <tr>
                   <td align="center" style="padding-bottom:32px;">
-                    <a href="https://ed-library.vercel.app" style="display:inline-block;background-color:#2563EB;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:12px;letter-spacing:0.2px;">
+                    <a href="https://www.ed-library.app" style="display:inline-block;background-color:#2563EB;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:12px;letter-spacing:0.2px;">
                       Go to Dashboard &rarr;
                     </a>
                   </td>

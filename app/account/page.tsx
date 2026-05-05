@@ -5,6 +5,8 @@ import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
 import ContributorSection from "@/components/ContributorSection";
 
+import AccessWall from "@/components/AccessWall";
+
 export default function AccountScreen() {
   const { user, loading } = useUser();
 
@@ -17,11 +19,7 @@ export default function AccountScreen() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] text-gray-500">
-        Not logged in. Which already explains a lot.
-      </div>
-    );
+    return <AccessWall type="user" />;
   }
 
   return (

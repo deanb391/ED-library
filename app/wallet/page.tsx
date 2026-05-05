@@ -6,15 +6,29 @@ import { useUser } from "@/context/UserContext";
 import { fetchWallet, fetchWalletHistory } from "@/lib/api/wallet";
 import { Plus, ArrowDownLeft, ArrowUpRight, ArrowUp, ArrowDown } from "lucide-react";
 
+import AccessWall from "@/components/AccessWall";
+
 const BRAND_BLUE = "#2563EB";
 
 export default function WalletPage() {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const router = useRouter();
 
   const [wallet, setWallet] = useState<any>(null);
   const [walletHistory, setWalletHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true);
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB]">
+        <div className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
 
   useEffect(() => {
     const load = async () => {

@@ -12,6 +12,8 @@ import CourseTypeModal from "@/components/CourseTypeModal";
 import CoursePriceModalOngoing from "@/components/CoursePriceModalOngoing";
 
 
+import AccessWall from "@/components/AccessWall";
+
 export default function CreateCoursePage() {
   const router = useRouter()
   const [title, setTitle] = useState("");
@@ -26,30 +28,42 @@ export default function CreateCoursePage() {
   const [showPriceModalOngoing, setShowPriceModalOngoing] = useState(false);
   const [price, setPrice] = useState(0);
   const [isFree, setIsFree] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true);
-  const {user} = useUser()
+  const { user, loading: userLoading, contributor, contributorLoading } = useUser()
   const [level, setLevel] = useState("");
   const [session, setSession] = useState("")
   const [department, setDepartment] = useState("");
   const [courseType, setCourseType] = useState("");
- 
-        const LEVELS = [100, 200, 300, 400, 500, 600];
 
-const sessions = [
-  "2023/2024",
-  "2024/2025",
-  "2025/2026"
-]
+  const LEVELS = [100, 200, 300, 400, 500, 600];
+
+  const sessions = [
+    "2023/2024",
+    "2024/2025",
+    "2025/2026"
+  ]
 
   useEffect(() => {
-        const getUser = async () => {
-            if (!user) return;
-          if (user?.isAdmin) setIsAdmin(true);
-          setLoading(false);
-        }
-      getUser();
-      }, [user]);
+    if (userLoading || contributorLoading) return;
+    setLoading(false);
+  }, [user, userLoading, contributor, contributorLoading]);
+
+  if (userLoading || contributorLoading || loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
+
+  if (!contributor) {
+    return <AccessWall type="contributor" />;
+  }
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -139,35 +153,13 @@ const handleCreateCourse = async ({ price, isFree }: { price: number; isFree: bo
   }
 };
 
-    if (loading) {
-    return (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
-  </div>
-);}
-
-if (isLoading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
-  </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      </div>
     );
-  }
-
-  if (!isAdmin && !loading) {
-    return (
-  <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 bg-white">
-    <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
-    <p className="text-gray-500 mb-4">You must be logged in to view this page.</p>
-    <Link href="/">
-      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-        Home
-      </button>
-    </Link>
-  </div>
-);
   }
 
 

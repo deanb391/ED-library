@@ -6,23 +6,27 @@ import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import AccessWall from "@/components/AccessWall";
+
 export default function AdminDashboard() {
   const { user, loading } = useUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && (!user || !user.isAdmin)) {
-      router.push("/");
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user?.isAdmin) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FB] px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
         <p className="text-gray-700 text-sm">Loading, please wait...</p>
       </div>
     );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
+
+  if (!user.isAdmin) {
+    return <AccessWall type="admin" />;
   }
 
   return (
