@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { uploadThumbnail } from "@/lib/courses";
-import { editCourse } from "@/lib/courses";
+import { uploadThumbnail } from "@/lib/api/courses";
+import { editCourse } from "@/lib/api/courses";
 import { bool } from "aws-sdk/clients/signer";
 import { Currency } from "lucide-react";
 
@@ -74,13 +74,6 @@ const [parse, setParsed] = useState<any>({})
 
 }, [isOpen, course]);
 
-const increase = () => {
-  setAmount((p) => isOnGoing ? Math.min(150, p + 10) : Math.min(15, p + 1));
-};
-
-const decrease = () => {
-  setAmount((p) => isOnGoing ? Math.max(0, p - 10) : Math.max(0, p - 1));
-};
 
   if (!isOpen) return null;
 
@@ -325,60 +318,19 @@ const decrease = () => {
               Price Per Page (NGN)
             </label>
 
-            <div
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "12px",
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
                 marginTop: "10px",
               }}
-            >
-              <button
-                type="button"
-                onClick={decrease}
-                disabled={amount <= 0}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "#f3f4f6",
-                  cursor: "pointer",
-                }}
-              >
-                −
-              </button>
-
-              <div
-                style={{
-                  minWidth: "100px",
-                  textAlign: "center",
-                  padding: "12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "12px",
-                  fontWeight: 600,
-                }}
-              >
-                ₦ { amount}
-              </div>
-
-              <button
-                type="button"
-                onClick={increase}
-                disabled={ amount >= 15}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "#f3f4f6",
-                  cursor: "pointer",
-                }}
-              >
-                +
-              </button>
-            </div>
+              placeholder="Enter price per page"
+            />
           </div>
             )
           }
@@ -390,60 +342,19 @@ const decrease = () => {
               Subscription Price (NGN)
             </label>
 
-            <div
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
               style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "12px",
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                border: "1px solid #d1d5db",
                 marginTop: "10px",
               }}
-            >
-              <button
-                type="button"
-                onClick={decrease}
-                disabled={ amount <= 0}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "#f3f4f6",
-                  cursor: "pointer",
-                }}
-              >
-                −
-              </button>
-
-              <div
-                style={{
-                  minWidth: "100px",
-                  textAlign: "center",
-                  padding: "12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "12px",
-                  fontWeight: 600,
-                }}
-              >
-                ₦ {amount}
-              </div>
-
-              <button
-                type="button"
-                onClick={increase}
-                disabled={amount >= 150}
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "#f3f4f6",
-                  cursor: "pointer",
-                }}
-              >
-                +
-              </button>
-            </div>
+              placeholder="Enter subscription price"
+            />
           </div>
             )
           }

@@ -136,11 +136,11 @@ export default function ContributorReviewModal({
         <div style={{ fontSize: "0.875rem", color: "#374151" }}>
           <p><strong>Description:</strong> {contributor.bio || "No description"}</p>
           <p>
-  <strong>Categories:</strong>{" "}
-  {contributor.category && contributor.category.length > 0
-    ? contributor.category.join(", ")
-    : "None"}
-</p>
+            <strong>Categories:</strong>{" "}
+            {contributor.category && contributor.category.length > 0
+              ? contributor.category.join(", ")
+              : "None"}
+          </p>
         </div>
 
         {/* IMAGES */}
@@ -152,18 +152,18 @@ export default function ContributorReviewModal({
           <div style={{ display: "flex", gap: "0.75rem", overflowX: "auto" }}>
             {(contributor.reviewImages || []).slice(0, 3).map((img, i) => (
               <img
-  src={img}
-  onClick={() =>
-    onPreviewImages(contributor.reviewImages || [], i)
-  }
-  style={{
-    width: "120px",
-    height: "120px",
-    objectFit: "cover",
-    borderRadius: "0.75rem",
-    cursor: "pointer"
-  }}
-/>
+                src={img}
+                onClick={() =>
+                  onPreviewImages(contributor.reviewImages || [], i)
+                }
+                style={{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  borderRadius: "0.75rem",
+                  cursor: "pointer"
+                }}
+              />
             ))}
           </div>
         </div>

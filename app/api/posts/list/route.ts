@@ -14,10 +14,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "courseId is required" }, { status: 400 });
   }
 
+  const order = searchParams.get("order") || "desc";
+
   const queries: any[] = [
     Query.equal("courses", courseId),
-    Query.orderDesc("$createdAt"),
-    Query.limit(5),
+    order === "asc" ? Query.orderAsc("$createdAt") : Query.orderDesc("$createdAt"),
+    Query.limit(order === "asc" ? 10 : 5),
   ];
 
   if (cursor) queries.push(Query.cursorAfter(cursor));

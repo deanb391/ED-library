@@ -19,14 +19,14 @@ export default function CoursePriceModalOngoing({
   initialPrice = 0,
   initialFree = false,
 }: CoursePriceModalProps) {
-  const SUGGESTED_PRICE = initialPrice || 100;
+  const SUGGESTED_PRICE = initialPrice || 0;
 
   const [isFree, setIsFree] = useState(initialFree);
-  const [price, setPrice] = useState(SUGGESTED_PRICE);
+  const [price, setPrice] = useState(initialPrice || 0);
 
   useEffect(() => {
     setIsFree(initialFree);
-    setPrice(initialPrice || 100);
+    setPrice(initialPrice);
   }, [initialFree, initialPrice, isOpen]);
 
   if (!isOpen) return null;
@@ -35,14 +35,6 @@ export default function CoursePriceModalOngoing({
     e.preventDefault();
     const normalizedPrice = isFree ? 0 : price;
     onConfirm({ price: normalizedPrice, isFree });
-  };
-
-  const decrease = () => {
-    setPrice((p) => Math.max(0, p - 1));
-  };
-
-  const increase = () => {
-    setPrice((p) => Math.min(SUGGESTED_PRICE + 10, p + 1));
   };
 
   return (
@@ -57,7 +49,7 @@ export default function CoursePriceModalOngoing({
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            
+
             {/* Free Toggle */}
             <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 p-4">
               <div>
@@ -71,61 +63,45 @@ export default function CoursePriceModalOngoing({
               <button
                 type="button"
                 onClick={() => setIsFree((prev) => !prev)}
-                className={`px-4 py-2 rounded-full font-medium transition ${
-                  isFree
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className={`px-4 py-2 rounded-full font-medium transition ${isFree
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
               >
                 {isFree ? "Enabled" : "Off"}
               </button>
             </div>
 
             {/* Info */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800" style={{fontSize: 10, color: "#4A4342"}}>
-              Suggested subscription price is based on demand. You can reduce it
-              freely, but you can only increase it by up to ₦50 above the suggested price.
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800" style={{ fontSize: 10, color: "#4A4342" }}>
+              Suggested subscription price is based on demand. You can adjust the price
+              as you see fit.
             </div>
 
             {/* Price Control */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Subscription Price  (NGN)
+                Subscription Price (NGN)
               </label>
 
-              <div className="flex items-center justify-center gap-3">
-                
-                {/* Minus */}
-                <button
-                  type="button"
-                  disabled={isFree || price <= 0}
-                  onClick={decrease}
-                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-40 flex items-center justify-center text-lg font-semibold"
-                  style={{color: "black"}}
-                >
-                  −
-                </button>
-
-                {/* Value */}
-                <div className="min-w-[100px] text-center px-4 py-3 rounded-xl border border-gray-300 text-gray-900 font-semibold bg-white" style={{width: 150}}>
-                  ₦ {isFree ? "0" : price}
+              <div className="flex items-center justify-center">
+                <div className="relative w-full max-w-[200px]">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium" style={{ marginRight: 10 }}>₦</span>
+                  <input
+                    type="number"
+                    disabled={isFree}
+                    value={isFree ? 0 : price}
+                    onChange={(e) => setPrice(Number(e.target.value))}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 text-gray-900 font-semibold bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:bg-gray-50 disabled:text-gray-400 transition-all"
+                    style={{ paddingLeft: 30 }}
+                    placeholder="0"
+                  />
                 </div>
-
-                {/* Plus */}
-                <button
-                  type="button"
-                  disabled={isFree || price >= SUGGESTED_PRICE + 10}
-                  onClick={increase}
-                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-40 flex items-center justify-center text-lg font-semibold"
-                  style={{color: "black"}}
-                >
-                  +
-                </button>
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
+              {/* <p className="text-xs text-gray-500 text-center">
                 Suggested: ₦ {SUGGESTED_PRICE}
-              </p>
+              </p> */}
             </div>
 
             {/* Actions */}

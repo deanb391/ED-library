@@ -40,9 +40,9 @@ export default function Header() {
   const contributorDashboardHref = user ? `/contributor/dashboard/${user.$id}` : "/";
 
   const avatarSrc =
-  hasContributorAccount
-    ? contributor?.profileImage
-    : user?.avatar;
+    hasContributorAccount
+      ? contributor?.profileImage
+      : user?.avatar;
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -55,9 +55,9 @@ export default function Header() {
   const MenuItems = ({ onSelect }: { onSelect: () => void }) => (
     <div className="py-2 text-sm w-full">
       <MenuItem icon={Home} label="Home" href="/" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+      <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
       <MenuItem icon={User} label="Account" href="/account" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+      <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
       {showContributorMenu && (
         hasContributorAccount ? (
           <>
@@ -67,7 +67,7 @@ export default function Header() {
               href={contributorDashboardHref}
               onSelect={onSelect}
             />
-            <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+            <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
           </>
         ) : (
           <>
@@ -77,7 +77,7 @@ export default function Header() {
               href="/become-a-contributor"
               onSelect={onSelect}
             />
-            <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+            <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
           </>
         )
       )}
@@ -96,32 +96,32 @@ export default function Header() {
       {
         hasLibrary && (
           <>
-          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
+            <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
 
-      <MenuItem icon={BookMarked} label="Library" href="/library" onSelect={onSelect} />
+            <MenuItem icon={BookMarked} label="Library" href="/library" onSelect={onSelect} />
           </>
-          
+
         )
       }
 
       {
         user && (
           <>
-          <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
+            <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
 
-      <MenuItem icon={Wallet} label="Wallet" href="/wallet" onSelect={onSelect} />
+            <MenuItem icon={Wallet} label="Wallet" href="/wallet" onSelect={onSelect} />
           </>
-          
+
         )
       }
 
-      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}} />
+      <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
 
       <MenuItem icon={CircleHelp} label="About" href="/about" onSelect={onSelect} />
 
-      <div className="my-5 h-px bg-gray-100" style={{marginTop: 10, marginBottom: 10}}/>
+      <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
 
-      <MenuItem icon={Phone} label="Contact" href="#" onSelect={onSelect} />
+      <MenuItem icon={Phone} label="Contact" href="/contact" onSelect={onSelect} />
     </div>
   );
 
@@ -171,23 +171,23 @@ export default function Header() {
           {
             hasLibrary && (
               <Link href="/library" className="hover:text-blue-600">
-            Library
-          </Link>
+                Library
+              </Link>
             )
           }
 
           {
             user && (
               <Link href="/wallet" className="hover:text-blue-600">
-            Wallet
-          </Link>
+                Wallet
+              </Link>
             )
           }
 
-          <Link href="#" className="hover:text-blue-600">
+          <Link href="/about" className="hover:text-blue-600">
             About
           </Link>
-          <Link href="#" className="hover:text-blue-600">
+          <Link href="/contact" className="hover:text-blue-600">
             Contact
           </Link>
 
@@ -243,71 +243,71 @@ export default function Header() {
               </button>
 
               {/* ================= MOBILE MENU ================= */}
-  
-                {/* ================= MOBILE MENU ================= */}
-<>
-  {/* Backdrop */}
-  <div
-    onClick={closeMenu}
-    className={clsx(
-      "fixed inset-0 bg-black/30 backdrop-blur-sm z-60 transition-opacity duration-300",
-      menuOpen
-        ? "opacity-100 pointer-events-auto"
-        : "opacity-0 pointer-events-none"
-    )}
-  />
 
-  
+              {/* ================= MOBILE MENU ================= */}
+              <>
+                {/* Backdrop */}
+                <div
+                  onClick={closeMenu}
+                  className={clsx(
+                    "fixed inset-0 bg-black/30 backdrop-blur-sm z-60 transition-opacity duration-300",
+                    menuOpen
+                      ? "opacity-100 pointer-events-auto"
+                      : "opacity-0 pointer-events-none"
+                  )}
+                />
 
-  {/* Drawer */}
-  {
-    menuOpen && (
 
-      <div
-    className={clsx(
-      "fixed right-0 top-0 h-full w-full max-w-lvh bg-white shadow-xl z-70 transition-transform duration-300 ease-out",
-      menuOpen
-        ? "translate-x-0 pointer-events-auto"
-        : "translate-x-full pointer-events-none"
-    )}
-    style={{paddingTop: 50, paddingRight: 30, paddingLeft: 10}}
-  >
-    {/* User header */}
-    <div className="flex items-center gap-3 px-4 py-4 border-b"
-    
-      >
-      <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100">
-        {user.avatar ? (
-          <Image
-            src={avatarSrc || "/default-avatar.png"}
-            alt="Avatar"
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-600">
-            {user.username?.[0]?.toUpperCase() || "U"}
-          </div>
-        )}
-      </div>
 
-      <div>
-        <p className="font-semibold text-gray-900">
-          {user.username || "User"}
-        </p>
-        <p className="text-xs text-gray-500">View profile</p>
-      </div>
-    </div>
+                {/* Drawer */}
+                {
+                  menuOpen && (
 
-    <MenuItems onSelect={closeMenu}/>
-  </div>
-    )
-  }
-</>
-            
+                    <div
+                      className={clsx(
+                        "fixed right-0 top-0 h-full w-full max-w-lvh bg-white shadow-xl z-70 transition-transform duration-300 ease-out",
+                        menuOpen
+                          ? "translate-x-0 pointer-events-auto"
+                          : "translate-x-full pointer-events-none"
+                      )}
+                      style={{ paddingTop: 50, paddingRight: 30, paddingLeft: 10 }}
+                    >
+                      {/* User header */}
+                      <div className="flex items-center gap-3 px-4 py-4 border-b"
+
+                      >
+                        <div className="relative h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+                          {user.avatar ? (
+                            <Image
+                              src={avatarSrc || "/default-avatar.png"}
+                              alt="Avatar"
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-600">
+                              {user.username?.[0]?.toUpperCase() || "U"}
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {user.username || "User"}
+                          </p>
+                          <p className="text-xs text-gray-500">View profile</p>
+                        </div>
+                      </div>
+
+                      <MenuItems onSelect={closeMenu} />
+                    </div>
+                  )
+                }
+              </>
+
 
               {/* ================= DESKTOP MENU ================= */}
-              
+
             </>
           )}
         </div>

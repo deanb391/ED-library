@@ -1,8 +1,24 @@
-import React from "react";
-import { FileText, MoreHorizontal, Clock } from "lucide-react";
+"use client";
+
+import React, { useEffect } from "react";
+import { Clock } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 
 export default function ApplicationUnderReviewPage() {
+  const { user, contributor, refetchContributor } = useUser();
+
+  const dashboardHref = contributor ? `/contributor/dashboard/${contributor.$id}` : "/";
+
+  useEffect(() => {
+    const refetch = async () => {
+      await refetchContributor();
+    };
+
+    refetch();
+  }, [])
+
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col text-gray-900">
       <main className="grow flex flex-col items-center justify-center px-4 w-full max-w-3xl mx-auto" style={{ paddingTop: 40 }}>
@@ -61,7 +77,7 @@ export default function ApplicationUnderReviewPage() {
         {/* ACTIONS */}
         <div className="w-full flex flex-col items-center gap-4 mt-10">
 
-          <Link href="/contributor/dashboard" className="w-full max-w-65">
+          <Link href={dashboardHref} className="w-full max-w-[260px]">
             <button className="w-full bg-blue-600 text-white text-sm font-medium py-3 rounded-xl hover:bg-blue-700 active:scale-[0.90] transition-all">
               Return to Dashboard
             </button>

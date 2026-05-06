@@ -43,12 +43,12 @@ function CourseSection({
           {title}
         </h2>
 
-        <a
-          href="/all_courses"
+        <Link
+          href="/contributor/courses"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
         >
           See all
-        </a>
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
@@ -120,31 +120,6 @@ export default function DashboardUnderReviewPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
 
-  if (userLoading || contributorLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AccessWall type="user" />;
-  }
-
-  if (!contributor) {
-    return <AccessWall type="contributor" />;
-  }
-
-  const isContributorActive = contributor?.status === "live";
-  const followerCount = contributor?.followers ?? 0;
-  const profileName = contributor?.username ?? user?.username ?? "Contributor";
-  const profileInstitution = contributor?.institution ?? "Institution unavailable";
-  const profileCountry = contributor?.country ?? "Country unavailable";
-  const profileBio = contributor?.bio ?? "No bio available yet.";
-  const profileStatus = contributor?.status ?? "pending";
-
   useEffect(() => {
     const loadDashboard = async () => {
       if (!user) {
@@ -169,6 +144,31 @@ export default function DashboardUnderReviewPage() {
 
     loadDashboard();
   }, [user?.$id, contributor, contributorLoading, refetchContributor]);
+
+  if (userLoading || contributorLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
+
+  if (!contributor) {
+    return <AccessWall type="contributor" />;
+  }
+
+  const isContributorActive = contributor?.status === "live";
+  const followerCount = contributor?.followers ?? 0;
+  const profileName = contributor?.username ?? user?.username ?? "Contributor";
+  const profileInstitution = contributor?.institution ?? "Institution unavailable";
+  const profileCountry = contributor?.country ?? "Country unavailable";
+  const profileBio = contributor?.bio ?? "No bio available yet.";
+  const profileStatus = contributor?.status ?? "pending";
 
   if (dashboardLoading) {
     return (

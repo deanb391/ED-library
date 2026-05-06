@@ -1,12 +1,13 @@
 // lib/services/course.service.ts
 
 import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
+import { databases, storage } from "@/lib/appwrite/server";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COURSE_COLLECTION = "courses";
 const POST_COLLECTION = "posts";
+const BUCKET_ID = "69617f7300331ea02ff5";
 
 function mapCourse(doc: any) {
   return {
@@ -25,7 +26,7 @@ function mapCourse(doc: any) {
     level: doc.level,
     price: doc.price, 
     user: doc.user,
-    analytics: doc.analytics,
+    analytics: typeof doc.analytics === "string" ? JSON.parse(doc.analytics) : doc.analytics,
     pageCount: doc?.pageCount || 0,
   };
 }
@@ -231,24 +232,72 @@ export async function fetchAllPostsService(queries: any[]) {
   };
 }
 
-export async function createPostService(data: any) {
-  const post = databases.createDocument(
+export async function fetchPostsAscService(courseId: string, limit = 10, cursor?: string) {
+  const queries = [
+    Query.equal("courses", courseId),
+    Query.orderAsc("$createdAt"),
+    Query.limit(limit),
+  ];
+
+  if (cursor) {
+    queries.push(Query.cursorAfter(cursor));
+  }
+
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    POST_COLLECTION,
+    queries
+  );
+
+  return {
+    posts: res.documents.map((doc: any) => ({
+      id: doc.$id,
+      images: doc.images ?? [],
+      description: doc.description ?? "",
+    })),
+    lastId:
+      res.documents.length > 0
+        ? res.documents[res.documents.length - 1].$id
+        : null,
+  };
+}
+
+export async function createPostService(data: { courses: string; images: string[]; description: string }) {
+  const post = await databases.createDocument(
     DATABASE_ID,
     POST_COLLECTION,
     ID.unique(),
     data
   );
 
-  const course = await fetchCourseByIdService(data.courseId)
+  const course = await fetchCourseByIdService(data.courses);
 
-  await updateCourseService(data.courseId, {
-    pageCount: course.pageCount + data.images.length
-  })
+  await updateCourseService(data.courses, {
+    pageCount: (course.pageCount || 0) + data.images.length,
+    lastOperation: "Now",
+  });
 
-  return post
+  return post;
 }
 
 export async function updatePostService(postId: string, data: any) {
+  if (data.images) {
+    const oldPost = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
+    const oldImagesCount = (oldPost.images || []).length;
+    const newImagesCount = data.images.length;
+    const diff = newImagesCount - oldImagesCount;
+
+    if (diff !== 0) {
+      const courseId = typeof oldPost.courses === 'string' ? oldPost.courses : (oldPost.courses?.$id || oldPost.courses);
+      if (courseId) {
+        const course = await fetchCourseByIdService(courseId);
+        await updateCourseService(courseId, {
+          pageCount: Math.max(0, (course.pageCount || 0) + diff)
+        });
+      }
+    }
+  }
+
   return databases.updateDocument(
     DATABASE_ID,
     POST_COLLECTION,
@@ -258,11 +307,51 @@ export async function updatePostService(postId: string, data: any) {
 }
 
 export async function deletePostService(postId: string) {
+  const post = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
+  const imagesCount = (post.images || []).length;
+  const courseId = typeof post.courses === 'string' ? post.courses : (post.courses?.$id || post.courses);
+
+  if (courseId) {
+    const course = await fetchCourseByIdService(courseId);
+    await updateCourseService(courseId, {
+      pageCount: Math.max(0, (course.pageCount || 0) - imagesCount)
+    });
+  }
+
   return databases.deleteDocument(
     DATABASE_ID,
     POST_COLLECTION,
     postId
   );
+}
+
+export async function deleteFileFromPostService(postId: string, fileUrl: string) {
+  const post = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
+
+  // Extract file ID from URL
+  const match = fileUrl.match(/files\/([a-zA-Z0-9]+)\/view/);
+  if (match) {
+    const fileId = match[1];
+    try {
+      await storage.deleteFile(BUCKET_ID, fileId);
+    } catch (err) {
+      console.error("Storage deletion failed:", err);
+    }
+  }
+
+  const updatedFiles = (post.images || []).filter((url: string) => url !== fileUrl);
+
+  await databases.updateDocument(DATABASE_ID, POST_COLLECTION, postId, { images: updatedFiles });
+
+  const courseId = typeof post.courses === 'string' ? post.courses : (post.courses?.$id || post.courses);
+  if (courseId) {
+    const course = await fetchCourseByIdService(courseId);
+    await updateCourseService(courseId, {
+      pageCount: Math.max(0, (course.pageCount || 0) - 1)
+    });
+  }
+
+  return true;
 }
 
 /* ================= SPECIAL ================= */

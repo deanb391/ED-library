@@ -15,7 +15,7 @@ import {
   GraduationCap,
   RotateCcw
 } from 'lucide-react';
-import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/courses';
+import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/api/courses';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';

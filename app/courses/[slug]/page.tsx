@@ -1,4 +1,4 @@
-import { fetchCourseById } from "@/lib/courses";
+import { fetchCourseByIdService } from "@/lib/services/course.service";
 import CourseDetailsClient from "./CourseDetailsClient";
 
 export async function generateMetadata({
@@ -8,7 +8,7 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
 
-  const course = await fetchCourseById(slug);
+  const course = await fetchCourseByIdService(slug);
 
   if (!course) {
     return {

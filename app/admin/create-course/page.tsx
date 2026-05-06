@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { uploadThumbnail, createCourse } from "@/lib/courses";
+import { uploadThumbnail, createCourse } from "@/lib/api/courses";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import NativeBanner from "@/components/ads/NativeBanner";

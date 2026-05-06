@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Trash2, RefreshCw, Plus } from "lucide-react";
-import { uploadImage } from "@/lib/courses";
+import { uploadImage } from "@/lib/api/courses";
 
 type ImageItem = {
   id: string;

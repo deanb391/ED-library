@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
-import { deleteCourse, deleteFileFromPost, deletePost, editPost, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit } from '@/lib/courses';
+import { Course, deleteCourse, deleteFileFromPost, deletePost, editCourse, editPost, fetchAllPosts, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit } from '@/lib/api/courses';
 import Image from 'next/image';
 import { getCurrentUser, updateUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
@@ -64,29 +64,7 @@ interface Post {
   description?: string;
 }
 
-export type Course = {
-  id: string;
-  title: string;
-  code: string;
-  description: string;
-  lecturer?: string;
-  university?: string;
-  thumbnailId: string;
-  thumbnailUrl: string;
-  files?: string[];
-  user?: any;
-  isOnGoing: boolean;
-  session: string;
-  level: Number;
-  department: string;
-  price?: string;
-  analytics?: {
-    avg_rating: number;
-    reached: string[];
-    visits_per_day: { mon: number; tue: number; wed: number; thu: number; fri: number; sat: number; sun: number };
-  };
-  pageCount: number;
-};
+// Course type is now imported from @/lib/api/courses
 
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -226,7 +204,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   }
 
   const fetchPDf = async () => {
-    const { posts, lastId } = await fetchPostsAsc(courseId, 10);
+    const { posts, lastId } = await fetchPostsAsc(courseId, "10");
     setPdfImages(posts.flatMap(p => p.images));
     setPdfCursor(lastId);
     setHasMorePdf(posts.length === 10);
@@ -303,6 +281,18 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
       const courseDoc = await fetchCourseById(courseId);
       setCourse(courseDoc);
 
+      // TEMP: Sync pageCount logic (to be removed later)
+      try {
+        const { posts } = await fetchAllPosts(courseId);
+        const totalImages = posts.reduce((acc, p) => acc + (p.images?.length || 0), 0);
+        if (totalImages !== courseDoc.pageCount) {
+          await editCourse(courseId, { pageCount: totalImages });
+          setCourse(prev => prev ? { ...prev, pageCount: totalImages } : null);
+        }
+      } catch (err) {
+        console.error("PAGE COUNT SYNC ERROR:", err);
+      }
+
       if (courseDoc.user === user?.$id) setActiveTab("information");
 
       // ===== COURSE LOCKING LOGIC =====
@@ -335,8 +325,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         setPriceMeta(parsedPrice);
 
         const isFree = parsedPrice?.isFree === true;
+        const isOwner = courseDoc.user === user?.$id;
 
-        if (isFree) {
+        if (isOwner) {
+          localHasAccess = true;
+          localTag = "owned";
+        } else if (isFree) {
           localHasAccess = true;
           localTag = "free";
         } else {
@@ -429,7 +423,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
       // Set analytics data
       if (courseDoc.analytics) {
-        const data = JSON.parse(courseDoc.analytics)
+        const data = courseDoc.analytics;
         setVisitsPerDay(data.visits_per_day || { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
         setTotalReach(data.reached?.length || 0);
       }
@@ -618,6 +612,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         images: data.images,
       });
 
+      const diff = (data.images || []).length - (activePost.images || []).length;
+
       setPosts((prev) =>
         prev.map((p) =>
           p.id === activePost.id
@@ -625,6 +621,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             : p
         )
       );
+
+      if (diff !== 0) {
+        setCourse((prev) =>
+          prev ? { ...prev, pageCount: Math.max(0, (prev.pageCount || 0) + diff) } : null
+        );
+      }
 
       setShowEdit(false);
     } finally {
@@ -900,7 +902,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-500">Pricing:</span>
                         <span className="text-sm font-semibold text-gray-900">
-                          {JSON.parse(course?.price || "")?.isFree || `${JSON.parse(course?.price || "")?.currency} ${JSON.parse(course?.price || "")?.amount}`}
+                          {JSON.parse(course?.price || "")?.isFree || `${JSON.parse(course?.price || "")?.currency} ${JSON.parse(course?.price || "")?.amount}`} {JSON.parse(course?.price || "")?.type === "one-time" ? "per page" : "per month"}
                         </span>
                         <span className="text-xs text-gray-400">
                           ({JSON.parse(course?.price || "")?.type})
