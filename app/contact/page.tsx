@@ -187,14 +187,14 @@ export default function ContactPage() {
             link="mailto:support@mail.edlibrary.com"
           />
           {/* Card 4 */}
-          <ContactCardUI
+          {/* <ContactCardUI
             icon={<MapPin size={24} color={BRAND_BLUE} />}
             title="Our Office"
             value="Lagos, Nigeria"
             desc="Academic Board HQ"
             actionText="View on map"
             link="https://maps.google.com/?q=Lagos,Nigeria"
-          />
+          /> */}
         </div>
       </section>
 
@@ -240,7 +240,7 @@ export default function ContactPage() {
             </div>
 
             {/* Support Hours Card */}
-            <div
+            {/* <div
               style={{
                 backgroundColor: BRAND_BLUE,
                 color: "#ffffff",
@@ -251,7 +251,7 @@ export default function ContactPage() {
                 boxShadow: "0 20px 25px -5px rgba(37, 99, 235, 0.2)"
               }}
             >
-              {/* Blur accent */}
+              {/* Blur accent 
               <div
                 style={{
                   position: "absolute",
@@ -284,7 +284,7 @@ export default function ContactPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Column: Contact Form */}
