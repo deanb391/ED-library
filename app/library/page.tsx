@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchLibrary } from "@/lib/api/library";
-import { fetchCourse, Course } from "@/lib/api/courses";
+import { fetchCourseById, Course } from "@/lib/api/courses";
 import { fetchUserSubscriptions, Subscription } from "@/lib/api/subscriptions";
 import Image from "next/image";
 
@@ -83,8 +83,8 @@ export default function LibraryPage() {
 
         // Fetch courses and subscriptions in parallel
         const [subCourses, oneCourses, userSubs] = await Promise.all([
-          Promise.all(subIds.map((id) => fetchCourse(id).catch(() => null))),
-          Promise.all(oneIds.map((id) => fetchCourse(id).catch(() => null))),
+          Promise.all(subIds.map((id) => fetchCourseById(id).catch(() => null))),
+          Promise.all(oneIds.map((id) => fetchCourseById(id).catch(() => null))),
           fetchUserSubscriptions(user.$id).catch(() => [] as Subscription[]),
         ]);
         console.log("userSubs: ", userSubs);
