@@ -86,8 +86,8 @@ export default function RectangularAd({
         className
       )}
       style={{
-        minWidth: "375px",
-        minHeight: "150px",
+        width: "100%",
+        minHeight: height ? `${height}px` : "150px",
         maxHeight: "400px",
         maxWidth:"1300px"
       }}
