@@ -8,7 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchCourse } from "@/lib/api/courses";
+import { fetchCourseById } from "@/lib/api/courses";
 import { payForCourse } from "@/lib/api/payments";
 import { fetchWallet } from "@/lib/api/wallet";
 import { useUser } from "@/context/UserContext";
@@ -58,7 +58,7 @@ export default function SecureCheckoutPage() {
 
         for (const id of courseIds) {
           try {
-            const course = await fetchCourse(id);
+            const course = await fetchCourseById(id);
 
             const priceData = course?.price
               ? JSON.parse(course.price)
