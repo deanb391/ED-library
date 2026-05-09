@@ -26,6 +26,7 @@ import { Course } from '@/lib/api/courses';
 import { useUser } from '@/context/UserContext';
 import { fetchCoursesByAdmin } from '@/lib/api/courses';
 import Message from '@/components/Message';
+import ContributorCelebrationModal from '@/components/ContributorCelebrationModal';
 
 function CourseSection({
   title,
@@ -119,6 +120,7 @@ export default function DashboardUnderReviewPage() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(true);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -400,7 +402,11 @@ export default function DashboardUnderReviewPage() {
                 desc="Design and launch interactive curriculums for students worldwide." 
               />
             </div>
+
+
  */}
+
+
 
             <CourseSection title='My Courses' courses={courses} />
 
@@ -422,6 +428,13 @@ export default function DashboardUnderReviewPage() {
   message="This is just an informational message."
 /> */}
         </main>
+
+        <ContributorCelebrationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          contributorName={contributor.username}
+          profileImage={contributor.profileImage}
+        />
 
       </div>
     </div>
