@@ -16,6 +16,7 @@ export type ContributorDraft = {
   reviewImages: string[];
   profileImage: string;
   status: string;
+  hasSeenCelebration?: boolean;
 };
 
 export type Contributor = ContributorDraft & {
@@ -44,7 +45,8 @@ function mapContributor(doc: any): Contributor {
     $updatedAt: doc.$updatedAt,
     approvalNotes: doc.approvalNotes || "",
     followers: doc.followers || 0,
-    followersIds: doc.followersIds
+    followersIds: doc.followersIds,
+    hasSeenCelebration: doc.hasSeenCelebration || false,
   };
 }
 

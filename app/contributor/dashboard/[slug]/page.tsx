@@ -27,6 +27,7 @@ import { useUser } from '@/context/UserContext';
 import { fetchCoursesByAdmin } from '@/lib/api/courses';
 import Message from '@/components/Message';
 import ContributorCelebrationModal from '@/components/ContributorCelebrationModal';
+import { editContributor } from '@/lib/api/contributors';
 
 function CourseSection({
   title,
@@ -120,7 +121,7 @@ export default function DashboardUnderReviewPage() {
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -146,6 +147,20 @@ export default function DashboardUnderReviewPage() {
 
     loadDashboard();
   }, [user?.$id, contributor, contributorLoading, refetchContributor]);
+
+  // Check if we should show the celebration modal
+  useEffect(() => {
+    if (contributor && contributor.status === 'live' && contributor.hasSeenCelebration !== true) {
+      setIsModalOpen(true);
+      // Immediately mark it as seen in the database so it won't show again on reload
+      editContributor(contributor.$id, { hasSeenCelebration: true })
+        .then(() => {
+          // Refetch to ensure the local context is updated
+          refetchContributor();
+        })
+        .catch(console.error);
+    }
+  }, [contributor, refetchContributor]);
 
   if (userLoading || contributorLoading) {
     return (
