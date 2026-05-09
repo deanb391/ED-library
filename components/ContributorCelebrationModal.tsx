@@ -44,7 +44,6 @@ export default function ContributorCelebrationModal({
         quality: 1.0,
         pixelRatio: 3,
         cacheBust: true,
-        useCORS: true,
       });
 
       // 2. Convert DataURL to File Object for sharing
@@ -95,7 +94,7 @@ export default function ContributorCelebrationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" style={{ paddingTop: 150, paddingBottom: 150 }}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-300 flex flex-col">
         {/* Close Button */}
         <button
@@ -109,8 +108,8 @@ export default function ContributorCelebrationModal({
         {/* Modal Header */}
         <div className="p-6 text-center border-b border-gray-100">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-sm">
-              <CheckCircle size={28} />
+            <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-sm">
+              <CheckCircle size={20} />
             </div>
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
