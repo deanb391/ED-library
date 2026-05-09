@@ -10,6 +10,8 @@ import {
   Book,
   Users,
   User,
+  Share2,
+  X,
 } from "lucide-react";
 import deskImg from "@/assets/images/desk.webp";
 import Link from "next/link";
@@ -172,9 +174,28 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
   const [contributor, setContributor] = useState<any>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user} = useUser()
+  const { user } = useUser()
   const [follow, setFollow] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [showExpandedImage, setShowExpandedImage] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${contributor?.username || "Contributor"}'s Profile`,
+      text: `Check out ${contributor?.username || "Contributor"}'s courses on ED-Library!`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -225,52 +246,52 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
     if (slug) load();
   }, [slug, user]);
 
-const handleFollow = async () => {
-  if (!contributor) return;
+  const handleFollow = async () => {
+    if (!contributor) return;
 
 
-  try {
-    setFollow(true);
+    try {
+      setFollow(true);
 
-    if (!user) { 
-      router.push("/signin") 
+      if (!user) {
+        router.push("/signin")
+        setFollow(false);
+        return;
+      }
+
+      const res = await toggleFollowContributor(
+        user.$id,
+        contributor.$id
+      );
+
+      if (!res) return;
+
+      // optimistic UI toggle
+      setFollowing((prev) => !prev);
+
+      setContributor((prev: any) => {
+        if (!prev) return prev;
+
+        const current = prev.followers || 0;
+
+        return {
+          ...prev,
+          followers: following ? current - 1 : current + 1,
+        };
+      });
+    } catch (error) {
+      console.error("FOLLOW ERROR:", error);
+    } finally {
       setFollow(false);
-      return;
     }
-
-    const res = await toggleFollowContributor(
-      user.$id,
-      contributor.$id
-    );
-
-    if (!res) return;
-
-    // optimistic UI toggle
-    setFollowing((prev) => !prev);
-
-    setContributor((prev: any) => {
-      if (!prev) return prev;
-
-      const current = prev.followers || 0;
-
-      return {
-        ...prev,
-        followers: following ? current - 1 : current + 1,
-      };
-    });
-  } catch (error) {
-    console.error("FOLLOW ERROR:", error);
-  } finally {
-    setFollow(false);
-  }
-};
+  };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
-  </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      </div>
     );
   }
 
@@ -283,8 +304,9 @@ const handleFollow = async () => {
           <section className="py-8 flex flex-col items-center text-center">
 
             <div
-              className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow border-2 border-white mb-4"
+              className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow border-2 border-white mb-4 cursor-pointer"
               style={{ height: 190, width: 190 }}
+              onClick={() => setShowExpandedImage(true)}
             >
               <img
                 src={contributor?.profileImage || deskImg.src}
@@ -300,35 +322,43 @@ const handleFollow = async () => {
             {/* Buttons */}
             <div className="mt-5 w-full flex flex-col items-center gap-3">
               <button
-  onClick={handleFollow}
-  disabled={follow}
-  className="max-w-xs py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition disabled:opacity-70"
-  style={{
-    backgroundColor: following ? "#16a34a" : BRAND_BLUE,
-    paddingRight: 20,
-    paddingLeft: 20,
-    marginTop: 10,
-    cursor: follow ? "not-allowed" : "pointer",
-  }}
->
-  {follow ? (
-    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-  ) : null}
-
-  {following ? "Following" : "Follow"}
-</button>
-
-              <button
-                className="max-w-xs py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 font-semibold"
-                onClick={() =>
-                  router.push(
-                    `/subscribe/usbscribe-to-contributor/${slug}`
-                  )
-                }
-                style={{ paddingRight: 20, paddingLeft: 20 }}
+                onClick={handleFollow}
+                disabled={follow}
+                className="max-w-xs py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition disabled:opacity-70"
+                style={{
+                  backgroundColor: following ? "#16a34a" : BRAND_BLUE,
+                  paddingRight: 20,
+                  paddingLeft: 20,
+                  marginTop: 10,
+                  cursor: follow ? "not-allowed" : "pointer",
+                }}
               >
-                Subscribe To Ongoing Courses
+                {follow ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : null}
+
+                {following ? "Following" : "Follow"}
               </button>
+
+              <div className="flex gap-2 max-w-xs w-full">
+                <button
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 font-semibold"
+                  onClick={() =>
+                    router.push(
+                      `/subscribe/usbscribe-to-contributor/${slug}`
+                    )
+                  }
+                  style={{ paddingRight: 20, paddingLeft: 20 }}
+                >
+                  Subscribe
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-50 transition"
+                >
+                  <Share2 size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Stats */}
@@ -391,6 +421,27 @@ const handleFollow = async () => {
           <CourseSection title="courses" courses={courses} />
         </div>
       </main>
+
+      {/* Expanded Image Modal */}
+      {showExpandedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowExpandedImage(false)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white p-2"
+            onClick={() => setShowExpandedImage(false)}
+          >
+            <X size={24} color="red" />
+          </button>
+          <img
+            src={contributor?.profileImage || deskImg.src}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -148,7 +148,7 @@ export async function debitWalletService(
     }
   );
 
-  await recordWalletHistory(wallet?.user, "debit", amount,description ? description :  "Payment For Course")
+  await recordWalletHistory(wallet?.user, "debit", amount, description ? description : "Payment For Course")
 
   return mapWallet(updated);
 }
@@ -187,7 +187,7 @@ export async function recordWalletHistory(
 ) {
 
   return await databases.createDocument(
-    DATABASE_ID, 
+    DATABASE_ID,
     WALLET_HISTORY_COLLECTION,
     ID.unique(),
     {
@@ -211,17 +211,18 @@ export async function updateCashoutAccountService(params: {
   if (!wallet) {
     throw new Error("Wallet not found");
   }
+  console.log({ account_number: params.number, account_bank: params.bank })
 
-  const res = await verifyAccount({account_number: params.number, account_bank: params.bank})
+  const res = await verifyAccount({ account_number: params.number, account_bank: params.bank })
 
   if (!res.success) {
-    return {success: false, message: "We couldn't verify this account, please check your details or try a different account."}
+    return { success: false, message: "We couldn't verify this account, please check your details or try a different account." }
   }
 
   const accountPayload = {
-    number: params.number,
+    number: res.account_number,
     bank: getBankName(params.bank),
-    name: params.name,
+    name: res.account_name,
   };
 
   const updated = await databases.updateDocument(
@@ -233,7 +234,7 @@ export async function updateCashoutAccountService(params: {
     }
   );
 
-  return {success: true, value: mapWallet(updated)};
+  return { success: true, value: mapWallet(updated) };
 }
 
 
@@ -259,7 +260,7 @@ export async function withdrawWalletService(userId: string, amount: string) {
       throw new Error("No cashout account set");
     }
 
-    return await processWithdrawal({userId: userId, amount: Number(amount), account_number: account.number, account_bank: account.bank})
+    return await processWithdrawal({ userId: userId, amount: Number(amount), account_number: account.number, account_bank: account.bank })
 
     // later: create withdrawal record + call flutterwave transfer
   } catch (error) {

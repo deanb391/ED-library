@@ -10,7 +10,8 @@ import {
   Download,
   MoreVertical,
   FileText,
-  Hexagon
+  Hexagon,
+  Share2
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
@@ -134,6 +135,24 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedNoteIndex, setSelectedNoteIndex] = useState(0);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: course?.title || "Course Details",
+      text: `Check out this course: ${course?.title} on ED-Library!`,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
 
   const [isCourseDeleteOpen, setIsCourseDeleteOpen] = useState(false);
   const [isPostDeleteOpen, setIsPostDeleteOpen] = useState(false);
@@ -692,8 +711,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                       Paid ({priceMeta?.type})
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-gray-100" style={{ backgroundColor: "#f3f4f6", paddingTop: 5, paddingBottom: 5, }}>
-                      {priceMeta?.currency} {(priceMeta.type === "one-time" ? (course?.pageCount || 0) * priceMeta?.amount : priceMeta.amount)}
+                      {priceMeta?.currency} {(priceMeta.type === "one-time" ? (Number(course?.pageCount) * priceMeta?.amount) : priceMeta.amount)}
                     </span>
+
                   </>
                 )}
 
@@ -713,9 +733,14 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           </div>
 
           {/* Action Buttons */}
-          {
-            isOwner && (
-              <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleShare}
+              className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-colors border border-gray-200 flex items-center justify-center">
+              <Share2 size={18} />
+            </button>
+            {isOwner && (
+              <>
                 <button
                   onClick={() => setShowEditCourse(true)}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -727,9 +752,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                   className="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-colors border border-red-100">
                   <Trash2 size={18} />
                 </button>
-              </div>
-            )
-          }
+              </>
+            )}
+          </div>
         </div>
 
         {
@@ -849,7 +874,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6">
 
                   {/* Thumbnail */}
-                  <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0" style={{ width: 100 }}>
+                  <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0" style={{ width: 200 }}>
                     <img
                       src={course?.thumbnailUrl}
                       alt={course?.title}
@@ -921,9 +946,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                   <h2 className="text-lg font-semibold text-gray-900">
                     Analytics
                   </h2>
-                  <span className="text-sm text-gray-500">
-                    Last 7 days
-                  </span>
+
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

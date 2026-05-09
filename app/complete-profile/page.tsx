@@ -25,16 +25,6 @@ export default function CompleteProfilePage() {
 
   const LEVELS = [100, 200, 300, 400, 500, 600];
 
-  const DEPARTMENTS = [
-    "Mechanical Engineering",
-    "Electrical Engineering",
-    "Civil Engineering",
-    "Computer Engineering",
-    "Chemical Engineering",
-    "Petroleum Engineering",
-    "Agricultural Engineering",
-    "Marine Engineering",
-  ];
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -136,26 +126,13 @@ export default function CompleteProfilePage() {
           </div>
 
           {/* Department */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
-              Department
-            </label>
-            <select
-              required
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
-            >
-              <option value="" disabled>
-                Select department
-              </option>
-              {DEPARTMENTS.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Input
+            label="Department"
+            icon={<Building2 size={16} />}
+            value={department}
+            onChange={setDepartment}
+            placeholder="Mechanical Engineering"
+          />
 
           {/* Submit */}
           <button

@@ -1,7 +1,7 @@
 import { databases } from "@/lib/appwrite/server";
 import { ID, Query } from "appwrite";
 import { fetchCourseByIdService } from "@/lib/services/course.service";
-import {  creditWalletService, debitWalletService, fetchWalletByUserService } from "@/lib/services/wallet.service";
+import { creditWalletService, debitWalletService, fetchWalletByUserService } from "@/lib/services/wallet.service";
 import { initFlutterwavePayment, initiateWithdrawal } from "./flutterwave.service";
 import { verifyFlutterwaveTransaction } from "./flutterwave.service";
 import { createEarningService } from "./earnings.service";
@@ -30,9 +30,9 @@ const bankCodes: Record<string, string> = {
   "Heritage Bank": "030",
   "Keystone Bank": "082",
   "Lotus Bank": "303",
-  "Moniepoint": "526",
-  "OPay": "999992",
-  "PalmPay": "999991",
+  "Moniepoint": "090405",
+  "OPay": "100004",
+  "PalmPay": "100033",
   "Premium Trust Bank": "105",
   "Polaris Bank": "076",
   "Stanbic IBTC Bank": "221",
@@ -126,7 +126,7 @@ export async function getWithdrawalById(withdrawalId: string) {
     return doc;
   } catch (error) {
     console.error(`Failed to fetch payment with ID ${withdrawalId}:`, error);
-    return null; 
+    return null;
   }
 }
 
@@ -211,7 +211,7 @@ export async function processWithdrawal({
 
   } catch (err) {
     console.error("processWithdrawal Error:", err);
-    
+
     // Determine if it was a network error/timeout (fetch failed) vs an API rejection
     const errorMessage = (err as Error).message || "";
     const isNetworkError = errorMessage.includes("fetch failed") || (err as Error).name === "TypeError";
@@ -234,7 +234,7 @@ export async function processWithdrawal({
 }
 
 
-export async function refundUser (userId: string, amount: number) {
+export async function refundUser(userId: string, amount: number) {
   await creditWalletService(userId, amount, "refund")
   trackEvent("WALLET_WITHDRAWAL_REFUNDED", {
     distinctId: userId,
