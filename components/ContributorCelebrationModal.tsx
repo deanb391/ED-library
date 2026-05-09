@@ -48,6 +48,11 @@ export default function ContributorCelebrationModal({
     setIsGenerating(true);
 
     try {
+      // 1. The "Dummy" Render: Warms up the browser cache silently (very fast)
+      // This solves the iOS/Safari bug where the first render has missing/blank images.
+      await toPng(cardRef.current, { pixelRatio: 0.1 });
+
+      // 2. The Real Render: Guaranteed to have fully cached assets
       const dataUrl = await toPng(cardRef.current, {
         quality: 1.0,
         pixelRatio: 3,
@@ -106,7 +111,7 @@ export default function ContributorCelebrationModal({
         This wrapper guarantees reliable scrolling behavior across all browsers (especially iOS Safari).
         The outer fixed container handles scrolling, while this flex container handles positioning. 
       */}
-      <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]" style={{ marginTop: 70 }}>
+      <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative animate-in fade-in zoom-in duration-300 flex flex-col mb-auto shrink-0">
           {/* Close Button */}
           <button
@@ -198,6 +203,9 @@ export default function ContributorCelebrationModal({
 
           {/* Action Controls */}
           <div className="p-6 border-t border-gray-100 flex flex-col gap-3">
+            <p className="text-xs text-gray-400 text-center px-4 mb-2">
+              Note: If your image appears blank when sharing, just close the share menu and try clicking the button again.
+            </p>
             <button
               onClick={handleShare}
               disabled={!imageLoaded || isGenerating}
