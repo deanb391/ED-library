@@ -48,7 +48,7 @@ function ContributorSection({
   const [follow, setFollow] = useState(false);
 
 
-    const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const { user } = useUser();
   const router = useRouter();
 
@@ -66,12 +66,12 @@ function ContributorSection({
         prev.map((c) =>
           c.$id === contributorId
             ? {
-                ...c,
-                isFollowing: !c.isFollowing,
-                followers: c.isFollowing
-                  ? (c.followers || 0) - 1
-                  : (c.followers || 0) + 1,
-              }
+              ...c,
+              isFollowing: !c.isFollowing,
+              followers: c.isFollowing
+                ? (c.followers || 0) - 1
+                : (c.followers || 0) + 1,
+            }
             : c
         )
       );
@@ -84,12 +84,12 @@ function ContributorSection({
           prev.map((c) =>
             c.$id === contributorId
               ? {
-                  ...c,
-                  isFollowing: !c.isFollowing,
-                  followers: c.isFollowing
-                    ? (c.followers || 0) - 1
-                    : (c.followers || 0) + 1,
-                }
+                ...c,
+                isFollowing: !c.isFollowing,
+                followers: c.isFollowing
+                  ? (c.followers || 0) - 1
+                  : (c.followers || 0) + 1,
+              }
               : c
           )
         );
@@ -166,11 +166,11 @@ function ContributorSection({
 
             {/* Action */}
             <button
-  onClick={(e) => {
-    e.preventDefault();   // stops navigation
-    e.stopPropagation();  // stops bubbling to Link
-    handleFollow(contributor.$id);
-  }}
+              onClick={(e) => {
+                e.preventDefault();   // stops navigation
+                e.stopPropagation();  // stops bubbling to Link
+                handleFollow(contributor.$id);
+              }}
               disabled={loadingId === contributor.$id}
               className="w-full text-xs font-medium py-2 rounded-lg transition active:scale-[0.97] disabled:opacity-70 flex items-center justify-center"
               style={{
@@ -211,16 +211,16 @@ function CourseSection({
     if (!container || !onLoadMore) return;
 
     const handleScroll = () => {
-  if (!container) return;
+      if (!container) return;
 
-  const { scrollLeft, clientWidth, scrollWidth } = container;
+      const { scrollLeft, clientWidth, scrollWidth } = container;
 
-  const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 5;
+      const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 5;
 
-  if (isAtEnd) {
-    onLoadMore();
-  }
-};
+      if (isAtEnd) {
+        onLoadMore();
+      }
+    };
 
     container.addEventListener("scroll", handleScroll);
     return () => container.removeEventListener("scroll", handleScroll);
@@ -229,7 +229,7 @@ function CourseSection({
   if (!courses.length) return null;
 
   return (
-    <section className="mb-10" style={{marginBottom: 30}}>
+    <section className="mb-10" style={{ marginBottom: 30 }}>
       <div className="mb-4 px-1">
         <h2 className="text-lg md:text-xl font-semibold text-gray-900">
           {title}
@@ -239,49 +239,49 @@ function CourseSection({
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-        style={{paddingTop: 20}}
+        style={{ paddingTop: 20 }}
       >
         {courses.map((course) => (
           <React.Fragment key={course.id}>
-          <Link
-            href={`/courses/${course.id}`}
-            className="bg-white rounded-2xl border border-gray-200 shrink-0 flex flex-col"
-            style={{minWidth: 200, maxWidth: 200}}
-          >
-            <div className="relative h-32 bg-gray-100 overflow-hidden rounded-4xl">
-              <Image
-                src={course.thumbnailUrl}
-                alt={course.title}
-                width={400}
-                height={240}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
-
-            <div className="p-3 flex flex-col gap-2 flex-grow">
-              <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                <span>{course.code}</span>
-                <span>•</span>
-                <span>{course.session}</span>
+            <Link
+              href={`/courses/${course.id}`}
+              className="bg-white rounded-2xl border border-gray-200 shrink-0 flex flex-col"
+              style={{ minWidth: 200, maxWidth: 200 }}
+            >
+              <div className="relative h-32 bg-gray-100 overflow-hidden rounded-4xl">
+                <Image
+                  src={course.thumbnailUrl}
+                  alt={course.title}
+                  width={400}
+                  height={240}
+                  className="w-full h-full object-cover rounded-2xl"
+                />
               </div>
 
-              <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
-                {course.title}
-              </h3>
+              <div className="p-3 flex flex-col gap-2 flex-grow">
+                <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                  <span>{course.code}</span>
+                  <span>•</span>
+                  <span>{course.session}</span>
+                </div>
 
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {course.description}
-              </p>
-            </div>
-          </Link>
+                <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                  {course.title}
+                </h3>
+
+                <p className="text-xs text-gray-500 line-clamp-2">
+                  {course.description}
+                </p>
+              </div>
+            </Link>
           </React.Fragment>
         ))}
 
         {isLoading && (
-  <div className="flex items-center justify-center min-w-15">
-    <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-  </div>
-)}
+          <div className="flex items-center justify-center min-w-15">
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -316,7 +316,7 @@ function CourseSearch({
 
   return (
     <div className="text-center w-full max-w-4xl mb-12">
-      <h1 className="text-4xl font-semibold mb-3" style={{color: 'black', marginBottom: 30}}>
+      <h1 className="text-4xl font-semibold mb-3" style={{ color: 'black', marginBottom: 30 }}>
         What are you learning today?
       </h1>
 
@@ -327,7 +327,7 @@ function CourseSearch({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search courses..."
           className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200"
-          style={{color: "#6b7280"}}
+          style={{ color: "#6b7280" }}
         />
 
         {query && (
@@ -354,7 +354,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
 
 export default function EDLibraryHome() {
-  const { user, loading: userLoading, homeBannerAds,showAdHome } = useUser();
+  const { user, loading: userLoading, homeBannerAds, showAdHome } = useUser();
 
   const [popular, setPopular] = useState<Course[]>([]);
   const [newCourses, setNewCourses] = useState<Course[]>([]);
@@ -364,17 +364,17 @@ export default function EDLibraryHome() {
   const [library, setLibrary] = useState<Course[]>([]);
   const [related, setRelated] = useState<Course[]>([]);
   const [contributors, setContributors] = useState<HomeContributor[]>([]);
-  
-const [smallSearchAds, setSmallSearchAds] = useState<AdItem[]>([])
-const [smallTopAds, setSmallTopAds] = useState<AdItem[]>([])
-const [smallMiddleAds, setSmallMiddleAds] = useState<AdItem[]>([])
-const [largeSearchAds, setLargeSearchAds] = useState<AdItem[]>([])
-const [largeTopAds, setLargeTopAds] = useState<AdItem[]>([])
-const [largeMiddleAds, setLargeMiddleAds] = useState<AdItem[]>([])
-const [bannerAdOpen, setBannerAdOpen] = useState(false);
-const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
 
-  
+  const [smallSearchAds, setSmallSearchAds] = useState<AdItem[]>([])
+  const [smallTopAds, setSmallTopAds] = useState<AdItem[]>([])
+  const [smallMiddleAds, setSmallMiddleAds] = useState<AdItem[]>([])
+  const [largeSearchAds, setLargeSearchAds] = useState<AdItem[]>([])
+  const [largeTopAds, setLargeTopAds] = useState<AdItem[]>([])
+  const [largeMiddleAds, setLargeMiddleAds] = useState<AdItem[]>([])
+  const [bannerAdOpen, setBannerAdOpen] = useState(false);
+  const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
+
+
 
   const [offsets, setOffsets] = useState({
     popular: 0,
@@ -389,10 +389,10 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [loadingMore, setLoadingMore] = useState({
-  popular: false,
-  new: false,
-  free: false,
-});
+    popular: false,
+    new: false,
+    free: false,
+  });
 
   useEffect(() => {
     if (userLoading) return;
@@ -401,22 +401,23 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       setLoading(true);
 
       const value = showAdHome()
-    setBannerAdOpen(value)
-    setCurrentBanner(pickRandom(homeBannerAds))
-    const { searchAds, topAds, middleAds } = await fetchSmallAds()
-    setSmallSearchAds(searchAds);
-    setSmallTopAds(topAds);
-    setSmallMiddleAds(middleAds);
+      setBannerAdOpen(value)
+      setCurrentBanner(pickRandom(homeBannerAds))
+      const { searchAds, topAds, middleAds } = await fetchSmallAds()
+      setSmallSearchAds(searchAds);
+      setSmallTopAds(topAds);
+      setSmallMiddleAds(middleAds);
 
-    const { oneAds, twoAds, threeAds } = await fetchMediumAds()
-    setLargeSearchAds(oneAds);
-    setLargeTopAds(twoAds);
-    setLargeMiddleAds(threeAds);
+      const { oneAds, twoAds, threeAds } = await fetchMediumAds()
+      setLargeSearchAds(oneAds);
+      setLargeTopAds(twoAds);
+      setLargeMiddleAds(threeAds);
 
-      const [p, n, f] = await Promise.all([
+      const [p, n, f, t] = await Promise.all([
         fetchPopularCourses(10, 0),
         fetchNewCourses(10, 0),
         fetchFreeCourses(10, 0),
+        getTopContributors()
       ]);
 
       setPopular(p);
@@ -424,37 +425,37 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
       setFree(f);
 
       if (user) {
-        const [fy, lib, rel, top] = await Promise.all([
+        const [fy, lib, rel] = await Promise.all([
           fetchCoursesForUser(user),
           fetchLibraryCourse(user.$id),
-          fetchRelatedCourse(user),
-          getTopContributors()
+          fetchRelatedCourse(user)
         ]);
 
         setForYou(fy);
         setLibrary(lib);
         setRelated(rel);
-        const mapped = top.map((c: Contributor) => {
-          let ids: string[] = [];
+      }
+      const mapped = t.map((c: Contributor) => {
+        let ids: string[] = [];
 
-          try {
-            ids = JSON.parse(c.followersIds || "[]");
-            if (!Array.isArray(ids)) ids = [];
-          } catch {
-            ids = [];
-          }
-
-          return {
-            ...c,
-            isFollowing: user?.$id ? ids.includes(user.$id) : false,
-          };
-        });
-
-        setContributors(mapped);
+        try {
+          ids = JSON.parse(c.followersIds || "[]");
+          if (!Array.isArray(ids)) ids = [];
+        } catch {
+          ids = [];
         }
 
+        return {
+          ...c,
+          isFollowing: user?.$id ? ids.includes(user.$id) : false,
+        };
+      });
+
+      setContributors(mapped);
       setLoading(false);
     }
+
+
 
     load();
   }, [userLoading, user]);
@@ -463,7 +464,7 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
 
     if (loadingMore[type]) return;
 
-  setLoadingMore((l) => ({ ...l, [type]: true }));
+    setLoadingMore((l) => ({ ...l, [type]: true }));
     const nextOffset = offsets[type] + 10;
 
     let data: Course[] = [];
@@ -484,7 +485,7 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
   };
 
   if (loading) {
-    return ( <div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-sans"> <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center"> {/* --- Hero Skeleton --- */} <div className="text-center w-full max-w-3xl mb-14"> <div className="h-10 md:h-12 bg-gray-200 rounded-lg w-3/4 mx-auto mb-4 animate-pulse" /> <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-8 animate-pulse" /> {/* Search Skeleton */} <div className="relative w-full max-w-xl mx-auto animate-pulse"> <div className="absolute inset-y-0 left-4 flex items-center"> <Search className="text-gray-300" size={20} /> </div> <div className="w-full h-14 rounded-xl bg-gray-200" /> </div> </div> {/* --- Grid Skeleton --- */} <div className="w-full"> <div className="h-6 bg-gray-200 rounded w-48 mb-6 animate-pulse" /> <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"> {Array.from({ length: 8 }).map((_, i) => ( <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse flex flex-col" > {/* Thumbnail */} <div className="h-32 sm:h-36 bg-gray-200" /> {/* Content */} <div className="p-4 flex flex-col gap-2"> <div className="h-3 bg-gray-200 rounded w-1/3" /> <div className="h-4 bg-gray-200 rounded w-3/4" /> <div className="h-3 bg-gray-200 rounded w-full" /> </div> </div> ))} </div> </div> </main> </div> );
+    return (<div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-sans"> <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center"> {/* --- Hero Skeleton --- */} <div className="text-center w-full max-w-3xl mb-14"> <div className="h-10 md:h-12 bg-gray-200 rounded-lg w-3/4 mx-auto mb-4 animate-pulse" /> <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-8 animate-pulse" /> {/* Search Skeleton */} <div className="relative w-full max-w-xl mx-auto animate-pulse"> <div className="absolute inset-y-0 left-4 flex items-center"> <Search className="text-gray-300" size={20} /> </div> <div className="w-full h-14 rounded-xl bg-gray-200" /> </div> </div> {/* --- Grid Skeleton --- */} <div className="w-full"> <div className="h-6 bg-gray-200 rounded w-48 mb-6 animate-pulse" /> <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"> {Array.from({ length: 8 }).map((_, i) => (<div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse flex flex-col" > {/* Thumbnail */} <div className="h-32 sm:h-36 bg-gray-200" /> {/* Content */} <div className="p-4 flex flex-col gap-2"> <div className="h-3 bg-gray-200 rounded w-1/3" /> <div className="h-4 bg-gray-200 rounded w-3/4" /> <div className="h-3 bg-gray-200 rounded w-full" /> </div> </div>))} </div> </div> </main> </div>);
   }
 
   return (
@@ -504,52 +505,52 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
 
         {searchLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4" />
-              <p className="text-sm text-gray-600">
-                Searching courses…
-              </p>
-            </div>
-        ) : (results  || contributorResults.length !== 0) && !searchLoading ? (
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4" />
+            <p className="text-sm text-gray-600">
+              Searching courses…
+            </p>
+          </div>
+        ) : (results || contributorResults.length !== 0) && !searchLoading ? (
           <>
-          {
-  !results && (contributorResults.length === 0) ? (
-    <div>Not Found</div>
-  ) : (
-    <>
-      <CourseSection title="Search results" courses={results || []} />
-      <ContributorSection title="Contributors" contributors={contributorResults || []}  setContributors={setContributorResults}/>
-    </>
-  )
-}
+            {
+              !results && (contributorResults.length === 0) ? (
+                <div>Not Found</div>
+              ) : (
+                <>
+                  <CourseSection title="Search results" courses={results || []} />
+                  <ContributorSection title="Contributors" contributors={contributorResults || []} setContributors={setContributorResults} />
+                </>
+              )
+            }
           </>
         ) : user ? (
           <>
             <CourseSection title="For You" courses={forYou} />
             <CourseSection title="Your Library" courses={library} />
-            
-<RectangularAd
-          ads={smallSearchAds || []}   // or whichever ad array you want
-          className="my-6"
-        />
 
-            <CourseSection title="Popular" courses={popular} onLoadMore={() => loadMore("popular")} isLoading={loadingMore.popular}/>
-            <CourseSection title="New" courses={newCourses} onLoadMore={() => loadMore("new")} isLoading={loadingMore.new}/>
-              
-<RectangularAd
-          ads={smallMiddleAds || []}   // or whichever ad array you want
-          className="my-6"
-          height={130}
-        />
+            <RectangularAd
+              ads={smallSearchAds || []}   // or whichever ad array you want
+              className="my-6"
+            />
 
-            <CourseSection title="Free" courses={free} onLoadMore={() => loadMore("free")} isLoading={loadingMore.free}/>
+            <CourseSection title="Popular" courses={popular} onLoadMore={() => loadMore("popular")} isLoading={loadingMore.popular} />
+            <CourseSection title="New" courses={newCourses} onLoadMore={() => loadMore("new")} isLoading={loadingMore.new} />
+
+            <RectangularAd
+              ads={smallMiddleAds || []}   // or whichever ad array you want
+              className="my-6"
+              height={130}
+            />
+
+            <CourseSection title="Free" courses={free} onLoadMore={() => loadMore("free")} isLoading={loadingMore.free} />
             <ContributorSection title="Top Contributors" contributors={contributors} setContributors={setContributors} />
 
-            
-<RectangularAd
-          ads={smallTopAds || []}   // or whichever ad array you want
-          className="my-6"
-          height={130}
-        />
+
+            <RectangularAd
+              ads={smallTopAds || []}   // or whichever ad array you want
+              className="my-6"
+              height={130}
+            />
 
             <CourseSection title="Related Courses" courses={related} />
           </>
@@ -557,15 +558,15 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
           <>
             <CourseSection title="Popular" courses={popular} onLoadMore={() => loadMore("popular")} />
             <CourseSection title="New" courses={newCourses} onLoadMore={() => loadMore("new")} />
-              
-<RectangularAd
-          ads={smallMiddleAds || []}   // or whichever ad array you want
-          className="my-6"
-          height={130}
-        />
+
+            <RectangularAd
+              ads={smallMiddleAds || []}   // or whichever ad array you want
+              className="my-6"
+              height={130}
+            />
 
             <CourseSection title="Free" courses={free} onLoadMore={() => loadMore("free")} />
-            <ContributorSection title="Top Contributors" contributors={contributors} setContributors={setContributorResults}/>
+            <ContributorSection title="Top Contributors" contributors={contributors} setContributors={setContributorResults} />
           </>
         )}
 
