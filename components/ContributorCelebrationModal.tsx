@@ -24,6 +24,8 @@ export default function ContributorCelebrationModal({
 
   // Reset states when the modal is opened/closed
   useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
     if (isOpen) {
       setIsGenerating(false);
       setImageLoaded(false);
@@ -31,6 +33,12 @@ export default function ContributorCelebrationModal({
       console.log(profileImage, "profileImage");
       if (!profileImage) {
         setImageLoaded(true);
+      } else {
+        // Safari/iOS Failsafe: Cached images often completely skip the onLoad event.
+        // We force-unlock the share button after 1 second just in case.
+        timeout = setTimeout(() => {
+          setImageLoaded(true);
+        }, 1000);
       }
       // Lock background scrolling
       document.body.style.overflow = "hidden";
@@ -40,6 +48,7 @@ export default function ContributorCelebrationModal({
 
     return () => {
       document.body.style.overflow = "";
+      if (timeout) clearTimeout(timeout);
     };
   }, [isOpen, profileImage]);
 
