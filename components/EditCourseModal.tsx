@@ -38,41 +38,41 @@ export default function EditCourseModal({
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOnGoing, setIsOnGoing] = useState(false);
-const [amount, setAmount] = useState(0);
-const [isFree,setIsFree] = useState(false);
-const [parse, setParsed] = useState<any>({})
+  const [amount, setAmount] = useState(0);
+  const [isFree, setIsFree] = useState(false);
+  const [parse, setParsed] = useState<any>({})
 
 
   useEffect(() => {
-  if (!isOpen) return;
+    if (!isOpen) return;
 
-  setTitle(course.title);
-  setCode(course.code);
-  setDescription(course.description);
-  setUniversity(course.university || "");
-  setLecturer(course.lecturer || "");
-  setIsOnGoing(course.isOngoing || true)
+    setTitle(course.title);
+    setCode(course.code);
+    setDescription(course.description);
+    setUniversity(course.university || "");
+    setLecturer(course.lecturer || "");
+    setIsOnGoing(course.isOngoing || true)
 
-  try {
-    const parsed = JSON.parse((course as any).price || "{}");
-    console.log("Parsed: ", parsed)
-    setParsed(parsed);
+    try {
+      const parsed = JSON.parse((course as any).price || "{}");
+      console.log("Parsed: ", parsed)
+      setParsed(parsed);
 
-    setIsOnGoing(parsed?.type === "subscription");
-    setIsFree(parsed.isFree)
+      setIsOnGoing(parsed?.type === "subscription");
+      setIsFree(parsed.isFree)
 
-    if (parsed?.type === "subscription") {
-      
-      setAmount(parsed.amount || 0);
-    } else {
-      setAmount(parsed.amount || 0);
+      if (parsed?.type === "subscription") {
+
+        setAmount(parsed.amount || 0);
+      } else {
+        setAmount(parsed.amount || 0);
+      }
+    } catch {
+      setIsOnGoing(false);
+      setAmount(0);
     }
-  } catch {
-    setIsOnGoing(false);
-    setAmount(0);
-  }
 
-}, [isOpen, course]);
+  }, [isOpen, course]);
 
 
   if (!isOpen) return null;
@@ -91,7 +91,7 @@ const [parse, setParsed] = useState<any>({})
         isOnGoing,
         price: JSON.stringify(
           {
-            type: isOnGoing ? "subscription" : "one_time",
+            type: isOnGoing ? "subscription" : "one-time",
             currency: parse.currency,
             isFree: amount > 0 ? false : true,
             amount: amount,
@@ -118,161 +118,161 @@ const [parse, setParsed] = useState<any>({})
   };
 
   return (
-  <div
-    style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 50,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "rgba(0,0,0,0.4)",
-      padding: "16px",
-    }}
-  >
     <div
       style={{
-        width: "100%",
-        maxWidth: "520px",
-        height: "80vh",
-        backgroundColor: "#fff",
-        borderRadius: "24px",
-        border: "1px solid #e5e7eb",
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
         display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0,0,0,0.4)",
+        padding: "16px",
       }}
     >
-      {/* Header */}
       <div
         style={{
-          padding: "24px",
-          borderBottom: "1px solid #e5e7eb",
-          textAlign: "center",
+          width: "100%",
+          maxWidth: "520px",
+          height: "80vh",
+          backgroundColor: "#fff",
+          borderRadius: "24px",
+          border: "1px solid #e5e7eb",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}
       >
-        <h2
+        {/* Header */}
+        <div
           style={{
-            fontSize: "18px",
-            fontWeight: 600,
-            color: "#111827",
+            padding: "24px",
+            borderBottom: "1px solid #e5e7eb",
+            textAlign: "center",
           }}
         >
-          Edit course
-        </h2>
-      </div>
+          <h2
+            style={{
+              fontSize: "18px",
+              fontWeight: 600,
+              color: "#111827",
+            }}
+          >
+            Edit course
+          </h2>
+        </div>
 
-      {/* Scrollable Content */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "20px",
-          minHeight: 0,
-        }}
-      >
-        <form
-          onSubmit={handleSubmit}
+        {/* Scrollable Content */}
+        <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
+            flex: 1,
+            overflowY: "auto",
+            padding: "20px",
+            minHeight: 0,
           }}
         >
-          {/* Title */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Course title
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "6px",
-              }}
-            />
-          </div>
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+          >
+            {/* Title */}
+            <div>
+              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                Course title
+              </label>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #d1d5db",
+                  marginTop: "6px",
+                }}
+              />
+            </div>
 
-          {/* Code */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Course code
-            </label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "6px",
-              }}
-            />
-          </div>
+            {/* Code */}
+            <div>
+              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                Course code
+              </label>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #d1d5db",
+                  marginTop: "6px",
+                }}
+              />
+            </div>
 
-          {/* Description */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Description
-            </label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "6px",
-                resize: "none",
-              }}
-            />
-          </div>
+            {/* Description */}
+            <div>
+              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                Description
+              </label>
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #d1d5db",
+                  marginTop: "6px",
+                  resize: "none",
+                }}
+              />
+            </div>
 
-          {/* University */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              University
-            </label>
-            <input
-              value={university}
-              onChange={(e) => setUniversity(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "6px",
-              }}
-            />
-          </div>
+            {/* University */}
+            <div>
+              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                University
+              </label>
+              <input
+                value={university}
+                onChange={(e) => setUniversity(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #d1d5db",
+                  marginTop: "6px",
+                }}
+              />
+            </div>
 
-          {/* Lecturer */}
-          <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Lecturer
-            </label>
-            <input
-              value={lecturer}
-              onChange={(e) => setLecturer(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "6px",
-              }}
-            />
-          </div>
+            {/* Lecturer */}
+            <div>
+              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                Lecturer
+              </label>
+              <input
+                value={lecturer}
+                onChange={(e) => setLecturer(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #d1d5db",
+                  marginTop: "6px",
+                }}
+              />
+            </div>
 
-          {/* File */}
-          <div>
+            {/* File */}
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Change thumbnail <span className="text-gray-400">(optional)</span>
               </label>
@@ -289,109 +289,109 @@ const [parse, setParsed] = useState<any>({})
               />
             </div>
 
-          {/* Toggle */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ fontSize: "14px", fontWeight: 500 }}>
-              Is Ongoing
-            </span>
-            <input
-              type="checkbox"
-              checked={isOnGoing}
-              onChange={(e) => {
+            {/* Toggle */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                Is Ongoing
+              </span>
+              <input
+                type="checkbox"
+                checked={isOnGoing}
+                onChange={(e) => {
                   setIsOnGoing(e.target.checked)
                   setAmount(0)
                 }}
-            />
-          </div>
+              />
+            </div>
 
-          {/* Price */}
-          {
-            !isOnGoing && (
-              <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Price Per Page (NGN)
-            </label>
+            {/* Price */}
+            {
+              !isOnGoing && (
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                    Price Per Page (NGN)
+                  </label>
 
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #d1d5db",
+                      marginTop: "10px",
+                    }}
+                    placeholder="Enter price per page"
+                  />
+                </div>
+              )
+            }
+
+            {
+              isOnGoing && (
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: 500 }}>
+                    Subscription Price (NGN)
+                  </label>
+
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "1px solid #d1d5db",
+                      marginTop: "10px",
+                    }}
+                    placeholder="Enter subscription price"
+                  />
+                </div>
+              )
+            }
+
+            <div
               style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "10px",
+                padding: "16px",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
               }}
-              placeholder="Enter price per page"
-            />
-          </div>
-            )
-          }
+            >
+              <button onClick={onClose} style={{ color: "#6b7280" }}>
+                Cancel
+              </button>
 
-          {
-            isOnGoing && (
-              <div>
-            <label style={{ fontSize: "14px", fontWeight: 500 }}>
-              Subscription Price (NGN)
-            </label>
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  background: "#2563eb",
+                  color: "#fff",
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  border: "none",
+                }}
+              >
+                {isLoading ? "Saving…" : "Save"}
+              </button>
 
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "12px",
-                border: "1px solid #d1d5db",
-                marginTop: "10px",
-              }}
-              placeholder="Enter subscription price"
-            />
-          </div>
-            )
-          }
+            </div>
+          </form>
+        </div>
 
-          <div
-        style={{
-          padding: "16px",
-          borderTop: "1px solid #e5e7eb",
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "12px",
-        }}
-      >
-        <button onClick={onClose} style={{ color: "#6b7280" }}>
-          Cancel
-        </button>
-
-        <button
-  type="submit"
-  disabled={isLoading}
-  style={{
-    background: "#2563eb",
-    color: "#fff",
-    padding: "10px 16px",
-    borderRadius: "10px",
-    border: "none",
-  }}
->
-  {isLoading ? "Saving…" : "Save"}
-</button>
 
       </div>
-        </form>
-      </div>
-
-
     </div>
-  </div>
-);
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import {  useEffect, useMemo, useRef } from "react";
-import {  Search, X, Plus, Check, Camera } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
+import { Search, X, Plus, Check, Camera } from "lucide-react";
 
 import React, { useState } from "react";
 import {
@@ -70,18 +70,18 @@ function Step1({
           >
             {uploadingProfile ? (
               <>
-              <div
-  style={{
-    width: "32px",
-    height: "32px",
-    border: "3px solid #e5e7eb",
-    borderTop: "3px solid #2563eb",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  }}
-/>
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    border: "3px solid #e5e7eb",
+                    borderTop: "3px solid #2563eb",
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                  }}
+                />
 
-<style jsx>{`
+                <style jsx>{`
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -93,7 +93,7 @@ function Step1({
                 src={draft.profileImage}
                 alt="profile"
                 className=" object-cover"
-                style={{width: "100%", height: "100%"}}
+                style={{ width: "100%", height: "100%" }}
               />
             ) : (
               <Camera size={22} className="text-gray-500" />
@@ -385,11 +385,10 @@ function Step2({
                     <div
                       key={o.id}
                       onClick={() => toggleSelect(o.id)}
-                      className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer ${
-                        active
+                      className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer ${active
                           ? "bg-blue-50 text-blue-600"
                           : "hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {active && <Check size={14} />}
                       <span>{o.title}</span>
@@ -411,7 +410,7 @@ function Step2({
           className="flex justify-between pt-6"
           style={{ marginTop: 30 }}
         >
-          <button onClick={back} className="flex items-center gap-2" style={{ color: "black"}}>
+          <button onClick={back} className="flex items-center gap-2" style={{ color: "black" }}>
             <ArrowLeft size={16} /> Back
           </button>
 
@@ -499,18 +498,18 @@ function Step3({
             >
               {uploadingImages[index] ? (
                 <>
-                <div
-  style={{
-    width: "32px",
-    height: "32px",
-    border: "3px solid #e5e7eb",
-    borderTop: "3px solid #2563eb",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  }}
-/>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      border: "3px solid #e5e7eb",
+                      borderTop: "3px solid #2563eb",
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
 
-<style jsx>{`
+                  <style jsx>{`
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -556,17 +555,17 @@ function Step3({
 
         {/* Actions */}
         <div className="flex justify-between pt-4">
-          <button onClick={back} className="flex items-center gap-2" style={{color: 'black'}}>
-          <ArrowLeft size={16} /> Back
-        </button>
+          <button onClick={back} className="flex items-center gap-2" style={{ color: 'black' }}>
+            <ArrowLeft size={16} /> Back
+          </button>
 
-        <button 
-          className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
-          onClick={onSubmit}
-          disabled={!allImagesSelected}
-        >
-          Submit <Send size={16} />
-        </button>
+          <button
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onSubmit}
+            disabled={!allImagesSelected}
+          >
+            Submit <Send size={16} />
+          </button>
         </div>
       </div>
     </div>
@@ -674,6 +673,7 @@ export default function OnboardingFlow() {
       console.error("Submission error:", err);
       setError(err instanceof Error ? err.message : "Submission failed");
       setSubmitting(false);
+      setIsOpen(false);
     }
   };
 
@@ -688,34 +688,34 @@ export default function OnboardingFlow() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center px-4 py-10 overflow-hidden">
-      
+
       {/* STEP HEADER */}
       <div className="w-full max-w-3xl mb-8"
-      style={{paddingLeft: 20, paddingRight: 20}}>
+        style={{ paddingLeft: 20, paddingRight: 20 }}>
         <div className="text-xs font-bold text-gray-500 uppercase mb-2 ml-2">
           Step {step + 1} of 3
         </div>
 
         {/* Progress Bar */}
         <div
-    style={{
-      width: "100%",
-      height: 6,
-      background: "#e5e7eb", // gray-200
-      borderRadius: 999,
-      overflow: "hidden",
-    }}
-  >
-    <div
-      style={{
-        height: "100%",
-        width: `${((step + 1) / 3) * 100}%`,
-        background: "#2563eb",
-        borderRadius: 999,
-        transition: "width 0.5s ease",
-      }}
-    />
-  </div>
+          style={{
+            width: "100%",
+            height: 6,
+            background: "#e5e7eb", // gray-200
+            borderRadius: 999,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${((step + 1) / 3) * 100}%`,
+              background: "#2563eb",
+              borderRadius: 999,
+              transition: "width 0.5s ease",
+            }}
+          />
+        </div>
       </div>
 
       {/* SLIDER */}
