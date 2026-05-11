@@ -1135,6 +1135,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               <div className="mt-6">
                 <button
                   onClick={() => {
+                    if (!user) {
+                      router.push("/signup");
+                      return;
+                    }
                     const type = priceMeta?.type ?? "one-time";
                     router.push(
                       `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course.id)}&type=${encodeURIComponent(type)}`
