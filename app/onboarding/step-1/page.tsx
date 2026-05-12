@@ -386,8 +386,8 @@ function Step2({
                       key={o.id}
                       onClick={() => toggleSelect(o.id)}
                       className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer ${active
-                          ? "bg-blue-50 text-blue-600"
-                          : "hover:bg-gray-50"
+                        ? "bg-blue-50 text-blue-600"
+                        : "hover:bg-gray-50"
                         }`}
                     >
                       {active && <Check size={14} />}
@@ -671,7 +671,7 @@ export default function OnboardingFlow() {
       router.push("/onboarding/review");
     } catch (err) {
       console.error("Submission error:", err);
-      setError(err instanceof Error ? err.message : "Submission failed");
+      setError(err instanceof Error ? err.message + JSON.stringify(err) : "Submission failed");
       setSubmitting(false);
       setIsOpen(false);
     }
