@@ -16,6 +16,7 @@ import {
 import TermsModal from "@/components/TermsModal";
 import { useRouter } from "next/navigation";
 import { uploadToServer } from "@/lib/upload";
+import { useUser } from "@/context/UserContext";
 
 type ContributorDraft = {
   username: string;
@@ -112,7 +113,7 @@ function Step1({
 
         <div className="space-y-1">
           <input
-            placeholder="Display name"
+            placeholder="Display name (Required)"
             value={draft.username}
             onChange={(e) => updateDraft({ username: e.target.value })}
             className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
@@ -122,7 +123,7 @@ function Step1({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
-            placeholder="Institution (optional)"
+            placeholder="Institution (Required)"
             value={draft.institution}
             onChange={(e) => updateDraft({ institution: e.target.value })}
             className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
@@ -134,13 +135,13 @@ function Step1({
             className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
             style={{ color: "grey" }}
           >
-            <option value="">Country</option>
+            <option value="">Country (Required)</option>
             <option value="Nigeria">Nigeria</option>
           </select>
         </div>
 
         <textarea
-          placeholder="Bio"
+          placeholder="Bio (Required)"
           value={draft.bio}
           onChange={(e) => updateDraft({ bio: e.target.value })}
           className="w-full min-h-[120px] px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none resize-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
@@ -239,9 +240,111 @@ function Step1({
 
 
 const SUBJECTS = [
-  { id: "mech", title: "Mechanical" },
   { id: "cs", title: "Computer Science" },
-  { id: "math", title: "Math" },
+  { id: "math", title: "Mathematics" },
+  { id: "physics", title: "Physics" },
+  { id: "chem", title: "Chemistry" },
+  { id: "bio", title: "Biology" },
+  { id: "mech", title: "Mechanical Engineering" },
+  { id: "elec", title: "Electrical Engineering" },
+  { id: "civil", title: "Civil Engineering" },
+  { id: "chem/pet_eng", title: "Chemical/Petrochemical Engineering" },
+  { id: "marine_eng", title: "Marine Engineering" },
+  { id: "pet_eng", title: "Petroleum Engineering" },
+  { id: "chem_eng", title: "Chemical Engineering" },
+  { id: "aero", title: "Aerospace Engineering" },
+  { id: "software", title: "Software Engineering" },
+  { id: "data_sci", title: "Data Science" },
+  { id: "ai", title: "Artificial Intelligence" },
+  { id: "ml", title: "Machine Learning" },
+  { id: "cyber", title: "Cybersecurity" },
+  { id: "networking", title: "Computer Networks" },
+  { id: "db", title: "Database Systems" },
+  { id: "web_dev", title: "Web Development" },
+  { id: "mobile_dev", title: "Mobile App Development" },
+  { id: "os", title: "Operating Systems" },
+  { id: "algorithms", title: "Algorithms & Data Structures" },
+  { id: "stats", title: "Statistics" },
+  { id: "prob", title: "Probability" },
+  { id: "calc", title: "Calculus" },
+  { id: "linear_alg", title: "Linear Algebra" },
+  { id: "discrete_math", title: "Discrete Mathematics" },
+  { id: "thermo", title: "Thermodynamics" },
+  { id: "fluid", title: "Fluid Mechanics" },
+  { id: "materials", title: "Materials Science" },
+  { id: "statics", title: "Statics & Dynamics" },
+  { id: "circuits", title: "Circuit Analysis" },
+  { id: "signals", title: "Signals & Systems" },
+  { id: "control_sys", title: "Control Systems" },
+  { id: "microelec", title: "Microelectronics" },
+  { id: "power_sys", title: "Power Systems" },
+  { id: "struct", title: "Structural Engineering" },
+  { id: "geotech", title: "Geotechnical Engineering" },
+  { id: "environ", title: "Agricultural and Environmental Engineering" },
+  { id: "transport", title: "Transportation Engineering" },
+  { id: "compute", title: "Computer Engineering" },
+
+  { id: "biomed", title: "Biomedical Engineering" },
+  { id: "robotics", title: "Robotics" },
+  { id: "quantum", title: "Quantum Computing" },
+  { id: "optics", title: "Optics" },
+  { id: "astronomy", title: "Astronomy & Astrophysics" },
+  { id: "organic_chem", title: "Organic Chemistry" },
+  { id: "inorganic_chem", title: "Inorganic Chemistry" },
+  { id: "physical_chem", title: "Physical Chemistry" },
+  { id: "biochem", title: "Biochemistry" },
+  { id: "genetics", title: "Genetics" },
+  { id: "microbio", title: "Microbiology" },
+  { id: "ecology", title: "Ecology" },
+  { id: "anatomy", title: "Anatomy & Physiology" },
+  { id: "medicine", title: "Medicine & Surgery" },
+  { id: "pharmacology", title: "Pharmacology" },
+  { id: "nursing", title: "Nursing" },
+  { id: "public_health", title: "Public Health" },
+  { id: "psychology", title: "Psychology" },
+  { id: "sociology", title: "Sociology" },
+  { id: "econ", title: "Economics" },
+  { id: "macro_econ", title: "Macroeconomics" },
+  { id: "micro_econ", title: "Microeconomics" },
+  { id: "finance", title: "Finance" },
+  { id: "accounting", title: "Accounting" },
+  { id: "marketing", title: "Marketing" },
+  { id: "management", title: "Business Management" },
+  { id: "law", title: "Law" },
+  { id: "poli_sci", title: "Political Science" },
+  { id: "history", title: "History" },
+  { id: "philosophy", title: "Philosophy" },
+  { id: "ethics", title: "Ethics" },
+  { id: "linguistics", title: "Linguistics" },
+  { id: "english", title: "English Literature" },
+  { id: "creative_writing", title: "Creative Writing" },
+  { id: "journalism", title: "Journalism" },
+  { id: "communications", title: "Communications" },
+  { id: "education", title: "Education & Pedagogy" },
+  { id: "art_history", title: "Art History" },
+  { id: "fine_arts", title: "Fine Arts" },
+  { id: "music_theory", title: "Music Theory" },
+  { id: "architecture", title: "Architecture" },
+  { id: "urban_plan", title: "Urban Planning" },
+  { id: "graphic_design", title: "Graphic Design" },
+  { id: "ux_ui", title: "UI/UX Design" },
+  { id: "game_dev", title: "Game Development" },
+  { id: "3d_model", title: "3D Modeling & Animation" },
+  { id: "photography", title: "Photography" },
+  { id: "film", title: "Film & Media Studies" },
+  { id: "agriculture", title: "Agriculture" },
+  { id: "forestry", title: "Forestry" },
+  { id: "veterinary", title: "Veterinary Medicine" },
+  { id: "nutrition", title: "Nutrition & Dietetics" },
+  { id: "kinesiology", title: "Kinesiology" },
+  { id: "sports_sci", title: "Sports Science" },
+  { id: "theology", title: "Theology & Religious Studies" },
+  { id: "anthropology", title: "Anthropology" },
+  { id: "archaeology", title: "Archaeology" },
+  { id: "geography", title: "Geography" },
+  { id: "geology", title: "Geology" },
+  { id: "oceanography", title: "Oceanography" },
+  { id: "meteorology", title: "Meteorology" },
 ];
 
 function Step2({
@@ -386,12 +489,12 @@ function Step2({
                       key={o.id}
                       onClick={() => toggleSelect(o.id)}
                       className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer ${active
-                          ? "bg-blue-50 text-blue-600"
-                          : "hover:bg-gray-50"
+                        ? "bg-blue-50 text-blue-600"
+                        : "hover:bg-gray-50"
                         }`}
                     >
                       {active && <Check size={14} />}
-                      <span>{o.title}</span>
+                      <span style={{ color: "black" }}>{o.title}</span>
                     </div>
                   );
                 })}
@@ -407,8 +510,7 @@ function Step2({
         </div>
 
         <div
-          className="flex justify-between pt-6"
-          style={{ marginTop: 30 }}
+          className="flex justify-between pt-6 mt-4 sm:mt-8"
         >
           <button onClick={back} className="flex items-center gap-2" style={{ color: "black" }}>
             <ArrowLeft size={16} /> Back
@@ -582,6 +684,7 @@ export default function OnboardingFlow() {
   const [uploadingImages, setUploadingImages] = useState([false, false, false]);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user } = useUser();
 
   const [draft, setDraft] = useState<ContributorDraft>({
     username: "",
@@ -655,11 +758,11 @@ export default function OnboardingFlow() {
 
       // Import the createContributor function
       const { createContributor } = await import("@/lib/api/contributors");
-      const { account } = await import("@/lib/appwrite");
+
 
       // Get the current user ID from Appwrite account
-      const user = await account.get();
-      const userId = user.$id;
+
+      const userId = user?.$id;
 
       if (!userId) {
         throw new Error("User not authenticated");
@@ -671,7 +774,7 @@ export default function OnboardingFlow() {
       router.push("/onboarding/review");
     } catch (err) {
       console.error("Submission error:", err);
-      setError(err instanceof Error ? err.message : "Submission failed");
+      setError(err instanceof Error ? err.message + JSON.stringify(err) : "Submission failed");
       setSubmitting(false);
       setIsOpen(false);
     }
@@ -729,7 +832,10 @@ export default function OnboardingFlow() {
         >
           <div className="w-1/3 shrink-0 flex justify-center">
             <Step1
-              next={() => setStep(1)}
+              next={() => {
+                setStep(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               draft={draft}
               updateDraft={updateDraft}
               uploadingProfile={uploadingProfile}
@@ -739,8 +845,14 @@ export default function OnboardingFlow() {
 
           <div className="w-1/3 shrink-0 flex justify-center">
             <Step2
-              next={() => setStep(2)}
-              back={() => setStep(0)}
+              next={() => {
+                setStep(2);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              back={() => {
+                setStep(0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               draft={draft}
               updateDraft={updateDraft}
             />

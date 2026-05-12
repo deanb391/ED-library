@@ -18,7 +18,8 @@ export async function createContributor(
   });
 
   if (!res.ok) {
-    throw new Error("Failed to create contributor");
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create contributor");
   }
 
   const data = await res.json();
