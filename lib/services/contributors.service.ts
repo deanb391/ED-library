@@ -17,6 +17,7 @@ export type ContributorDraft = {
   profileImage: string;
   status: string;
   hasSeenCelebration?: boolean;
+  agreed?: boolean;
 };
 
 export type Contributor = ContributorDraft & {
@@ -47,6 +48,7 @@ function mapContributor(doc: any): Contributor {
     followers: doc.followers || 0,
     followersIds: doc.followersIds,
     hasSeenCelebration: doc.hasSeenCelebration || false,
+    agreed: doc.agreed || false,
   };
 }
 

@@ -27,6 +27,7 @@ import { useUser } from '@/context/UserContext';
 import { fetchCoursesByAdmin } from '@/lib/api/courses';
 import Message from '@/components/Message';
 import ContributorCelebrationModal from '@/components/ContributorCelebrationModal';
+import TermsModal from '@/components/TermsModal';
 import { editContributor } from '@/lib/api/contributors';
 
 function CourseSection({
@@ -122,6 +123,8 @@ export default function DashboardUnderReviewPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isSubmittingTerms, setIsSubmittingTerms] = useState(false);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -161,6 +164,27 @@ export default function DashboardUnderReviewPage() {
         .catch(console.error);
     }
   }, [contributor, refetchContributor]);
+
+  // Check if we should show the terms modal
+  useEffect(() => {
+    if (contributor && contributor.agreed !== true) {
+      setIsTermsModalOpen(true);
+    }
+  }, [contributor]);
+
+  const handleAgreeTerms = async () => {
+    if (!contributor) return;
+    setIsSubmittingTerms(true);
+    try {
+      await editContributor(contributor.$id, { agreed: true });
+      setIsTermsModalOpen(false);
+      await refetchContributor();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmittingTerms(false);
+    }
+  };
 
   if (userLoading || contributorLoading) {
     return (
@@ -449,6 +473,13 @@ export default function DashboardUnderReviewPage() {
           onClose={() => setIsModalOpen(false)}
           contributorName={contributor.username}
           profileImage={contributor.profileImage}
+        />
+
+        <TermsModal 
+          open={isTermsModalOpen}
+          onClose={() => setIsTermsModalOpen(false)}
+          onSubmit={handleAgreeTerms}
+          loading={isSubmittingTerms}
         />
 
       </div>

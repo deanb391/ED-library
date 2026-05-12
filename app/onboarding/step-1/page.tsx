@@ -17,6 +17,7 @@ import TermsModal from "@/components/TermsModal";
 import { useRouter } from "next/navigation";
 import { uploadToServer } from "@/lib/upload";
 import { useUser } from "@/context/UserContext";
+import { editContributor } from "@/lib/api/contributors";
 
 type ContributorDraft = {
   username: string;
@@ -470,6 +471,7 @@ function Step2({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search or add category"
                   className="w-full text-sm outline-none"
+                  style={{ color: "gray" }}
                 />
                 {query && (
                   <button
@@ -768,7 +770,8 @@ export default function OnboardingFlow() {
         throw new Error("User not authenticated");
       }
 
-      await createContributor(draft, userId);
+      const newContributor = await createContributor(draft, userId);
+      await editContributor(newContributor.$id, { agreed: true });
 
       // On success, navigate to review page
       router.push("/onboarding/review");
