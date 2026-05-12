@@ -4,6 +4,7 @@ import { createPaymentService } from "./payments.service";
 import { initFlutterwavePayment } from "./flutterwave.service";
 import { getBankName, processWithdrawal, verifyAccount } from "./withdrawals.service";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import { trackWalletTopupSuccessful, trackWithdrawalInitiated, trackWithdrawalSuccessful } from "@/lib/analytics/trackers";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const WALLET_COLLECTION = "wallet";
@@ -113,11 +114,7 @@ export async function topUpWalletService(params: {
 }
 
 export async function walletDepositSuccess(userId: string, amount: number, paymentId: string) {
-  trackEvent("WALLET_DEPOSIT", {
-    distinctId: userId,
-    userId: userId,
-    metadata: { amount, paymentId }
-  });
+  trackWalletTopupSuccessful(userId, amount, { paymentId });
 }
 
 

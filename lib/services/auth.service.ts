@@ -1,7 +1,7 @@
 // src/lib/appwrite.ts
 import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from "appwrite";
 // @ts-ignore: 'expo-web-browser' may not be installed in this environment
-import { trackEvent } from "@/lib/analytics/trackEvent";
+import { trackUserSignup, trackUserSignin } from "@/lib/analytics/trackers";
 
 
 const client = new Client()
@@ -77,18 +77,10 @@ export async function createUser({
       console.error("Wallet creation error:", err);
     }
 
-    trackEvent("USER_SIGNED_UP", {
-      distinctId: userAccount.$id,
-      userId: userAccount.$id,
-      metadata: { email, username, level, department }
-    });
+    trackUserSignup(userAccount.$id, { email, username, level, department });
 
     return userDoc;
-  } catch (error: any) {
-    trackEvent("AUTH_FAILED", {
-      distinctId: "anonymous",
-      metadata: { action: "signup", email, error: error.message }
-    });
+  } catch (error: unknown) {
     throw error;
   }
 }
@@ -151,18 +143,10 @@ export async function signIn(email: string, password: string) {
     );
     console.log("Session: ", session)
 
-    trackEvent("USER_SIGNED_IN", {
-      distinctId: session.userId,
-      userId: session.userId,
-      metadata: { email }
-    });
+    trackUserSignin(session.userId, { email });
 
     return session;
-  } catch (error: any) {
-    trackEvent("AUTH_FAILED", {
-      distinctId: "anonymous",
-      metadata: { action: "signin", email, error: error.message }
-    });
+  } catch (error: unknown) {
     throw error;
   }
 }

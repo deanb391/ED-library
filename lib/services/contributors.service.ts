@@ -2,6 +2,7 @@ import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
+import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
@@ -84,11 +85,7 @@ export async function createContributorService(
     console.error("Failed to fetch user for email notification", err);
   }
 
-  trackEvent("CONTRIBUTOR_APPLIED", {
-    distinctId: user,
-    userId: user,
-    metadata: { username: draft.username, institution: draft.institution }
-  });
+  trackContributorApplication(user, { username: draft.username, institution: draft.institution });
 
   return mapContributor(doc);
 }

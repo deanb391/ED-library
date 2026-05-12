@@ -9,6 +9,7 @@ import { addCourseToLibraryService } from "./library.service";
 import { fetchContributorService } from "./contributors.service";
 import { createTransactionService } from "./transactions.service";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import { trackCoursePayment } from "@/lib/analytics/trackers";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const PAYMENTS_COLLECTION = "payments";
@@ -234,16 +235,7 @@ export async function payForCourseService(params: {
       }
     }
 
-    trackEvent("PAYMENT_SUCCESS", {
-      distinctId: params.userId,
-      userId: params.userId,
-      metadata: {
-        paymentId: payment.$id,
-        amount: total,
-        type: params.type,
-        method: "wallet"
-      }
-    });
+    trackCoursePayment(params.userId, total, { method: "wallet", type: params.type });
 
     return {
       type: "wallet",
