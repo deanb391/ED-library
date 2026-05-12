@@ -18,17 +18,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (
-      !draft.username ||
-      !draft.institution ||
-      !draft.country ||
-      !draft.bio ||
-      !Array.isArray(draft.category) ||
-      !Array.isArray(draft.reviewImages) ||
-      !draft.profileImage
-    ) {
+    const missingFields = [];
+    if (!draft.username) missingFields.push("Display name");
+    if (!draft.country) missingFields.push("Country");
+    if (!draft.bio) missingFields.push("Bio");
+    if (!Array.isArray(draft.category) || draft.category.length === 0) missingFields.push("Category");
+    if (!draft.profileImage) missingFields.push("Profile Image");
+    if (!Array.isArray(draft.reviewImages) || draft.reviewImages.some((img: string) => !img || img.trim() === "")) missingFields.push("Review Images");
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { error: "Invalid or missing required fields in draft" },
+        { error: `Missing required fields: ${missingFields.join(", ")}` },
         { status: 400 }
       );
     }
