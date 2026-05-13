@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, UploadCloud, Megaphone, Users } from "lucide-react";
+import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -62,6 +62,34 @@ export default function AdminDashboard() {
             icon={<Users size={24} className="text-orange-600" />}
             href="/admin/contributor-review"
           />
+        </div>
+
+        {/* Analytics Section */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <BarChart2 size={20} className="text-blue-600" />
+            Analytics & Business Intelligence
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <ActionCard
+              title="Acquisition"
+              description="Track signups, daily active users, and user demographics."
+              icon={<TrendingUp size={24} className="text-blue-600" />}
+              href="/analytics?tab=acquisition"
+            />
+            <ActionCard
+              title="Contributors"
+              description="Monitor contributor applications, uploads, and course creation."
+              icon={<Users size={24} className="text-indigo-600" />}
+              href="/analytics?tab=contributors"
+            />
+            <ActionCard
+              title="Revenue"
+              description="Track wallet topups, subscriptions, withdrawals, and platform earnings."
+              icon={<DollarSign size={24} className="text-emerald-600" />}
+              href="/analytics?tab=revenue"
+            />
+          </div>
         </div>
       </div>
     </div>

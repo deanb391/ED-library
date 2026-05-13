@@ -2,6 +2,7 @@ import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
+import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 
 const DATABASE_ID = "69617e75000c6c010a75";
@@ -17,6 +18,7 @@ export type ContributorDraft = {
   profileImage: string;
   status: string;
   hasSeenCelebration?: boolean;
+  agreed?: boolean;
 };
 
 export type Contributor = ContributorDraft & {
@@ -47,6 +49,7 @@ function mapContributor(doc: any): Contributor {
     followers: doc.followers || 0,
     followersIds: doc.followersIds,
     hasSeenCelebration: doc.hasSeenCelebration || false,
+    agreed: doc.agreed || false,
   };
 }
 
@@ -82,11 +85,7 @@ export async function createContributorService(
     console.error("Failed to fetch user for email notification", err);
   }
 
-  trackEvent("CONTRIBUTOR_APPLIED", {
-    distinctId: user,
-    userId: user,
-    metadata: { username: draft.username, institution: draft.institution }
-  });
+  trackContributorApplication(user, { username: draft.username, institution: draft.institution });
 
   return mapContributor(doc);
 }
@@ -116,7 +115,7 @@ export async function editContributorService(
     else if (type === "reject") status = "not-live"
     console.log("DOC USER: ", doc.user.$id || doc.user)
     const courses = await fetchCoursesByAdminService(doc.user.$id || doc.user);
-    courses.map( async (course) => {
+    courses.map(async (course) => {
       await updateCourseService(course.id, {
         status: status
       })
@@ -169,6 +168,8 @@ export async function getContributorByUserIdService(
   userId: string
 ): Promise<Contributor | null> {
   try {
+
+    console.log("User ID: ", userId)
     const res = await databases.listDocuments(
       DATABASE_ID,
       CONTRIBUTORS_COLLECTION,
@@ -277,7 +278,7 @@ export async function searchContributorsService(query: string) {
     Query.limit(30),
   ];
 
-  const [title, code, ] = await Promise.all([
+  const [title, code,] = await Promise.all([
     databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
       Query.search("username", query),
       ...base,
@@ -291,9 +292,9 @@ export async function searchContributorsService(query: string) {
   const map = new Map();
 
 
-[...title.documents, ...code.documents].forEach((doc: any) => {
-  map.set(doc.$id, doc);
-});
+  [...title.documents, ...code.documents].forEach((doc: any) => {
+    map.set(doc.$id, doc);
+  });
 
   return Array.from(map.values()).map(mapContributor);
 }

@@ -57,9 +57,9 @@ export default function AccessWall({ type }: AccessWallProps) {
       description:
         "This is the control room. Unless you're an admin, there's nothing for you to see here. Move along, citizen!",
       primaryAction: {
-        label: "Back to Safety",
-        href: "/",
-        icon: <Home size={18} />,
+        label: "Sign In",
+        href: "/signin",
+        icon: <LogIn size={18} />,
       },
     },
   };
