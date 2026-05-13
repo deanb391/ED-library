@@ -1,6 +1,6 @@
 "use client";
 // app/analytics/page.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AcquisitionTab from "@/components/dashboard/analytics/AcquisitionTab";
 import ContributorsTab from "@/components/dashboard/analytics/ContributorsTab";
@@ -17,7 +17,8 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 const VALID_TABS = new Set<Tab>(["acquisition", "contributors", "revenue"]);
 
-export default function AnalyticsDashboardPage() {
+// Inner component — isolates useSearchParams so it can be Suspense-wrapped
+function AnalyticsDashboardContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab") as Tab | null;
   const initialTab: Tab = tabParam && VALID_TABS.has(tabParam) ? tabParam : "acquisition";
@@ -74,3 +75,13 @@ export default function AnalyticsDashboardPage() {
     </div>
   );
 }
+
+// Shell page — Suspense boundary required by Next.js for useSearchParams
+export default function AnalyticsDashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F4F7F9]" />}>
+      <AnalyticsDashboardContent />
+    </Suspense>
+  );
+}
+
