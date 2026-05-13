@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import type { ChartDataPoint } from "@/lib/analytics/types";
+import type { ChartDataPoint } from "@/lib/analytics/types/index";
 import { formatDateLabel } from "@/lib/analytics/utils/timeframes";
 
 type ChartType = "line" | "bar" | "area";
@@ -53,7 +53,8 @@ const defaultSeries: SeriesConfig[] = [
   { dataKey: "value", label: "Value", color: "#3b82f6" },
 ];
 
-function formatTooltipValue(value: number, prefix = "") {
+function formatTooltipValue(value: number | undefined, prefix = "") {
+  if (value == null || typeof value !== "number") return "";
   return `${prefix}${value.toLocaleString()}`;
 }
 
@@ -83,8 +84,8 @@ export default function TimeSeriesChart({
         <LineChart data={formatted}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
           <XAxis dataKey="label" {...commonAxisProps} />
-          <YAxis {...commonAxisProps} tickFormatter={(v: number) => `${prefix}${v.toLocaleString()}`} />
-          <Tooltip formatter={(v: number) => formatTooltipValue(v, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
+          <YAxis {...commonAxisProps} tickFormatter={(v: number | string) => `${prefix}${Number(v).toLocaleString()}`} />
+          <Tooltip formatter={(v) => formatTooltipValue(v as number | undefined, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           {series.map((s) => (
             <Line key={s.dataKey} type="monotone" dataKey={s.dataKey} name={s.label} stroke={s.color} strokeWidth={2} dot={false} />
@@ -97,8 +98,8 @@ export default function TimeSeriesChart({
         <BarChart data={formatted}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
           <XAxis dataKey="label" {...commonAxisProps} />
-          <YAxis {...commonAxisProps} tickFormatter={(v: number) => `${prefix}${v.toLocaleString()}`} />
-          <Tooltip formatter={(v: number) => formatTooltipValue(v, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
+          <YAxis {...commonAxisProps} tickFormatter={(v: number | string) => `${prefix}${Number(v).toLocaleString()}`} />
+          <Tooltip formatter={(v) => formatTooltipValue(v as number | undefined, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
           {series.map((s) => (
             <Bar key={s.dataKey} dataKey={s.dataKey} name={s.label} fill={s.color} radius={[4, 4, 0, 0]} />
@@ -119,8 +120,8 @@ export default function TimeSeriesChart({
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
         <XAxis dataKey="label" {...commonAxisProps} />
-        <YAxis {...commonAxisProps} tickFormatter={(v: number) => `${prefix}${v.toLocaleString()}`} />
-        <Tooltip formatter={(v: number) => formatTooltipValue(v, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
+        <YAxis {...commonAxisProps} tickFormatter={(v: number | string) => `${prefix}${Number(v).toLocaleString()}`} />
+        <Tooltip formatter={(v) => formatTooltipValue(v as number | undefined, prefix)} contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {series.map((s) => (
           <Area key={s.dataKey} type="monotone" dataKey={s.dataKey} name={s.label} stroke={s.color} strokeWidth={2} fill={`url(#grad-${s.dataKey})`} dot={false} />
