@@ -95,6 +95,9 @@ export default function CreateCoursePage() {
 
     const userId = user.$id;
     const lvl = Number(level);
+
+    // If price is 0 the course is always free, regardless of what the modal sent
+    const effectiveIsFree = price === 0 ? true : isFree;
     setIsLoading(true);
     if (courseType === "ongoing") {
       setShowPriceModalOngoing(false);
@@ -122,7 +125,7 @@ export default function CreateCoursePage() {
           type: courseType === "ongoing" ? "subscription" : "one-time",
           amount: price,
           currency: "NGN",
-          isFree: isFree
+          isFree: effectiveIsFree
         }),
         analytics: JSON.stringify({
           avg_rating: 0.0,
