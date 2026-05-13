@@ -1,5 +1,35 @@
 // lib/analytics/api.ts
 // Frontend-facing analytics API wrappers.
+
+import type { AnalyticsEvent, EventPayload } from "./types";
+
+export interface MetricIncrement {
+  metric: string;
+  amount?: number;
+  category?: string;
+  dimension?: string;
+}
+
+/**
+ * Client-safe tracker: fires a POST to /api/analytics/track so that
+ * the actual Appwrite writes happen server-side with the admin API key.
+ * Never throws — analytics must not break the calling feature.
+ */
+export async function postTrackEvent(
+  event: AnalyticsEvent,
+  payload: EventPayload,
+  metricIncrements: MetricIncrement[] = []
+): Promise<void> {
+  try {
+    await fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, payload, metricIncrements }),
+    });
+  } catch (err) {
+    console.error("[Analytics] postTrackEvent failed:", err);
+  }
+}
 import type {
   Timeframe,
   AcquisitionSummary,
@@ -7,7 +37,7 @@ import type {
   RevenueSummary,
   ChartDataPoint,
   AnalyticsMetricName,
-} from "./types";
+} from "./types/index";
 
 const BASE = "/api/analytics/metrics";
 

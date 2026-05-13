@@ -230,11 +230,14 @@ export async function handleOAuthSignIn(userId: string, secret: string) {
       authUser.$id
     );
 
+    trackUserSignin(authUser.$id, { email: authUser.email });
+
     return {
       status: "EXISTS",
       user: authUser,
     };
   } catch {
+
     return {
       status: "NEW",
       user: authUser,
@@ -266,6 +269,8 @@ export async function createUserProfile(authUser: any, data: {
       isAdmin: false,
     }
   );
+
+  trackUserSignup(authUser.$id, { email: authUser.email, username: authUser.username, level: authUser.level, department: authUser.department });
 
   try {
     const { createWallet } = await import('@/lib/api/wallet');

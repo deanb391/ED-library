@@ -94,11 +94,10 @@ export async function incrementDailyMetric(
  * 3. Unified Track Function
  */
 export async function trackAnalyticsEvent(payload: EventPayload, metricIncrements: Array<{metric: string, amount?: number, category?: string, dimension?: string}> = []) {
-  // Fire and forget
-  Promise.all([
+  await Promise.all([
     logRawEvent(payload),
     ...metricIncrements.map(inc => incrementDailyMetric(inc.metric, inc.amount || 1, inc.category, inc.dimension))
-  ]).catch(err => console.error("[Analytics] Error in tracking:", err));
+  ]);
 }
 
 /**

@@ -1,7 +1,7 @@
 // app/api/analytics/metrics/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getAcquisitionSummary, getContributorSummary, getRevenueSummary, getMetricSeries } from "@/lib/analytics/services/query.service";
-import type { Timeframe, AnalyticsMetricName } from "@/lib/analytics/types";
+import type { Timeframe, AnalyticsMetricName } from "@/lib/analytics/types/index";
 
 const VALID_TIMEFRAMES: Timeframe[] = ["7d", "30d", "90d", "1y", "2y"];
 

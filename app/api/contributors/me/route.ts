@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    console.log("User ID: ", userId, "From route")
 
     if (!userId) {
       return NextResponse.json(
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
+
 
     const contributor = await getContributorByUserIdService(userId);
 

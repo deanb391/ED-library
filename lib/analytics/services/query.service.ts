@@ -16,10 +16,11 @@ import type {
   ContributorSummary,
   RevenueSummary,
   AnalyticsMetricName,
-} from "../types";
+} from "../types/index";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const METRICS_COLLECTION = "analytics_daily_metrics";
+const DAILY_USERS_COLLECTION = "daily_users";
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -63,6 +64,31 @@ async function fetchMetricSum(
   return series.reduce((acc, cur) => acc + cur.value, 0);
 }
 
+/**
+ * Fetch daily active user counts from the dedicated `daily_users` table.
+ * Each row has: date (YYYY-MM-DD), count (integer), day (string).
+ */
+async function fetchDailyUsersSeries(
+  startDate: string,
+  endDate: string
+): Promise<ChartDataPoint[]> {
+  try {
+    const res = await databases.listDocuments(DATABASE_ID, DAILY_USERS_COLLECTION, [
+      Query.greaterThanEqual("date", startDate),
+      Query.lessThanEqual("date", endDate),
+      Query.orderAsc("date"),
+      Query.limit(800),
+    ]);
+    return res.documents.map((d) => ({
+      date: d.date as string,
+      value: d.count as number,
+    }));
+  } catch (err) {
+    console.error("[AnalyticsQuery] fetchDailyUsersSeries failed:", err);
+    return [];
+  }
+}
+
 // ─── Acquisition ──────────────────────────────────────────────────────────────
 
 export async function getAcquisitionSummary(timeframe: Timeframe): Promise<AcquisitionSummary> {
@@ -75,19 +101,24 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
   const days = (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86400000;
   prevStart.setDate(prevStart.getDate() - Math.ceil(days));
 
+  const prevStartStr = prevStart.toISOString().substring(0, 10);
+  const prevEndStr = prevEnd.toISOString().substring(0, 10);
+
   const [
     signupSeries,
     activeUserSeries,
     totalUsersData,
     prevSignups,
-    prevActive,
+    prevActiveSeries,
     deptRaw,
   ] = await Promise.all([
     fetchMetricSeries("DAILY_SIGNUPS", startDate, endDate),
-    fetchMetricSeries("DAILY_ACTIVE_USERS", startDate, endDate),
+    // ← sourced from the daily_users table (end-of-day snapshot job)
+    fetchDailyUsersSeries(startDate, endDate),
     fetchMetricSeries("TOTAL_USERS", "2000-01-01", endDate),
-    fetchMetricSum("DAILY_SIGNUPS", prevStart.toISOString().substring(0, 10), prevEnd.toISOString().substring(0, 10)),
-    fetchMetricSum("DAILY_ACTIVE_USERS", prevStart.toISOString().substring(0, 10), prevEnd.toISOString().substring(0, 10)),
+    fetchMetricSum("DAILY_SIGNUPS", prevStartStr, prevEndStr),
+    // previous period also comes from daily_users
+    fetchDailyUsersSeries(prevStartStr, prevEndStr),
     // Fetch by dimension grouping for dept breakdown
     databases.listDocuments(DATABASE_ID, METRICS_COLLECTION, [
       Query.equal("metric", "DAILY_SIGNUPS_BY_DEPT"),
@@ -96,6 +127,8 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
       Query.limit(500),
     ]).catch(() => ({ documents: [] })),
   ]);
+
+  const prevActive = prevActiveSeries.reduce((a, b) => a + b.value, 0);
 
   const signupsThisPeriod = signupSeries.reduce((a, b) => a + b.value, 0);
   const activeUsersThisPeriod = activeUserSeries.reduce((a, b) => a + b.value, 0);

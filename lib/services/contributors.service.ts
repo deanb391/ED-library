@@ -115,7 +115,7 @@ export async function editContributorService(
     else if (type === "reject") status = "not-live"
     console.log("DOC USER: ", doc.user.$id || doc.user)
     const courses = await fetchCoursesByAdminService(doc.user.$id || doc.user);
-    courses.map( async (course) => {
+    courses.map(async (course) => {
       await updateCourseService(course.id, {
         status: status
       })
@@ -168,6 +168,8 @@ export async function getContributorByUserIdService(
   userId: string
 ): Promise<Contributor | null> {
   try {
+
+    console.log("User ID: ", userId)
     const res = await databases.listDocuments(
       DATABASE_ID,
       CONTRIBUTORS_COLLECTION,
@@ -276,7 +278,7 @@ export async function searchContributorsService(query: string) {
     Query.limit(30),
   ];
 
-  const [title, code, ] = await Promise.all([
+  const [title, code,] = await Promise.all([
     databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
       Query.search("username", query),
       ...base,
@@ -290,9 +292,9 @@ export async function searchContributorsService(query: string) {
   const map = new Map();
 
 
-[...title.documents, ...code.documents].forEach((doc: any) => {
-  map.set(doc.$id, doc);
-});
+  [...title.documents, ...code.documents].forEach((doc: any) => {
+    map.set(doc.$id, doc);
+  });
 
   return Array.from(map.values()).map(mapContributor);
 }

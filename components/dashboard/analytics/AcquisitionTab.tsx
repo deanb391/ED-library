@@ -2,7 +2,7 @@
 // components/dashboard/analytics/AcquisitionTab.tsx
 import { useEffect, useState, useCallback } from "react";
 import { analyticsApi } from "@/lib/analytics/api";
-import type { Timeframe, AcquisitionSummary } from "@/lib/analytics/types";
+import type { Timeframe, AcquisitionSummary } from "@/lib/analytics/types/index";
 import TimeframeToggle from "./TimeframeToggle";
 import MetricCard from "../cards/MetricCard";
 import TimeSeriesChart from "../charts/TimeSeriesChart";
