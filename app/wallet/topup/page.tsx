@@ -19,6 +19,7 @@ const getFeePercent = (amount: number): number => {
 export default function TopUpPage() {
   const [amount, setAmount] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
+  const [showPaymentTransferModal, setShowPaymentTransferModal] = useState(false);
 
   const router = useRouter();
   const { user } = useUser();
@@ -34,6 +35,7 @@ export default function TopUpPage() {
 
     try {
       setLoading(true);
+      setShowPaymentTransferModal(false);
 
       const res = await topUpWallet(
         user.$id,
@@ -138,8 +140,62 @@ export default function TopUpPage() {
           </div>
         )}
 
+        {showPaymentTransferModal && (
+          <div
+            onClick={() => setShowPaymentTransferModal(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 16,
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 400,
+                backgroundColor: "#fff",
+                borderRadius: 16,
+                padding: 20,
+              }}
+            >
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Payment Information
+              </h2>
+
+              <p className="text-sm text-gray-600 mb-4">
+                You will be redirected to complete your payment.
+                If you are paying via bank transfer, the account name may appear as:
+              </p>
+
+              <div className="bg-gray-100 rounded-lg p-3 mb-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Blessed Okori (ED-Library)
+                </p>
+              </div>
+
+              <p className="text-xs text-gray-500 mb-5">
+                This is the official payment account for ED-Library.
+                Please proceed only if the details match.
+              </p>
+
+              <button
+                onClick={handleTopUp}
+                className="w-full py-3 rounded-xl text-white font-semibold"
+                style={{ backgroundColor: BRAND_BLUE }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
-          onClick={handleTopUp}
+          onClick={() => setShowPaymentTransferModal(true)}
           disabled={!isValidAmount || loading}
           style={{
             width: "100%",

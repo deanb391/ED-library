@@ -644,6 +644,7 @@ export default function SecureCheckoutPage() {
           </div>
         )}
 
+
         {showFreeModal && (
           <div
             style={{
