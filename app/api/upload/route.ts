@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       Key: key,
       Body: buffer,
       ContentType: file.type || "image/jpeg",
+      ACL: "public-read",
     }).promise();
 
     const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;

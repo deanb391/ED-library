@@ -19,20 +19,29 @@ export async function generateMetadata({
   }
 
   const followers = contributor.followers || 0
+  const profileImage = contributor.profileImage || ""
 
   return {
     title: `${contributor.username} | ED Library`,
     description: contributor.bio || "Contributor on ED-Library platform.",
     openGraph: {
-      title: `${contributor.username} - ${contributor.followers} ${ followers > 1 ? "followers" : "follower"}`,
+      title: `${contributor.username} - ${followers} ${ followers > 1 ? "followers" : "follower"}`,
       description: contributor.bio || "Explore courses by this contributor.",
-      images: [
-        {
-          url: contributor.profileImage,
-          width: 800,
-          height: 600,
-        },
-      ],
+      ...(profileImage && {
+        images: [
+          {
+            url: profileImage,
+            width: 800,
+            height: 600,
+          },
+        ],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${contributor.username} | ED Library`,
+      description: contributor.bio || "Explore courses by this contributor.",
+      ...(profileImage && { images: [profileImage] }),
     },
   };
 }
