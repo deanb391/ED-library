@@ -40,7 +40,7 @@ function mapContributor(doc: any): Contributor {
     bio: doc.bio,
     category: doc.category || [],
     reviewImages: doc.reviewImages || [],
-    profileImage: doc.profileImage,
+    profileImage: doc.profileImage || "",
     status: doc.status,
     user: doc.user,
     $createdAt: doc.$createdAt,
