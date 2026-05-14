@@ -197,6 +197,28 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
     }
   };
 
+  // ── One-time S3 ACL migration ────────────────────────────────────────────
+  // Runs on the very first page-load ever. Sets every existing contributor
+  // profile image to public-read so share-preview crawlers can fetch it.
+  // The localStorage flag ensures it never fires again after succeeding.
+  useEffect(() => {
+    const MIGRATION_KEY = "ed_img_migration_v2";
+    if (localStorage.getItem(MIGRATION_KEY)) return; // already done
+
+    fetch("/api/contributors/migrate-images", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          localStorage.setItem(MIGRATION_KEY, "done");
+          console.log("[migrate-images] complete:", data.results);
+        } else {
+          console.warn("[migrate-images] failed:", data.error);
+        }
+      })
+      .catch((err) => console.error("[migrate-images] network error:", err));
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     async function load() {
       try {
