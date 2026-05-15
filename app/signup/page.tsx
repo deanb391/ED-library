@@ -29,7 +29,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { refreshUser } = useUser()
 
-  const LEVELS = [100, 200, 300, 400, 500, 600];
+  const LEVELS = ["Pre-Degree", 100, 200, 300, 400, 500, 600, "Post-Graduate"];
 
 
 

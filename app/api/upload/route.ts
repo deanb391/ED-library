@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
+import sharp from "sharp";
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY!,
@@ -21,21 +22,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file" }, { status: 400 });
     }
 
+    let buffer: any = Buffer.from(await file.arrayBuffer());
+    let contentType = file.type || "image/jpeg";
     let extension;
+
     if (type === "image") {
-        extension = "jpg"
-    } else if (type === "video" ) {
-        extension = 'mp4'
+      extension = "jpg";
+      contentType = "image/jpeg";
+      buffer = await sharp(buffer)
+        .rotate() // auto-applies EXIF rotation
+        .resize(1200, 1200, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: 80, mozjpeg: true }) // converts to JPEG with optimized compression
+        .toBuffer();
+    } else if (type === "video") {
+      extension = "mp4";
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const key = `${folder}/${uuidv4()}.${extension}`;
+    // console.log(key, "key");
+    // console.log(buffer, "buffer");
+    // console.log(contentType, "contentType");
+    // console.log(extension, "extension");
+    // console.log(folder, "folder");
+    // console.log(type, "type");
+
 
     await s3.putObject({
       Bucket: BUCKET_NAME,
       Key: key,
       Body: buffer,
-      ContentType: file.type || "image/jpeg",
+      ContentType: contentType,
     }).promise();
 
     const url = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
@@ -64,7 +83,7 @@ export async function GET(req: NextRequest) {
       ResponseContentDisposition: "attachment", // forces download
     });
 
-    
+
 
 
 

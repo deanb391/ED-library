@@ -27,12 +27,16 @@ export async function generateMetadata({
     openGraph: {
       title: `${contributor.username} - ${followers} ${ followers > 1 ? "followers" : "follower"}`,
       description: contributor.bio || "Explore courses by this contributor.",
+      url: `https://www.ed-library.app/contributor/account/${slug}`,
+      siteName: "ED Library",
+      type: "profile",
       ...(profileImage && {
         images: [
           {
             url: profileImage,
-            width: 800,
-            height: 600,
+            width: 1200,
+            height: 1200,
+            alt: contributor.username,
           },
         ],
       }),
