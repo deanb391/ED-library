@@ -25,6 +25,7 @@
     "react-dom": "19.2.3",
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
+    "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
