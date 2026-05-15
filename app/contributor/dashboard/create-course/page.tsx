@@ -120,7 +120,7 @@ export default function CreateCoursePage() {
         department: department,
         level: lvl,
         session: session,
-        isOnGoing: false,
+        isOnGoing: courseType === "ongoing" ? true : false,
         price: JSON.stringify({
           type: courseType === "ongoing" ? "subscription" : "one-time",
           amount: price,
