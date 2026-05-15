@@ -31,13 +31,24 @@ export async function POST(req: NextRequest) {
       contentType = "image/jpeg";
       buffer = await sharp(buffer)
         .rotate() // auto-applies EXIF rotation
-        .jpeg({ quality: 85 }) // converts to JPEG
+        .resize(1200, 1200, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .jpeg({ quality: 80, mozjpeg: true }) // converts to JPEG with optimized compression
         .toBuffer();
     } else if (type === "video") {
       extension = "mp4";
     }
 
     const key = `${folder}/${uuidv4()}.${extension}`;
+    // console.log(key, "key");
+    // console.log(buffer, "buffer");
+    // console.log(contentType, "contentType");
+    // console.log(extension, "extension");
+    // console.log(folder, "folder");
+    // console.log(type, "type");
+
 
     await s3.putObject({
       Bucket: BUCKET_NAME,
@@ -72,7 +83,7 @@ export async function GET(req: NextRequest) {
       ResponseContentDisposition: "attachment", // forces download
     });
 
-    
+
 
 
 
