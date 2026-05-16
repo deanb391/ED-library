@@ -578,7 +578,7 @@ export default function EDLibraryHome() {
         <FloatingActionButton />
       )}
 
-      <FloatingActionButton />
+
     </div>
   );
 }
