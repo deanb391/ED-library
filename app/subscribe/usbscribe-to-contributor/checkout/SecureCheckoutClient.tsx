@@ -15,7 +15,7 @@ import { useUser } from "@/context/UserContext";
 import { getContributor, getMyContributor } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
 import { fetchAllPosts } from "@/lib/api/courses";
-import { addCourseToLibrary } from "@/lib/api/library";
+import { addCourseToLibrary, addSubscriptionsCoursesToLibrary } from "@/lib/api/library";
 import { fetchLibrary } from "@/lib/api/library";
 import { checkSubscriptionAccess } from "@/lib/api/subscriptions";
 
@@ -148,13 +148,26 @@ export default function SecureCheckoutPage() {
   const total = courses.reduce((sum, c) => sum + c.price, 0);
   const isFreeFlow = total === 0;
 
+  const [processingFree, setProcessingFree] = useState(false);
+
   const handleShowModel = async () => {
     if (isFreeFlow) {
       setShowFreeModal(true);
       if (!user) return;
       if (!type) return;
       const ids = courses.map((c) => c.id);
-      await addCourseToLibrary(user.$id, ids, type)
+      try {
+        setProcessingFree(true);
+        if (type === "subscription") {
+          await addSubscriptionsCoursesToLibrary(user.$id, ids);
+        } else {
+          await addCourseToLibrary(user.$id, ids, type);
+        }
+      } catch (err) {
+        console.error("Free addition failed:", err);
+      } finally {
+        setProcessingFree(false);
+      }
       return;
     }
 
@@ -701,8 +714,10 @@ export default function SecureCheckoutPage() {
               </p>
 
               <button
+                disabled={processingFree}
                 onClick={() => {
                   setShowFreeModal(false);
+                  router.replace('/library')
                 }}
                 style={{
                   width: "100%",
@@ -713,11 +728,12 @@ export default function SecureCheckoutPage() {
                   fontSize: "1rem",
                   backgroundColor: BRAND_BLUE,
                   border: "none",
-                  cursor: "pointer",
-                  transition: "opacity 0.2s ease-in-out"
+                  cursor: processingFree ? "not-allowed" : "pointer",
+                  transition: "opacity 0.2s ease-in-out",
+                  opacity: processingFree ? 0.7 : 1
                 }}
               >
-                Go to Courses
+                {processingFree ? "Preparing your library..." : "Go to Courses"}
               </button>
             </div>
           </div>

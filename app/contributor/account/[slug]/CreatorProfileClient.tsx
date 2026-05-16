@@ -44,7 +44,6 @@ function CourseSection({
         </h2>
 
         <a
-          href="/all_courses"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
         >
           See all

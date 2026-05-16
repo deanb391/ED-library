@@ -128,6 +128,9 @@ export async function fetchCourses(user?: any,
 
 export async function fetchCourseById(courseId: string): Promise<Course> {
   const res = await fetch(`/api/courses/get?courseId=${encodeURIComponent(courseId)}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch course: ${res.statusText}`);
+  }
   return res.json();
 }
 
