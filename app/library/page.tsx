@@ -31,23 +31,11 @@ export default function LibraryPage() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
 
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("subscription");
   const [subscriptionCourses, setSubscriptionCourses] = useState<Course[]>([]);
   const [oneTimeCourses, setOneTimeCourses] = useState<Course[]>([]);
   const [subscriptionMap, setSubscriptionMap] = useState<Record<string, Subscription>>({});
-  const [loading, setLoading] = useState(true);
-
-  if (userLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AccessWall type="user" />;
-  }
 
   useEffect(() => {
     if (!user?.$id) return;
@@ -108,6 +96,18 @@ export default function LibraryPage() {
 
     loadLibrary();
   }, [user?.$id]);
+
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AccessWall type="user" />;
+  }
 
   if (loading) {
     return (

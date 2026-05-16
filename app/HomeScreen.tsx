@@ -316,7 +316,7 @@ function CourseSearch({
   }, [query]);
 
   return (
-    <div className="text-center w-full max-w-4xl mb-12">
+    <div className="text-center w-full max-w-4xl mx-auto mb-12">
       <h1 className="text-4xl font-semibold mb-3" style={{ color: 'black', marginBottom: 30 }}>
         What are you learning today?
       </h1>

@@ -1081,7 +1081,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
                     <button
                       onClick={() => {
-                        if (!user?.isAdmin) return;
+                        if (course?.user !== user?.$id && !user?.isAdmin) return;
 
                         const found = posts.find(p => p.id === post.id);
                         if (!found) return;

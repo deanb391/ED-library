@@ -98,8 +98,29 @@ export async function addCourseToLibraryService(
   }
 }
 
+export async function addSubscriptionsCoursesToLibraryService(
+  courseIds: string[],
+  userId: string
+) {
+  const { handleSubscriptionService } = await import("./subscriptions.service");
 
-export async function fetchLibraryByUserService(userId: string){
+  try {
+    const results = [];
+    for (const id of courseIds) {
+      // 1. Add to library
+      await addCourseToLibraryService(id, userId, "subscription");
+      // 2. Handle subscription record (start/end dates)
+      const sub = await handleSubscriptionService(userId, id);
+      results.push(sub);
+    }
+    return results;
+  } catch (error) {
+    console.error("ADD SUBSCRIPTIONS TO LIBRARY ERROR:", error);
+    throw error;
+  }
+}
+
+export async function fetchLibraryByUserService(userId: string) {
   const res = await databases.listDocuments(
     DATABASE_ID,
     COLLECTION_ID,

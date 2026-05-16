@@ -28,3 +28,13 @@ export async function addCourseToLibrary(userId: string, courseIds: string[], ty
 
   return res.json();
 }
+
+export async function addSubscriptionsCoursesToLibrary(userId: string, courseIds: string[]) {
+  const res = await fetch("/api/library/add-subscription", {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify({ userId, courseIds }),
+  });
+
+  return res.json();
+}
