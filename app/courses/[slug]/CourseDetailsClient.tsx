@@ -179,7 +179,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [hasMorePdf, setHasMorePdf] = useState(true);
   const [topAds, setTopAds] = useState<AdItem[]>([])
   type ViewMode = "timeline" | "pdf";
-  const [viewMode, setViewMode] = useState<ViewMode>("timeline");
+  const [viewMode, setViewMode] = useState<ViewMode>("pdf");
   const [bannerAdOpen, setBannerAdOpen] = useState(false);
   const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
   const [showNoUserModal, setShowNoUserModal] = useState(false);

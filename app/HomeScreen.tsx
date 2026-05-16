@@ -22,6 +22,7 @@ import { fetchSmallAds } from '@/lib/ads';
 import { fetchMediumAds } from '@/lib/api/ads';
 import RectangularAd from '@/components/RectangularAd';
 import { useRouter } from 'next/navigation';
+import FloatingActionButton from '@/components/FloatingActionButton';
 
 
 export type AdItem = {
@@ -354,7 +355,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
 
 export default function EDLibraryHome() {
-  const { user, loading: userLoading, homeBannerAds, showAdHome } = useUser();
+  const { user, loading: userLoading, contributor, homeBannerAds, showAdHome } = useUser();
 
   const [popular, setPopular] = useState<Course[]>([]);
   const [newCourses, setNewCourses] = useState<Course[]>([]);
@@ -571,6 +572,13 @@ export default function EDLibraryHome() {
         )}
 
       </main>
+
+      {/* Floating Action Button for Approved Contributors */}
+      {user && contributor?.status === "live" && (
+        <FloatingActionButton />
+      )}
+
+
     </div>
   );
 }
