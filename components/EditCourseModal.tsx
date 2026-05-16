@@ -55,7 +55,6 @@ export default function EditCourseModal({
 
     try {
       const parsed = JSON.parse((course as any).price || "{}");
-      console.log("Parsed: ", parsed)
       setParsed(parsed);
 
       setIsOnGoing(parsed?.type === "subscription");
