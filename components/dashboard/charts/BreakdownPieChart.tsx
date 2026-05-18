@@ -41,9 +41,9 @@ export default function BreakdownPieChart({ data, loading = false, height = 240 
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
-          innerRadius={height * 0.22}
-          outerRadius={height * 0.38}
+          cy="40%" // Pulls the center up slightly to make room for the legend below
+          innerRadius={height * 0.15} // Scaled down
+          outerRadius={height * 0.25} // Scaled down so it doesn't clip
           paddingAngle={3}
           dataKey="value"
         >
@@ -56,7 +56,7 @@ export default function BreakdownPieChart({ data, loading = false, height = 240 
           contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }}
         />
         <Legend
-          wrapperStyle={{ fontSize: 12 }}
+          wrapperStyle={{ fontSize: 8, paddingTop: "20px" }}
           formatter={(value) => <span style={{ color: "#4b5563" }}>{value}</span>}
         />
       </PieChart>
