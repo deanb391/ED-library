@@ -17,6 +17,7 @@ interface Ad {
   largeImages: string[];
   videos: string[];
   views: number;
+  clicks: number;
   uniqueUsers: string[];
   isExpired: boolean;
   endTime: string;
@@ -25,7 +26,7 @@ interface Ad {
 }
 
 export default function AdDetailsPage() {
-   const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { user } = useUser();
 
   // mock data for now
@@ -33,12 +34,12 @@ export default function AdDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const AD_TYPE_OPTIONS = [
-  { label: "Daily", value: "daily" },
-  { label: "2-Daily", value: "2-daily" },
-  { label: "Weekly", value: "weekly" },
-  { label: "2-Weekly", value: "2-weekly" },
-  { label: "Monthly", value: "monthly" },
-];
+    { label: "Daily", value: "daily" },
+    { label: "2-Daily", value: "2-daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "2-Weekly", value: "2-weekly" },
+    { label: "Monthly", value: "monthly" },
+  ];
 
 
   useEffect(() => {
@@ -60,10 +61,10 @@ export default function AdDetailsPage() {
   }, [slug]);
 
   if (loading) {
-    return ( <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
-  </div>)
+    return (<div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <p className="text-gray-700 text-sm">Loading, please wait...</p>
+    </div>)
   }
 
   if (!ad) {
@@ -76,14 +77,14 @@ export default function AdDetailsPage() {
         <div className="p-8 sm:p-10">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900" style={{textTransform: 'capitalize'}}>
+              <h1 className="text-2xl font-semibold text-gray-900" style={{ textTransform: 'capitalize' }}>
                 {ad.name}
               </h1>
               <p className="text-sm text-gray-500 mt-1 mb-10">
                 Ad details and performance
               </p>
               <p
-  className="
+                className="
     flex-none items-center
     px-4 py-1.5
     rounded-full
@@ -92,10 +93,10 @@ export default function AdDetailsPage() {
     border border-amber-200
     mb-1 mt-3
   "
-  style={{textTransform: "capitalize"}}
->
-  {ad.type}
-</p>
+                style={{ textTransform: "capitalize" }}
+              >
+                {ad.type}
+              </p>
 
             </div>
 
@@ -113,7 +114,8 @@ export default function AdDetailsPage() {
 
           {/* Meta */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <Stat label="Views" value={ad.views} valueClass="text-blue-600"/>
+            <Stat label="Views" value={ad.views} valueClass="text-blue-600" />
+            <Stat label="Clicks" value={ad.clicks} valueClass="text-blue-600" />
             <Stat
               label="Unique users"
               value={ad.uniqueUsers.length}
@@ -145,7 +147,7 @@ export default function AdDetailsPage() {
                     src={url}
                     alt={`Ad image ${i + 1}`}
                     className="rounded-xl border object-cover aspect-square"
-                    style={{height: 100, width: 250}}
+                    style={{ height: 100, width: 250 }}
                   />
                 ))}
               </div>
@@ -163,7 +165,7 @@ export default function AdDetailsPage() {
                     src={url}
                     alt={`Ad image ${i + 1}`}
                     className="rounded-xl border object-cover aspect-square"
-                    style={{height: 150, width: 225}}
+                    style={{ height: 150, width: 225 }}
                   />
                 ))}
               </div>
@@ -249,18 +251,18 @@ function EditAdModal({
   const [saving, setSaving] = useState(false);
 
   const AD_TYPE_OPTIONS = [
-  { label: "Daily", value: "daily", days: 1 },
-  { label: "2-Daily", value: "2-daily", days: 2 },
-  { label: "Weekly", value: "weekly", days: 7 },
-  { label: "2-Weekly", value: "2-weekly", days: 14 },
-  { label: "Monthly", value: "monthly", days: 30 },
-];
+    { label: "Daily", value: "daily", days: 1 },
+    { label: "2-Daily", value: "2-daily", days: 2 },
+    { label: "Weekly", value: "weekly", days: 7 },
+    { label: "2-Weekly", value: "2-weekly", days: 14 },
+    { label: "Monthly", value: "monthly", days: 30 },
+  ];
 
   const calculateEndTime = (days: number) => {
-  const now = new Date();
-  now.setDate(now.getDate() + days);
-  return now.toISOString();
-};
+    const now = new Date();
+    now.setDate(now.getDate() + days);
+    return now.toISOString();
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -343,43 +345,43 @@ function EditAdModal({
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-                         style={{color: "black", textTransform: 'capitalize'}}
+              style={{ color: "black", textTransform: 'capitalize' }}
             />
           </Field>
 
           <Field label="Ad type">
-  <select
-    value={type}
-    onChange={(e) => {
-      const selected = AD_TYPE_OPTIONS.find(
-        (opt) => opt.value === e.target.value
-      );
+            <select
+              value={type}
+              onChange={(e) => {
+                const selected = AD_TYPE_OPTIONS.find(
+                  (opt) => opt.value === e.target.value
+                );
 
-      setType(e.target.value);
+                setType(e.target.value);
 
-      if (selected) {
-        setEndTime(calculateEndTime(selected.days));
-      }
-    }}
-    className="w-full px-4 py-3 rounded-xl border border-gray-300
+                if (selected) {
+                  setEndTime(calculateEndTime(selected.days));
+                }
+              }}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300
                focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-               style={{color: "black"}}
-  >
-    {AD_TYPE_OPTIONS.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
-</Field>
+              style={{ color: "black" }}
+            >
+              {AD_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-<Field label="Link">
+          <Field label="Link">
             <input
               value={link}
               onChange={(e) => setLink(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-                         style={{color: "black"}}
+              style={{ color: "black" }}
             />
           </Field>
 
@@ -390,135 +392,135 @@ function EditAdModal({
               onChange={(e) => setEndTime(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-300
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-                         style={{color: "black"}}
+              style={{ color: "black" }}
             />
           </Field>
 
           <Field label="2.5 x 1 Images">
-  <div className="flex gap-2 flex-wrap">
-    {existingSmallImages.map((url, i) => (
-      <div key={i} className="relative w-20 h-20">
-        <img
-          src={url}
-          className="w-full h-full object-cover rounded-lg border"
-        />
-        <button
-          type="button"
-          onClick={() =>
-            setExistingSmallImages(existingSmallImages.filter((_, x) => x !== i))
-          }
-          className="w-full mt-1 text-sm text-red-500 hover:underline "
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
+            <div className="flex gap-2 flex-wrap">
+              {existingSmallImages.map((url, i) => (
+                <div key={i} className="relative w-20 h-20">
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExistingSmallImages(existingSmallImages.filter((_, x) => x !== i))
+                    }
+                    className="w-full mt-1 text-sm text-red-500 hover:underline "
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
 
-  <input
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={(e) =>
-      setNewSmallImages((prev) => [...prev, ...Array.from(e.target.files || [])])
-    }
-    className=" text-sm text-blue-600 mt-10"
-  />
-</Field>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) =>
+                setNewSmallImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+              }
+              className=" text-sm text-blue-600 mt-10"
+            />
+          </Field>
 
-         <Field label="1.5 x 1 Images">
-  <div className="flex gap-2 flex-wrap">
-    {existingMediumImages.map((url, i) => (
-      <div key={i} className="relative w-20 h-20">
-        <img
-          src={url}
-          className="w-full h-full object-cover rounded-lg border"
-        />
-        <button
-          type="button"
-          onClick={() =>
-            setExistingMediumImages(existingMediumImages.filter((_, x) => x !== i))
-          }
-          className="w-full mt-1 text-sm text-red-500 hover:underline "
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
+          <Field label="1.5 x 1 Images">
+            <div className="flex gap-2 flex-wrap">
+              {existingMediumImages.map((url, i) => (
+                <div key={i} className="relative w-20 h-20">
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExistingMediumImages(existingMediumImages.filter((_, x) => x !== i))
+                    }
+                    className="w-full mt-1 text-sm text-red-500 hover:underline "
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
 
-  <input
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={(e) =>
-      setNewMediumImages((prev) => [...prev, ...Array.from(e.target.files || [])])
-    }
-    className=" text-sm text-blue-600 mt-10"
-  />
-</Field>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) =>
+                setNewMediumImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+              }
+              className=" text-sm text-blue-600 mt-10"
+            />
+          </Field>
 
-         <Field label="Banner Images">
-  <div className="flex gap-2 flex-wrap">
-    {existingLargeImages.map((url, i) => (
-      <div key={i} className="relative w-80 h-20">
-        <img
-          src={url}
-          className="w-full h-full object-cover rounded-lg aspect-auto"
-        />
-        <button
-          type="button"
-          onClick={() =>
-            setExistingLargeImages(existingLargeImages.filter((_, x) => x !== i))
-          }
-          className="w-full mt-1 text-sm text-red-500 hover:underline "
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
+          <Field label="Banner Images">
+            <div className="flex gap-2 flex-wrap">
+              {existingLargeImages.map((url, i) => (
+                <div key={i} className="relative w-80 h-20">
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover rounded-lg aspect-auto"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExistingLargeImages(existingLargeImages.filter((_, x) => x !== i))
+                    }
+                    className="w-full mt-1 text-sm text-red-500 hover:underline "
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
 
-  <input
-    type="file"
-    accept="image/*"
-    multiple
-    onChange={(e) =>
-      setNewLargeImages((prev) => [...prev, ...Array.from(e.target.files || [])])
-    }
-    className=" text-sm text-blue-600 mt-10"
-  />
-</Field>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) =>
+                setNewLargeImages((prev) => [...prev, ...Array.from(e.target.files || [])])
+              }
+              className=" text-sm text-blue-600 mt-10"
+            />
+          </Field>
 
 
-<Field label="Videos">
-  <div className="space-y-2">
-    {existingVideos.map((url, i) => (
-      <div key={i} className="relative">
-        <video src={url} controls className="w-80 h-50 rounded-lg border" />
-        <button
-          type="button"
-          onClick={() =>
-            setExistingVideos(existingVideos.filter((_, x) => x !== i))
-          }
-          className="w-full mt-1 text-sm text-red-500 hover:underline"
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
+          <Field label="Videos">
+            <div className="space-y-2">
+              {existingVideos.map((url, i) => (
+                <div key={i} className="relative">
+                  <video src={url} controls className="w-80 h-50 rounded-lg border" />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExistingVideos(existingVideos.filter((_, x) => x !== i))
+                    }
+                    className="w-full mt-1 text-sm text-red-500 hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
 
-  <input
-    type="file"
-    accept="video/*"
-    multiple
-    onChange={(e) =>
-      setNewVideos((prev) => [...prev, ...Array.from(e.target.files || [])])
-    }
-    className="mt-2 text-sm text-blue-600"
-  />
-</Field>
+            <input
+              type="file"
+              accept="video/*"
+              multiple
+              onChange={(e) =>
+                setNewVideos((prev) => [...prev, ...Array.from(e.target.files || [])])
+              }
+              className="mt-2 text-sm text-blue-600"
+            />
+          </Field>
 
 
 

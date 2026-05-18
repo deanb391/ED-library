@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useUser } from "@/context/UserContext";
-import { recordAdView } from "@/lib/ads";
+import { recordAdView, recordAdClick } from "@/lib/ads";
 
 type AdFileType = "image" | "video";
 
@@ -113,7 +113,10 @@ export default function RectangularAd({
                 alt="Sponsored content"
                 className="h-full w-full object-cover"
                 loading="lazy"
-                onClick={() => ad.link && window.open(ad.link, "_blank")}
+                onClick={() => {
+                  recordAdClick(ad.id);
+                  if (ad.link) window.open(ad.link, "_blank");
+                }}
               />
             )}
 
@@ -126,7 +129,10 @@ export default function RectangularAd({
                 muted
                 playsInline
                 onEnded={goNext}
-                onClick={() => ad.link && window.open(ad.link, "_blank")}
+                onClick={() => {
+                  recordAdClick(ad.id);
+                  if (ad.link) window.open(ad.link, "_blank");
+                }}
               />
             )}
           </div>
