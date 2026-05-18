@@ -257,7 +257,7 @@ export async function toggleFollowContributorService(
   }
 }
 
-export async function fetchTopContributorsCoursesService(limit = 20, offset = 0) {
+export async function fetchTopContributorsCoursesService(limit = 50, offset = 0) {
   const res = await databases.listDocuments(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,

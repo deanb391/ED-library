@@ -10,6 +10,7 @@ export type Ad = {
   largeImages: string[];
   videos: string[];
   views: number;
+  clicks: number;
   uniqueUsers: string[];
   isExpired: boolean;
   endTime: string;
@@ -32,6 +33,7 @@ function mapAd(doc: any): Ad {
     largeImages: doc.largeImages || [],
     videos: doc.videos || [],
     views: doc.views ?? 0,
+    clicks: doc.clicks ?? 0,
     uniqueUsers: doc.uniqueUsers || [],
     isExpired: doc.isExpired,
     endTime: doc.endTime,
@@ -73,6 +75,7 @@ export async function createAd(data: {
       largeImages: data.largeImages,
       videos: data.videos,
       views: 0,
+      clicks: 0,
       uniqueUsers: [],
       isExpired: false,
       endTime: data.endTime,
@@ -313,8 +316,16 @@ export async function recordAdView(adId: string, userId?: string) {
   }
 }
 
-
-
+export async function recordAdClick(adId: string) {
+  try {
+    const ad = await fetchAdById(adId);
+    await editAd(adId, {
+      clicks: ad.clicks + 1,
+    });
+  } catch (err) {
+    console.error("Failed to record ad click", err);
+  }
+}
 
 export async function fetchActiveAds(): Promise<Ad[]> {
   const res = await databases.listDocuments(
@@ -356,6 +367,7 @@ export async function editAd(
     link?: string;
     uniqueUsers?: string[];
     views?: number;
+    clicks?: number;
   }>
 ) {
   try {

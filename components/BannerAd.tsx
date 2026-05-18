@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Volume, VolumeX, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { recordAdView } from "@/lib/ads";
+import { recordAdView, recordAdClick } from "@/lib/ads";
 
 export type AdItem = {
   id: string;
@@ -58,6 +58,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
   };
 
   const handleClick = () => {
+    recordAdClick(ad.id);
     if (ad.link) window.open(ad.link, "_blank");
     onClose();
   };

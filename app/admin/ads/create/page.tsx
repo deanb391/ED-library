@@ -23,19 +23,19 @@ export default function CreateAdPage() {
   const [smallImage, setSmallImage] = useState<File[]>([]);
   const [mediumImage, setMediumImage] = useState<File[]>([]);
   const [LargeImage, setLargeImage] = useState<File[]>([]);
-  const [rectImages, setRectImages] =useState<File[]>([]);
+  const [rectImages, setRectImages] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
   const [endTime, setEndTime] = useState("");
   const [duration, setDuration] = useState("");
   const [link, setLink] = useState('')
 
   const DURATION_OPTIONS = [
-  { label: "Daily", value: "daily", days: 1 },
-  { label: "2-Daily", value: "2-daily", days: 2 },
-  { label: "Weekly", value: "weekly", days: 7 },
-  { label: "2-Weekly", value: "2-weekly", days: 14 },
-  { label: "Monthly", value: "monthly", days: 30 },
-];
+    { label: "Daily", value: "daily", days: 1 },
+    { label: "2-Daily", value: "2-daily", days: 2 },
+    { label: "Weekly", value: "weekly", days: 7 },
+    { label: "2-Weekly", value: "2-weekly", days: 14 },
+    { label: "Monthly", value: "monthly", days: 30 },
+  ];
 
 
   useEffect(() => {
@@ -92,67 +92,70 @@ export default function CreateAdPage() {
   };
 
   const calculateEndTime = (days: number) => {
-  const now = new Date();
-  now.setDate(now.getDate() + days);
-  return now.toISOString();
-};
+    const now = new Date();
+    now.setDate(now.getDate() + days);
+    return now.toISOString();
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!name || !endTime) return;
+    if (!name || !endTime) return;
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    // Upload images
-    const uploadedSmallImages: string[] = [];
-    for (const image of smallImage) {
-      const url = await uploadAdImage(image);
-      uploadedSmallImages.push(url);
+    try {
+      // Upload images
+      const uploadedSmallImages: string[] = [];
+      for (const image of smallImage) {
+        const url = await uploadAdImage(image);
+        uploadedSmallImages.push(url);
+      }
+
+      const uploadedMediumImages: string[] = [];
+      for (const image of mediumImage) {
+        const url = await uploadAdImage(image);
+        uploadedMediumImages.push(url);
+      }
+
+      const uploadedLargeImages: string[] = [];
+      for (const image of LargeImage) {
+        const url = await uploadAdImage(image);
+        uploadedLargeImages.push(url);
+      }
+
+      // Upload videos
+      const uploadedVideos: string[] = [];
+      for (const video of videos) {
+        const url = await uploadAdVideo(video);
+        uploadedVideos.push(url);
+      }
+
+      const ad = await createAd({
+        name,
+        smallImages: uploadedSmallImages,
+        mediumImages: uploadedMediumImages,
+        largeImages: uploadedLargeImages,
+        videos: uploadedVideos,
+        endTime,
+        clicks: 0,
+        views: 0,
+        uniqueUsers: [],
+        user: user?.$id,
+        type: duration,
+        link: link
+      });
+
+      alert("Ad created successfully");
+      router.push(`/admin/ads/ad/${ad?.$id}`);
+    } catch (err) {
+      console.error("Failed to create ad", err);
+      alert("Failed to create ad");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const uploadedMediumImages: string[] = [];
-    for (const image of mediumImage) {
-      const url = await uploadAdImage(image);
-      uploadedMediumImages.push(url);
-    }
-
-    const uploadedLargeImages: string[] = [];
-    for (const image of LargeImage) {
-      const url = await uploadAdImage(image);
-      uploadedLargeImages.push(url);
-    }
-
-    // Upload videos
-    const uploadedVideos: string[] = [];
-    for (const video of videos) {
-      const url = await uploadAdVideo(video);
-      uploadedVideos.push(url);
-    }
-
-    const ad = await createAd({
-      name,
-      smallImages: uploadedSmallImages,
-      mediumImages: uploadedMediumImages,
-      largeImages: uploadedLargeImages,
-      videos: uploadedVideos,
-      endTime,
-      user: user?.$id,
-      type: duration,
-      link: link
-    });
-
-    alert("Ad created successfully");
-    router.push(`/admin/ads/ad/${ad?.$id}`);
-  } catch (err) {
-    console.error("Failed to create ad", err);
-    alert("Failed to create ad");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   if (loading) {
@@ -210,53 +213,53 @@ export default function CreateAdPage() {
                 placeholder="Homepage Banner – February"
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none
                            focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-                           style={{color: 'black'}}
+                style={{ color: 'black' }}
               />
             </div>
 
             <div className="space-y-1.5">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Ad duration
-  </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ad duration
+              </label>
 
-  <select
-    required
-    value={duration}
-    onChange={(e) => {
-      const selected = DURATION_OPTIONS.find(
-        (opt) => opt.value === e.target.value
-      );
+              <select
+                required
+                value={duration}
+                onChange={(e) => {
+                  const selected = DURATION_OPTIONS.find(
+                    (opt) => opt.value === e.target.value
+                  );
 
-      setDuration(e.target.value);
+                  setDuration(e.target.value);
 
-      if (selected) {
-        setEndTime(calculateEndTime(selected.days));
-      }
-    }}
-    className="w-full px-4 py-3 rounded-xl border border-gray-300
+                  if (selected) {
+                    setEndTime(calculateEndTime(selected.days));
+                  }
+                }}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300
                bg-white text-sm focus:outline-none
                focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-               style={{color: 'black'}}
-  >
-    <option value="" disabled>
-      Select duration
-    </option>
+                style={{ color: 'black' }}
+              >
+                <option value="" disabled>
+                  Select duration
+                </option>
 
-    {DURATION_OPTIONS.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
+                {DURATION_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
 
-  {endTime && (
-    <p className="text-xs text-gray-500 mt-1">
-      Ends on {new Date(endTime).toLocaleString()}
-    </p>
-  )}
-</div>
+              {endTime && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Ends on {new Date(endTime).toLocaleString()}
+                </p>
+              )}
+            </div>
 
-<div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Ad Link
               </label>
@@ -267,279 +270,279 @@ export default function CreateAdPage() {
                 placeholder="https://www.examplelink.com"
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none
                            focus:ring-2 focus:ring-blue-500 transition text-blue-600"
-                style={{fontStyle: 'italic', color: "black"}}
+                style={{ fontStyle: 'italic', color: "black" }}
               />
             </div>
 
 
             {/* Images */}
-           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    2.5 x 1 Images (max 3)
-  </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                2.5 x 1 Images (max 3)
+              </label>
 
-  {/* Styled file picker */}
-  <label
-    className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
+              {/* Styled file picker */}
+              <label
+                className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       hover:bg-gray-50 transition bg-blue-600
       ${smallImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    Choose images
-    <input
-      type="file"
-      accept="image/*"
-      multiple
-      onChange={(e) => handleSmallImageAdd(e.target.files)}
-      disabled={smallImage.length >= 3}
-      className="hidden"
-    />
-  </label>
+              >
+                Choose images
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleSmallImageAdd(e.target.files)}
+                  disabled={smallImage.length >= 3}
+                  className="hidden"
+                />
+              </label>
 
-  {/* Image previews */}
-  {smallImage.length > 0 && (
-    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {smallImage.map((file, index) => {
-        const previewUrl = URL.createObjectURL(file);
+              {/* Image previews */}
+              {smallImage.length > 0 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {smallImage.map((file, index) => {
+                    const previewUrl = URL.createObjectURL(file);
 
-        return (
-          <div
-            key={index}
-            className="relative flex-shrink-0
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
                        border border-gray-200 overflow-hidden bg-gray-50"
-          >
-            <img
-              src={previewUrl}
-              alt={`Selected image ${index + 1}`}
-              className="w-full h-full object-cover"
-              style={{height: 100, width: 250}}
-            />
+                      >
+                        <img
+                          src={previewUrl}
+                          alt={`Selected image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          style={{ height: 100, width: 250 }}
+                        />
 
-            {/* Remove button */}
-            <button
-              type="button"
-              onClick={() => removeSmallImage(index)}
-              className="absolute -top-2 -right-2 bottom-10
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeSmallImage(index)}
+                          className="absolute -top-2 -right-2 bottom-10
                          w-6 h-6 rounded-full
                          bg-red-600 text-white
                          flex items-center justify-center
                          shadow-md hover:bg-red-500 transition"
-              title="Remove image"
-            >
-              <X size={30} strokeWidth={2.5} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+                          title="Remove image"
+                        >
+                          <X size={30} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    1.5 x 1 Images (max 3)
-  </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                1.5 x 1 Images (max 3)
+              </label>
 
-  {/* Styled file picker */}
-  <label
-    className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
+              {/* Styled file picker */}
+              <label
+                className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       hover:bg-gray-50 transition bg-blue-600
       ${mediumImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    Choose images
-    <input
-      type="file"
-      accept="image/*"
-      multiple
-      onChange={(e) => handleMediumImageAdd(e.target.files)}
-      disabled={mediumImage.length >= 3}
-      className="hidden"
-    />
-  </label>
+              >
+                Choose images
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleMediumImageAdd(e.target.files)}
+                  disabled={mediumImage.length >= 3}
+                  className="hidden"
+                />
+              </label>
 
-  {/* Image previews */}
-  {mediumImage.length > 0 && (
-    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {mediumImage.map((file, index) => {
-        const previewUrl = URL.createObjectURL(file);
+              {/* Image previews */}
+              {mediumImage.length > 0 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {mediumImage.map((file, index) => {
+                    const previewUrl = URL.createObjectURL(file);
 
-        return (
-          <div
-            key={index}
-            className="relative flex-shrink-0
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
                        border border-gray-200 overflow-hidden bg-gray-50"
-          >
-            <img
-              src={previewUrl}
-              alt={`Selected image ${index + 1}`}
-              className="w-full h-full object-cover"
-              style={{height: 150, width: 225}}
-            />
+                      >
+                        <img
+                          src={previewUrl}
+                          alt={`Selected image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          style={{ height: 150, width: 225 }}
+                        />
 
-            {/* Remove button */}
-            <button
-              type="button"
-              onClick={() => removeMediumImage(index)}
-              className="absolute -top-2 -right-2 bottom-10
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeMediumImage(index)}
+                          className="absolute -top-2 -right-2 bottom-10
                          w-6 h-6 rounded-full
                          bg-red-600 text-white
                          flex items-center justify-center
                          shadow-md hover:bg-red-500 transition"
-              title="Remove image"
-            >
-              <X size={30} strokeWidth={2.5} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+                          title="Remove image"
+                        >
+                          <X size={30} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-           <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Banner Images (max 3)
-  </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Banner Images (max 3)
+              </label>
 
-  {/* Styled file picker */}
-  <label
-    className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
+              {/* Styled file picker */}
+              <label
+                className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       hover:bg-gray-50 transition bg-blue-600
       ${LargeImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    Choose images
-    <input
-      type="file"
-      accept="image/*"
-      multiple
-      onChange={(e) => handleLargeImageAdd(e.target.files)}
-      disabled={LargeImage.length >= 3}
-      className="hidden"
-    />
-  </label>
+              >
+                Choose images
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleLargeImageAdd(e.target.files)}
+                  disabled={LargeImage.length >= 3}
+                  className="hidden"
+                />
+              </label>
 
-  {/* Image previews */}
-  {LargeImage.length > 0 && (
-    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {LargeImage.map((file, index) => {
-        const previewUrl = URL.createObjectURL(file);
+              {/* Image previews */}
+              {LargeImage.length > 0 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {LargeImage.map((file, index) => {
+                    const previewUrl = URL.createObjectURL(file);
 
-        return (
-          <div
-            key={index}
-            className="relative flex-shrink-0
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
                        border border-gray-200 overflow-hidden bg-gray-50"
-          >
-            <img
-              src={previewUrl}
-              alt={`Selected image ${index + 1}`}
-              className="w-80 h-60 object-cover"
-            />
+                      >
+                        <img
+                          src={previewUrl}
+                          alt={`Selected image ${index + 1}`}
+                          className="w-80 h-60 object-cover"
+                        />
 
-            {/* Remove button */}
-            <button
-              type="button"
-              onClick={() => removeLargeImage(index)}
-              className="absolute -top-2 -right-2 bottom-10
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeLargeImage(index)}
+                          className="absolute -top-2 -right-2 bottom-10
                          w-6 h-6 rounded-full
                          bg-red-600 text-white
                          flex items-center justify-center
                          shadow-md hover:bg-red-500 transition"
-              title="Remove image"
-            >
-              <X size={30} strokeWidth={2.5} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+                          title="Remove image"
+                        >
+                          <X size={30} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
 
 
             {/* Videos */}
             <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Videos (max 2)
-  </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Videos (max 2)
+              </label>
 
-  {/* Styled video picker */}
-  <label
-    className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
+              {/* Styled video picker */}
+              <label
+                className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
       border border-gray-300 text-sm font-medium cursor-pointer
       bg-blue-600 hover:bg-gray-50 transition
       ${videos.length >= 2 ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    Choose videos
-    <input
-      type="file"
-      accept="video/*"
-      multiple
-      onChange={(e) => handleVideoAdd(e.target.files)}
-      disabled={videos.length >= 2}
-      className="hidden"
-    />
-  </label>
+              >
+                Choose videos
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  onChange={(e) => handleVideoAdd(e.target.files)}
+                  disabled={videos.length >= 2}
+                  className="hidden"
+                />
+              </label>
 
-  {/* Video previews */}
-  {videos.length > 0 && (
-    <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-      {videos.map((file, index) => {
-        const previewUrl = URL.createObjectURL(file);
+              {/* Video previews */}
+              {videos.length > 0 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {videos.map((file, index) => {
+                    const previewUrl = URL.createObjectURL(file);
 
-        return (
-          <div
-            key={index}
-            className="relative flex-shrink-0
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex-shrink-0
                        w-60 h-80 rounded-lg
                        border border-gray-200 overflow-hidden bg-black"
-          >
-            <video
-              src={previewUrl}
-              muted
-              className="w-60 h-80 object-cover"
-            />
+                      >
+                        <video
+                          src={previewUrl}
+                          muted
+                          className="w-60 h-80 object-cover"
+                        />
 
-            {/* Play hint overlay */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-8 h-8 rounded-full bg-black/50
+                        {/* Play hint overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-8 h-8 rounded-full bg-black/50
                               flex items-center justify-center">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="white"
-                >
-                  <polygon points="5,3 19,12 5,21" />
-                </svg>
-              </div>
-            </div>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="white"
+                            >
+                              <polygon points="5,3 19,12 5,21" />
+                            </svg>
+                          </div>
+                        </div>
 
-            {/* Remove button */}
-            <button
-              type="button"
-              onClick={() => removeVideo(index)}
-              className="absolute -top-2 -right-2
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeVideo(index)}
+                          className="absolute -top-2 -right-2
                          w-6 h-6 rounded-full
                          bg-red-600 text-white
                          flex items-center justify-center
                          shadow-md hover:bg-red-500 transition"
-              title="Remove video"
-            >
-              <X size={14} strokeWidth={2.5} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+                          title="Remove video"
+                        >
+                          <X size={14} strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
 
             {/* Submit */}
