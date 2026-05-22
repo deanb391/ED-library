@@ -10,7 +10,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "ed-library-bucket.s3.us-east-1.amazonaws.com",
+        hostname: "d22d06tte8psea.cloudfront.net",
+      },
+      {
+        protocol: "https",
+        hostname: "*.amazonaws.com",
       },
       {
         protocol: "https",
