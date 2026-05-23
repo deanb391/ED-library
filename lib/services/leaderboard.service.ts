@@ -51,7 +51,13 @@ export async function incrementUploadCount(
 
   // 2. Update Redis sorted set
   await safeRedisOp(async (client) => {
-    await client.zincrby(LEADERBOARD_KEY, amount, contributorId);
+    const exists = await client.exists(LEADERBOARD_KEY);
+    if (!exists) {
+      console.log("[Leaderboard] Redis key not found during increment. Syncing from Appwrite...");
+      await syncLeaderboardToRedis();
+    } else {
+      await client.zincrby(LEADERBOARD_KEY, amount, contributorId);
+    }
   }, undefined);
 }
 
@@ -64,6 +70,12 @@ export async function getLeaderboard(
 ): Promise<LeaderboardEntry[]> {
   // Try Redis first
   const redisEntries = await safeRedisOp(async (client) => {
+    const exists = await client.exists(LEADERBOARD_KEY);
+    if (!exists) {
+      console.log("[Leaderboard] Redis key not found during fetch. Syncing from Appwrite...");
+      await syncLeaderboardToRedis();
+    }
+
     // ZREVRANGE returns members sorted highest-to-lowest
     const results = await client.zrevrange(
       LEADERBOARD_KEY,
@@ -73,6 +85,7 @@ export async function getLeaderboard(
     );
 
     if (!results || results.length === 0) return null;
+    console.log("Results: ", results)
 
     // Results come as [member, score, member, score, ...]
     const entries: { contributorId: string; score: number }[] = [];
@@ -87,7 +100,10 @@ export async function getLeaderboard(
 
   if (redisEntries && redisEntries.length > 0) {
     // Hydrate with contributor details from Appwrite
-    return hydrateLeaderboard(redisEntries, offset);
+    console.log("redisEntries: ", redisEntries)
+    const values = await hydrateLeaderboard(redisEntries, offset);
+    console.log("Values: ", values)
+    return values
   }
 
   // Fallback: read from Appwrite directly
@@ -102,6 +118,12 @@ export async function getContributorRank(
 ): Promise<{ rank: number; uploadCount: number } | null> {
   // Try Redis
   const redisRank = await safeRedisOp(async (client) => {
+    const exists = await client.exists(LEADERBOARD_KEY);
+    if (!exists) {
+      console.log("[Leaderboard] Redis key not found during rank lookup. Syncing...");
+      await syncLeaderboardToRedis();
+    }
+
     const rank = await client.zrevrank(LEADERBOARD_KEY, contributorId);
     const score = await client.zscore(LEADERBOARD_KEY, contributorId);
 
@@ -226,6 +248,7 @@ async function hydrateLeaderboard(
       continue;
     }
   }
+  console.log("Hydated: ", hydrated);
 
   return hydrated;
 }

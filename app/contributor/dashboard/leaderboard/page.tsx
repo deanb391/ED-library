@@ -23,6 +23,8 @@ export default function LeaderboardPage() {
           fetchLeaderboard(50, 0),
           contributor?.$id ? fetchContributorRank(contributor.$id) : Promise.resolve(null),
         ]);
+        console.log(leaderboardData);
+        console.log(rankData)
         setEntries(leaderboardData);
         setMyRank(rankData);
       } catch (err) {
