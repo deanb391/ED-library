@@ -16,7 +16,10 @@ import {
   LineChart,
   CheckCircle2,
   Circle,
-  GraduationCap
+  GraduationCap,
+  Flame,
+  Trophy,
+  Crown
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -29,6 +32,12 @@ import Message from '@/components/Message';
 import ContributorCelebrationModal from '@/components/ContributorCelebrationModal';
 import TermsModal from '@/components/TermsModal';
 import { editContributor } from '@/lib/api/contributors';
+import StreakCelebrationModal from '@/components/StreakCelebrationModal';
+import StreakCalendarModal from '@/components/StreakCalendarModal';
+import StreakReminderModal from '@/components/StreakReminderModal';
+import TopContributorAnnouncementModal from '@/components/TopContributorAnnouncementModal';
+import TopContributorAwardModal from '@/components/TopContributorAwardModal';
+import { fetchStreak, fetchTopContributor, type StreakData, type WeeklyAward } from '@/lib/api/rewards';
 
 function CourseSection({
   title,
@@ -126,6 +135,16 @@ export default function DashboardUnderReviewPage() {
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isSubmittingTerms, setIsSubmittingTerms] = useState(false);
 
+  // Rewards state
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [streakCelebrationData, setStreakCelebrationData] = useState<{ streak: number; dayName: string }>({ streak: 0, dayName: '' });
+  const [showStreakCalendar, setShowStreakCalendar] = useState(false);
+  const [showStreakReminder, setShowStreakReminder] = useState(false);
+  const [topContributor, setTopContributor] = useState<WeeklyAward | null>(null);
+  const [showTopContributorAnnouncement, setShowTopContributorAnnouncement] = useState(false);
+  const [showTopContributorAward, setShowTopContributorAward] = useState(false);
+
   useEffect(() => {
     const loadDashboard = async () => {
       if (!user) {
@@ -171,6 +190,68 @@ export default function DashboardUnderReviewPage() {
       setIsTermsModalOpen(true);
     }
   }, [contributor]);
+
+  // Load streak data + rewards
+  useEffect(() => {
+    if (!contributor?.$id) return;
+
+    // Fetch streak data
+    fetchStreak(contributor.$id)
+      .then((data) => {
+        if (data) setStreakData(data);
+      })
+      .catch(console.error);
+
+    // Fetch top contributor
+    fetchTopContributor()
+      .then((award) => {
+        if (award) {
+          setTopContributor(award);
+
+          // If this contributor IS the top contributor, show award modal
+          if (award.contributorId === contributor.$id) {
+            const awardKey = `topContributor_award_${award.weekStart}`;
+            if (!localStorage.getItem(awardKey)) {
+              setShowTopContributorAward(true);
+              localStorage.setItem(awardKey, 'seen');
+            }
+          }
+
+          // Show announcement modal on Sundays (once per week)
+          const today = new Date();
+          if (today.getDay() === 0) {
+            const announceKey = `topContributor_seen_${award.weekStart}`;
+            if (!localStorage.getItem(announceKey)) {
+              setShowTopContributorAnnouncement(true);
+              localStorage.setItem(announceKey, 'seen');
+            }
+          }
+        }
+      })
+      .catch(console.error);
+  }, [contributor?.$id]);
+
+  // Streak reminder logic
+  useEffect(() => {
+    if (!contributor?.$id || !streakData) return;
+    // Only show if contributor is active and hasn't uploaded today
+    if (contributor.status !== 'live') return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const hasUploadedToday = streakData.lastUploadDate === today;
+
+    if (!hasUploadedToday) {
+      const reminderCount = parseInt(sessionStorage.getItem('streakReminderCount') || '0');
+      if (reminderCount < 2) {
+        // Delay slightly so it doesn't fight other modals
+        const timer = setTimeout(() => {
+          setShowStreakReminder(true);
+          sessionStorage.setItem('streakReminderCount', String(reminderCount + 1));
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [contributor?.$id, contributor?.status, streakData]);
 
   const handleAgreeTerms = async () => {
     if (!contributor) return;
@@ -332,7 +413,7 @@ export default function DashboardUnderReviewPage() {
                         {profileBio}
                       </p>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-semibold text-slate-500 uppercase" style={{ fontSize: 10 }}>
                           Status:
                         </span>
@@ -349,6 +430,14 @@ export default function DashboardUnderReviewPage() {
                         >
                           {profileStatus}
                         </span>
+                        {contributor?.isTopContributor && (
+                          <span
+                            className="text-xs font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1"
+                            style={{ backgroundColor: '#FFF8E1', color: '#FF8F00', fontSize: 10, border: '1px solid #FFE082' }}
+                          >
+                            <Crown size={10} /> Top Contributor
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -375,6 +464,76 @@ export default function DashboardUnderReviewPage() {
                 </div>
               </div>
 
+              {/* Streak & Leaderboard Section */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Streak Card */}
+                <button
+                  onClick={() => setShowStreakCalendar(true)}
+                  className="rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-md active:scale-[0.98] text-left"
+                  style={{
+                    background: streakData && streakData.currentStreak > 0
+                      ? 'linear-gradient(135deg, #FFF3E0, #FFE0B2)'
+                      : 'linear-gradient(135deg, #F3F4F6, #E5E7EB)',
+                    border: streakData && streakData.currentStreak > 0
+                      ? '1px solid #FFE0B2'
+                      : '1px solid #E5E7EB',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 36,
+                      lineHeight: 1,
+                      animation: streakData && streakData.currentStreak > 0
+                        ? 'dashboardFireBounce 1.2s ease-in-out infinite'
+                        : 'none',
+                      filter: streakData && streakData.currentStreak > 0
+                        ? 'drop-shadow(0 2px 6px rgba(255, 69, 0, 0.3))'
+                        : 'grayscale(0.5)',
+                      opacity: streakData && streakData.currentStreak > 0 ? 1 : 0.5,
+                    }}
+                  >
+                    🔥
+                  </div>
+                  <div>
+                    <div style={{
+                      fontSize: 28,
+                      fontWeight: 900,
+                      color: streakData && streakData.currentStreak > 0 ? '#FF4500' : '#9CA3AF',
+                      lineHeight: 1,
+                    }}>
+                      {streakData?.currentStreak ?? 0}
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: streakData && streakData.currentStreak > 0 ? '#E65100' : '#9CA3AF',
+                      marginTop: 2,
+                    }}>
+                      Day Upload Streak
+                    </div>
+                  </div>
+                </button>
+
+                {/* Leaderboard Card */}
+                <Link
+                  href="/contributor/dashboard/leaderboard"
+                  className="rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-md active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, #EDE7F6, #D1C4E9)',
+                    border: '1px solid #D1C4E9',
+                  }}
+                >
+                  <div style={{ fontSize: 36, lineHeight: 1 }}>🏆</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#4A148C' }}>
+                      Leaderboard
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: '#7B1FA2', marginTop: 2 }}>
+                      See where you rank among contributors
+                    </div>
+                  </div>
+                </Link>
+              </div>
 
 
               {/* RIGHT SIDE - FIRST ACTION */}
@@ -418,34 +577,14 @@ export default function DashboardUnderReviewPage() {
 
             </div>
 
-            {/* Disabled Action Cards
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <DisabledActionCard 
-                icon={<PlusCircle size={20} />} 
-                title="Create Course" 
-                desc="Design and launch interactive curriculums for students worldwide." 
-              />
-              <DisabledActionCard 
-                icon={<UploadCloud size={20} />} 
-                title="Upload Assets" 
-                desc="Batch upload research papers, slide decks, and lecture recordings." 
-              />
-              <DisabledActionCard 
-                icon={<LineChart size={20} />} 
-                title="Deep Analytics" 
-                desc="Track student engagement, completion rates, and feedback loops." 
-              />
-              <DisabledActionCard 
-                icon={<PlusCircle size={20} />} 
-                title="Create Course" 
-                desc="Design and launch interactive curriculums for students worldwide." 
-              />
-            </div>
 
 
- */}
-
-
+            <style jsx>{`
+              @keyframes dashboardFireBounce {
+                0%, 100% { transform: translateY(0) scale(1); }
+                50% { transform: translateY(-6px) scale(1.08); }
+              }
+            `}</style>
 
             <CourseSection title='My Courses' courses={courses} />
 
@@ -475,12 +614,68 @@ export default function DashboardUnderReviewPage() {
           profileImage={contributor.profileImage}
         />
 
-        <TermsModal 
+        <TermsModal
           open={isTermsModalOpen}
           onClose={() => setIsTermsModalOpen(false)}
           onSubmit={handleAgreeTerms}
           loading={isSubmittingTerms}
         />
+
+        {/* Streak Celebration Modal */}
+        <StreakCelebrationModal
+          isOpen={showStreakCelebration}
+          onClose={() => setShowStreakCelebration(false)}
+          currentStreak={streakCelebrationData.streak}
+          dayName={streakCelebrationData.dayName}
+        />
+
+        {/* Streak Calendar Modal */}
+        <StreakCalendarModal
+          isOpen={showStreakCalendar}
+          onClose={() => setShowStreakCalendar(false)}
+          currentStreak={streakData?.currentStreak ?? 0}
+          longestStreak={streakData?.longestStreak ?? 0}
+          streakHistory={streakData?.streakHistory ?? []}
+          joinedDate={streakData?.joinedDate ?? contributor.$createdAt?.slice(0, 10) ?? ''}
+        />
+
+        {/* Streak Reminder Modal */}
+        <StreakReminderModal
+          isOpen={showStreakReminder}
+          onClose={() => setShowStreakReminder(false)}
+          hasStreak={(streakData?.currentStreak ?? 0) > 0}
+          currentStreak={streakData?.currentStreak ?? 0}
+        />
+
+        {/* Top Contributor Announcement (for all users on Sunday) */}
+        {topContributor && (
+          <TopContributorAnnouncementModal
+            isOpen={showTopContributorAnnouncement}
+            onClose={() => setShowTopContributorAnnouncement(false)}
+            award={topContributor}
+          />
+        )}
+
+        {/* Top Contributor Award (shareable, for the winner only) */}
+        {topContributor && topContributor.contributorId === contributor.$id && (
+          <TopContributorAwardModal
+            isOpen={showTopContributorAward}
+            onClose={() => setShowTopContributorAward(false)}
+            contributorName={contributor.username}
+            profileImage={contributor.profileImage}
+            weeklyUploads={topContributor.weeklyUploads}
+            totalUploads={topContributor.totalUploads}
+          />
+        )}
+
+        {/* <TopContributorAwardModal
+          isOpen={true}
+          onClose={() => setShowTopContributorAward(false)}
+          contributorName={contributor.username}
+          profileImage={contributor.profileImage}
+          weeklyUploads={42}
+          totalUploads={100}
+        /> */}
 
       </div>
     </div>

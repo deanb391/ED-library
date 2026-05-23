@@ -12,6 +12,7 @@ import {
   User,
   Share2,
   X,
+  Crown,
 } from "lucide-react";
 import deskImg from "@/assets/images/desk.webp";
 import Link from "next/link";
@@ -336,9 +337,27 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
               />
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-bold">
-              {contributor?.username || "Contributor"}
-            </h1>
+            <div className="flex flex-col items-center gap-1.5">
+              <h1 className="text-2xl md:text-3xl font-bold">
+                {contributor?.username || "Contributor"}
+              </h1>
+
+              {contributor?.isTopContributor && (
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                  style={{
+                    backgroundColor: "#FFF8E1",
+                    border: "1px solid #FFE082",
+                    color: "#FF8F00",
+                  }}
+                >
+                  <Crown size={14} color="#FF8F00" />
+                  <span className="text-xs font-bold uppercase tracking-wide">
+                    Top Contributor
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Buttons */}
             <div className="mt-5 w-full flex flex-col items-center gap-3">

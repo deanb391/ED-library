@@ -7,6 +7,9 @@ import {
   fetchCourseByIdService,
 } from "@/lib/services/course.service";
 import { trackAnalyticsEvent } from "@/lib/analytics/services/analytics.service";
+import { recordUploadStreak } from "@/lib/services/streak.service";
+import { incrementUploadCount } from "@/lib/services/leaderboard.service";
+import { getContributorByUserIdService } from "@/lib/services/contributors.service";
 
 export async function POST(req: NextRequest) {
   const { courseId, images, description } = await req.json();
@@ -21,27 +24,51 @@ export async function POST(req: NextRequest) {
     lastOperation: "Now",
   });
 
-  // Resolve the course owner so we have a proper userId for the tracker
-  fetchCourseByIdService(courseId)
-    .then((course) => {
-      trackAnalyticsEvent(
-        {
-          eventName: "COURSE_ASSET_UPLOADED",
-          distinctId: course.user ?? "unknown",
-          userId: course.user ?? undefined,
-          metadata: {
-            postId: post.$id,
-            courseId,
-            imageCount: Array.isArray(images) ? images.length : 1,
-          },
-        },
-        [
-          { metric: "DAILY_UPLOADS", amount: Array.isArray(images) ? images.length : 1 },
-          { metric: "TOTAL_UPLOADS",  amount: Array.isArray(images) ? images.length : 1 },
-        ]
-      );
-    })
-    .catch((err) => console.error("[Analytics] upload tracking failed:", err));
+  let streakData = null;
 
-  return NextResponse.json(post);
+  try {
+    const course = await fetchCourseByIdService(courseId);
+    const userId = course.user ?? "unknown";
+
+    // Analytics tracking (fire-and-forget)
+    trackAnalyticsEvent(
+      {
+        eventName: "COURSE_ASSET_UPLOADED",
+        distinctId: userId,
+        userId: userId !== "unknown" ? userId : undefined,
+        metadata: {
+          postId: post.$id,
+          courseId,
+          imageCount: Array.isArray(images) ? images.length : 1,
+        },
+      },
+      [
+        { metric: "DAILY_UPLOADS", amount: Array.isArray(images) ? images.length : 1 },
+        { metric: "TOTAL_UPLOADS",  amount: Array.isArray(images) ? images.length : 1 },
+      ]
+    ).catch(err => console.error("[Analytics] upload tracking failed:", err));
+
+    // Streak & Leaderboard tracking
+    if (userId !== "unknown") {
+      const contributor = await getContributorByUserIdService(userId);
+      if (contributor) {
+        const uploadAmount = Array.isArray(images) ? images.length : 1;
+
+        // Record streak (await this so we can return it)
+        streakData = await recordUploadStreak(
+          contributor.$id,
+          userId,
+          contributor.$createdAt?.slice(0, 10) || ""
+        );
+
+        // Increment leaderboard count (fire-and-forget)
+        incrementUploadCount(contributor.$id, uploadAmount)
+          .catch((err) => console.error("[Leaderboard] tracking failed:", err));
+      }
+    }
+  } catch (err) {
+    console.error("[Rewards/Analytics] processing failed:", err);
+  }
+
+  return NextResponse.json({ ...post, streakData });
 }

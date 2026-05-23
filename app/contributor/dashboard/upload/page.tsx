@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
+import StreakCelebrationModal from '@/components/StreakCelebrationModal';
 
 // --- Dummy Data ---
 const PENDING_FILES = [
@@ -89,6 +90,10 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(true)
   const [description, setDescription] = useState('');
   const { user, loading: userLoading, contributor, contributorLoading } = useUser();
+
+  // Streak celebration state
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [streakData, setStreakData] = useState<{ currentStreak: number; dayName: string } | null>(null);
 
   useEffect(() => {
     if (userLoading || contributorLoading) return;
@@ -175,9 +180,19 @@ export default function UploadPage() {
       const res = await createPost(selectedCourse, urls, description);
       
       if (res) {
-        alert("Upload successful");
         setQueuedFiles([]);
-        router.replace(`/courses/${selectedCourse}`);
+        
+        // Check if we hit a streak today
+        if (res.streakData && res.streakData.isFirstToday) {
+          setStreakData({
+            currentStreak: res.streakData.currentStreak,
+            dayName: res.streakData.dayName,
+          });
+          setShowStreakModal(true);
+        } else {
+          alert("Upload successful");
+          router.replace(`/courses/${selectedCourse}`);
+        }
       } else {
         alert("Upload Failed. Try Again");
       }
@@ -551,6 +566,19 @@ export default function UploadPage() {
           </div>
         </div>
       </main>
+
+      {/* Streak Celebration Modal */}
+      {streakData && (
+        <StreakCelebrationModal
+          isOpen={showStreakModal}
+          onClose={() => {
+            setShowStreakModal(false);
+            router.replace(`/courses/${selectedCourse}`);
+          }}
+          currentStreak={streakData.currentStreak}
+          dayName={streakData.dayName}
+        />
+      )}
     </div>
   );
 }

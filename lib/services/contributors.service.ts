@@ -19,6 +19,10 @@ export type ContributorDraft = {
   status: string;
   hasSeenCelebration?: boolean;
   agreed?: boolean;
+  uploadCount?: number;
+  weeklyUploadCount?: number;
+  isTopContributor?: boolean;
+  topContributorWeek?: string;
 };
 
 export type Contributor = ContributorDraft & {
@@ -29,6 +33,10 @@ export type Contributor = ContributorDraft & {
   approvalNotes: string;
   followers?: number;
   followersIds?: string;
+  uploadCount?: number;
+  weeklyUploadCount?: number;
+  isTopContributor?: boolean;
+  topContributorWeek?: string;
 };
 
 function mapContributor(doc: any): Contributor {
@@ -50,6 +58,10 @@ function mapContributor(doc: any): Contributor {
     followersIds: doc.followersIds,
     hasSeenCelebration: doc.hasSeenCelebration || false,
     agreed: doc.agreed || false,
+    uploadCount: doc.uploadCount || 0,
+    weeklyUploadCount: doc.weeklyUploadCount || 0,
+    isTopContributor: doc.isTopContributor || false,
+    topContributorWeek: doc.topContributorWeek || "",
   };
 }
 

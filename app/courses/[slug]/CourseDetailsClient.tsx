@@ -28,6 +28,7 @@ import PostActionModal from '@/components/PostActionModal';
 import ConfirmPostDelete from '@/components/ConfirmPostDelete';
 import EditCourseModal from '@/components/EditCourseModal';
 import PdfImageList from "@/components/PdfImageList"
+import FloatingActionButton from '@/components/FloatingActionButton';
 import NativeBanner from '@/components/ads/NativeBanner';
 import RectangularAd from '@/components/RectangularAd';
 import { fetchSmallAds } from '@/lib/ads';
@@ -1331,6 +1332,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           }}
           courseTitle={course?.title}
         />
+
+        {isOwner && (
+          <FloatingActionButton />
+        )}
 
       </main>
     </div>
