@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Search,
   Bell,
@@ -11,7 +11,9 @@ import {
   MoreVertical,
   FileText,
   Hexagon,
-  Share2
+  Share2,
+  BookOpen,
+  Lock
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
@@ -34,6 +36,7 @@ import RectangularAd from '@/components/RectangularAd';
 import { fetchSmallAds } from '@/lib/ads';
 import BannerAd from '@/components/BannerAd';
 import NoUserModal from '@/components/NoUserModal';
+import FollowSuggestionModal from '@/components/FollowSuggestionModal';
 import {
   LineChart,
   Line,
@@ -49,6 +52,104 @@ import { getMyContributor, toggleFollowContributor } from '@/lib/api/contributor
 import { Contributor } from '@/lib/services/contributors.service';
 import Link from 'next/link';
 import { fetchLibrary } from '@/lib/api/library';
+import { CourseDocument, fetchDocuments, deleteDocument, createDocumentReviewRequest } from '@/lib/api/documents';
+import DocumentViewerModal from '@/components/DocumentViewerModal';
+import DocumentReviewModal from '@/components/DocumentReviewModal';
+
+function SwipeableDocumentItem({
+  doc,
+  isOwner,
+  onOpen,
+  onDelete,
+  onRequestReview
+}: {
+  doc: CourseDocument,
+  isOwner: boolean,
+  onOpen: (doc: CourseDocument) => void,
+  onDelete: (id: string) => void,
+  onRequestReview?: (id: string) => void
+}) {
+  const [offset, setOffset] = useState(0);
+  const startX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isOwner) return;
+    startX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isOwner) return;
+    const diff = e.touches[0].clientX - startX.current;
+    // Slide right to reveal delete icon on the left
+    if (diff > 0) setOffset(Math.min(diff, 80));
+    else setOffset(Math.max(diff, 0));
+  };
+
+  const handleTouchEnd = () => {
+    if (!isOwner) return;
+    if (offset > 40) setOffset(80);
+    else setOffset(0);
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-xl bg-red-500 mb-6 group select-none">
+      <div className="absolute inset-y-0 left-0 w-20 flex items-center justify-center text-white">
+        <button onClick={() => onDelete(doc.$id!)} className="p-2 w-full h-full flex justify-center items-center hover:bg-red-600 transition-colors">
+          <Trash2 size={24} />
+        </button>
+      </div>
+
+      <div
+        className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-transform duration-200 ease-out z-10 relative group-hover:translate-x-20"
+        style={{ transform: offset > 0 ? `translateX(${offset}px)` : undefined }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <FileText size={28} />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 text-lg">{doc.fileName}</h3>
+            {doc.description && <p className="text-sm text-gray-600 mt-1">{doc.description}</p>}
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{(doc.fileSize / 1024 / 1024).toFixed(2)} MB</span>
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{doc.fileType}</span>
+              {isOwner && (
+                <>
+                  <span className="text-xs text-gray-300">•</span>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${doc.status === 'approved' ? 'bg-green-100 text-green-700' :
+                    doc.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                    {doc.status}
+                  </span>
+                </>
+              )}
+            </div>
+            {isOwner && doc.status === 'rejected' && doc.reviewReason && (
+              <div className="mt-3 text-xs bg-red-50 p-3 rounded-lg border border-red-100 flex flex-col gap-2">
+                <span className="text-red-700 font-medium"><strong>Reason:</strong> {doc.reviewReason}</span>
+                {onRequestReview && (
+                  <button onClick={() => onRequestReview(doc.$id!)} className="text-blue-600 font-semibold self-start hover:underline active:opacity-70 transition-opacity">
+                    Request Human Review
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => onOpen(doc)}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shrink-0 w-full md:w-auto shadow-sm"
+        >
+          <BookOpen size={18} /> Open
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const data = [
   { day: "Mon", visits: 120 },
@@ -188,8 +289,16 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewCursor, setReviewCursor] = useState<string | undefined>(undefined);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
-  type Tab = "lecture" | "information" | "review";
+  type Tab = "lecture" | "information" | "review" | "documents";
   const [activeTab, setActiveTab] = useState<Tab>('lecture')
+  const [documents, setDocuments] = useState<CourseDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<CourseDocument | null>(null);
+  const [documentDeleteOpen, setDocumentDeleteOpen] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
+  const [reviewRequestDocumentId, setReviewRequestDocumentId] = useState<string | null>(null);
+
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [isReviewSaving, setIsReviewSaving] = useState(false);
   const [avgRating, setAvgRating] = useState(0);
@@ -199,6 +308,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [contributor, setContributor] = useState<Contributor | null>(null)
   const [follow, setFollow] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [showFollowSuggestion, setShowFollowSuggestion] = useState(false);
+  const hasIncrementedVisits = useRef(false);
 
   const [hasAccess, setHasAccess] = useState<boolean>(true);
   const [accessTag, setAccessTag] = useState<"free" | "paid" | "owned" | "subscribed" | null>(null);
@@ -265,6 +376,40 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     };
 
     loadInitialReviews();
+  }, [courseId]);
+
+  useEffect(() => {
+    if (!courseId) return;
+
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const fetchLoop = async (showLoading: boolean) => {
+      if (showLoading && isMounted) setLoadingDocs(true);
+      try {
+        const docs = await fetchDocuments(courseId);
+        if (isMounted) {
+          setDocuments(docs);
+          // If any document is pending, we poll quickly. Otherwise, slow poll to keep list fresh.
+          const hasPending = docs.some(d => d.status === 'pending');
+          timeoutId = setTimeout(() => fetchLoop(false), hasPending ? 3000 : 15000);
+        }
+      } catch (err) {
+        console.error(err);
+        if (isMounted) {
+          timeoutId = setTimeout(() => fetchLoop(false), 15000);
+        }
+      } finally {
+        if (showLoading && isMounted) setLoadingDocs(false);
+      }
+    };
+
+    fetchLoop(true);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [courseId]);
 
   useEffect(() => {
@@ -456,10 +601,58 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const isOwner = course?.user === user?.$id;
 
+  useEffect(() => {
+    hasIncrementedVisits.current = false;
+  }, [courseId]);
+
+  useEffect(() => {
+    if (loading || lloading) return;
+    if (!user?.$id || !contributor?.$id) return;
+    if (isOwner || following) return;
+
+    const hasDismissed = localStorage.getItem(`hide_follow_modal_course_${courseId}`);
+    if (hasDismissed === "true") return;
+
+    if (!hasIncrementedVisits.current) {
+      hasIncrementedVisits.current = true;
+
+      const visitsKey = `follow_modal_visits_course_${courseId}`;
+      const rawVisits = localStorage.getItem(visitsKey);
+      const visits = rawVisits ? parseInt(rawVisits, 10) : 0;
+      const nextVisits = visits + 1;
+      localStorage.setItem(visitsKey, nextVisits.toString());
+
+      if (nextVisits % 3 === 1) {
+        const timer = setTimeout(() => {
+          setShowFollowSuggestion(true);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user?.$id, contributor?.$id, isOwner, following, loading, lloading, courseId]);
+
+  const displayedDocuments = documents.filter(d => isOwner || d.status === "approved");
+
   const effectiveTabs: Tab[] = React.useMemo(() => {
-    if (isOwner) return ["information", "lecture"];
-    return ["lecture", "review"];
-  }, [isOwner]);
+    const tabs: Tab[] = [];
+    if (isOwner) tabs.push("information");
+
+    // Hide lecture notes if there are documents but no posts
+    const shouldHideLecture = displayedDocuments.length > 0 && posts.length === 0;
+    if (!shouldHideLecture) {
+      tabs.push("lecture");
+    }
+
+    if (displayedDocuments.length > 0 || isOwner) {
+      tabs.push("documents");
+    }
+
+    if (!isOwner && displayedDocuments.length > 0) {
+      tabs.push("review");
+    }
+
+    return tabs;
+  }, [isOwner, displayedDocuments.length, posts.length]);
 
 
   useEffect(() => {
@@ -834,6 +1027,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               onClick={() => setActiveTab('lecture')}
               className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "lecture" ? 4 : 0, borderBottomColor: activeTab === "lecture" ? "#155dfc" : "", color: activeTab === "lecture" ? "#155dfc" : "#6a7282" }}>
               Lecture Notes
+            </button>
+
+            <button
+              onClick={() => setActiveTab('documents')}
+              className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "documents" ? 4 : 0, borderBottomColor: activeTab === "documents" ? "#155dfc" : "", color: activeTab === "documents" ? "#155dfc" : "#6a7282" }}>
+              Documents
             </button>
 
             {
@@ -1288,6 +1487,67 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
         }
 
+        {activeTab === "documents" && (
+          <div className="max-w-6xl mx-auto px-0 py-6">
+            <div className="bg-white rounded-xl p-6" style={{ marginTop: 20 }}>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Course Documents</h2>
+              {loadingDocs ? (
+                <div className="flex justify-center py-4">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                </div>
+              ) : documents.length === 0 ? (
+                <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+              ) : (
+                <div className="relative">
+                  <div className={`space-y-6 ${!hasAccess ? "blur-md pointer-events-none opacity-50 select-none" : ""}`}>
+                    {(hasAccess ? displayedDocuments : displayedDocuments.slice(0, 2)).map((doc) => (
+                      <SwipeableDocumentItem
+                        key={doc.$id}
+                        doc={doc}
+                        isOwner={isOwner}
+                        onOpen={(d) => {
+                          setSelectedDocument(d);
+                          setDocumentViewerOpen(true);
+                        }}
+                        onDelete={(id) => {
+                          setDeletingDocumentId(id);
+                          setDocumentDeleteOpen(true);
+                        }}
+                        onRequestReview={(id) => setReviewRequestDocumentId(id)}
+                      />
+                    ))}
+                  </div>
+                  {!hasAccess && (
+                    <div className="absolute inset-0 flex flex-col items-start justify-start pt-10 pointer-events-auto px-4 z-20">
+                      <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl max-w-sm text-center border border-gray-100 mx-auto w-full">
+                        <Lock className="w-12 h-12 text-blue-600 mx-auto mb-3 opacity-80" />
+                        <h3 className="font-bold text-gray-900 mb-2">Premium Documents</h3>
+                        <p className="text-sm text-gray-600 mb-5">Subscribe or pay for this course to unlock full access to all structured notes and documents.</p>
+                        <button
+                          onClick={() => {
+                            if (!user) {
+                              router.push("/signup");
+                              return;
+                            }
+                            const type = priceMeta?.type ?? "one-time";
+                            router.push(
+                              `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course?.id || "")}&type=${encodeURIComponent(type)}`
+                            );
+                          }}
+                          className="w-full py-2.5 rounded-xl text-white font-semibold shadow-md hover:shadow-lg transition-all"
+                          style={{ backgroundColor: "#155dfc" }}
+                        >
+                          {priceMeta?.type === "subscription" ? "Subscribe to Course" : "Pay for Course"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
 
         <ConfirmFileDelete
           isOpen={isFileDeleteOpen}
@@ -1298,6 +1558,44 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             router.replace(`/`)
           }}
           fileName={""}
+        />
+
+        {selectedDocument && (
+          <DocumentViewerModal
+            isOpen={documentViewerOpen}
+            onClose={() => setDocumentViewerOpen(false)}
+            fileUrl={selectedDocument.fileUrl}
+            fileType={selectedDocument.fileType}
+            fileName={selectedDocument.fileName}
+          />
+        )}
+
+        <ConfirmFileDelete
+          isOpen={documentDeleteOpen}
+          onClose={() => setDocumentDeleteOpen(false)}
+          onConfirm={async () => {
+            if (deletingDocumentId) {
+              await deleteDocument(deletingDocumentId);
+              setDocuments(docs => docs.filter(d => d.$id !== deletingDocumentId));
+            }
+            setDocumentDeleteOpen(false);
+          }}
+          fileName="this document"
+        />
+
+        <DocumentReviewModal
+          isOpen={!!reviewRequestDocumentId}
+          onClose={() => setReviewRequestDocumentId(null)}
+          onSubmit={async (complaint) => {
+            if (!reviewRequestDocumentId || !course?.id || !user?.$id) return;
+            await createDocumentReviewRequest({
+              documents: reviewRequestDocumentId,
+              courses: course.id,
+              contributors: user.$id,
+              complaint
+            });
+            alert("Review request submitted successfully!");
+          }}
         />
 
         {course && (
@@ -1331,6 +1629,19 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             router.replace("/")
           }}
           courseTitle={course?.title}
+        />
+
+        <FollowSuggestionModal
+          open={showFollowSuggestion}
+          onClose={(dontShowAgain) => {
+            setShowFollowSuggestion(false);
+            if (dontShowAgain) {
+              localStorage.setItem(`hide_follow_modal_course_${courseId}`, "true");
+            }
+          }}
+          contributorName={contributor?.username || "Contributor"}
+          onFollow={handleFollow}
+          loading={follow}
         />
 
         {isOwner && (

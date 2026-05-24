@@ -10,6 +10,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics/services/analytics.service"
 import { recordUploadStreak } from "@/lib/services/streak.service";
 import { incrementUploadCount } from "@/lib/services/leaderboard.service";
 import { getContributorByUserIdService } from "@/lib/services/contributors.service";
+import { notifyFollowersOfPost } from "@/lib/services/follower-notifications.service";
 
 export async function POST(req: NextRequest) {
   const { courseId, images, description } = await req.json();
@@ -64,6 +65,10 @@ export async function POST(req: NextRequest) {
         // Increment leaderboard count (fire-and-forget)
         incrementUploadCount(contributor.$id, uploadAmount)
           .catch((err) => console.error("[Leaderboard] tracking failed:", err));
+
+        // Notify followers of the new post (fire-and-forget)
+        notifyFollowersOfPost(contributor.$id, course.title || "Course", description || "")
+          .catch((err) => console.error("[Followers Notification] failed for post:", err));
       }
     }
   } catch (err) {

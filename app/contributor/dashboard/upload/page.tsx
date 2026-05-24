@@ -22,6 +22,9 @@ import { getCurrentUser } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 import StreakCelebrationModal from '@/components/StreakCelebrationModal';
+import { createDocument } from '@/lib/api/documents';
+import { uploadToServer } from '@/lib/upload';
+
 
 // --- Dummy Data ---
 const PENDING_FILES = [
@@ -95,6 +98,11 @@ export default function UploadPage() {
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [streakData, setStreakData] = useState<{ currentStreak: number; dayName: string } | null>(null);
 
+  // Document Upload State
+  const [uploadType, setUploadType] = useState<'images' | 'document'>('images');
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [showDocReviewModal, setShowDocReviewModal] = useState(false);
+
   useEffect(() => {
     if (userLoading || contributorLoading) return;
     if (!user || !contributor) {
@@ -133,70 +141,99 @@ export default function UploadPage() {
   }
 
   const handleUpload = async () => {
-    if (!selectedCourse || queuedFiles.length === 0) return;
+    if (!selectedCourse) return;
 
-    const hasFailed = queuedFiles.some((f) => f.status === 'failed');
-    if (hasFailed) {
-      alert("Some files failed to upload. Please remove them or try again.");
-      return;
+    if (uploadType === 'images' && queuedFiles.length === 0) return;
+    if (uploadType === 'document' && !documentFile) return;
+
+    if (uploadType === 'images') {
+      const hasFailed = queuedFiles.some((f) => f.status === 'failed');
+      if (hasFailed) {
+        alert("Some files failed to upload. Please remove them or try again.");
+        return;
+      }
     }
 
     setIsUploading(true);
 
     try {
-      // Function to wait for all currently active files in the queue to finish
-      const waitForUploads = async (): Promise<string[]> => {
-        return new Promise((resolve, reject) => {
-          const checkStatus = () => {
-            // We need to use the functional update pattern or a ref to see the absolute latest state
-            setQueuedFiles((current) => {
-              const allFinished = current.every((f) => f.status === 'completed' || f.status === 'failed');
-              const anyFailed = current.some((f) => f.status === 'failed');
+      if (uploadType === 'images') {
+        const waitForUploads = async (): Promise<string[]> => {
+          return new Promise((resolve, reject) => {
+            const checkStatus = () => {
+              setQueuedFiles((current) => {
+                const allFinished = current.every((f) => f.status === 'completed' || f.status === 'failed');
+                const anyFailed = current.some((f) => f.status === 'failed');
 
-              if (allFinished) {
-                if (anyFailed) {
-                  reject(new Error("One or more files failed to upload."));
-                } else {
-                  resolve(current.map((f) => f.url!).filter(Boolean));
+                if (allFinished) {
+                  if (anyFailed) {
+                    reject(new Error("One or more files failed to upload."));
+                  } else {
+                    resolve(current.map((f) => f.url!).filter(Boolean));
+                  }
+                  return current;
                 }
+
+                setTimeout(checkStatus, 500);
                 return current;
-              }
-              
-              // If not finished, check again in 500ms
-              setTimeout(checkStatus, 500);
-              return current;
+              });
+            };
+            checkStatus();
+          });
+        };
+
+        const urls = await waitForUploads();
+
+        if (urls.length === 0) {
+          throw new Error("No files were uploaded successfully.");
+        }
+
+        const res = await createPost(selectedCourse, urls, description);
+
+        if (res) {
+          setQueuedFiles([]);
+
+          if (res.streakData && res.streakData.isFirstToday) {
+            setStreakData({
+              currentStreak: res.streakData.currentStreak,
+              dayName: res.streakData.dayName,
             });
-          };
-          checkStatus();
+            setShowStreakModal(true);
+          } else {
+            alert("Upload successful");
+            router.replace(`/courses/${selectedCourse}`);
+          }
+        } else {
+          alert("Upload Failed. Try Again");
+        }
+      } else {
+        // Document Upload Logic
+        console.log("Uploading, document: ", documentFile);
+        const url = await uploadToServer(documentFile!, "documents", "document");
+        console.log("Upload successful, URL: ", url);
+        const ext = documentFile!.name.split('.').pop()?.toLowerCase();
+        const fileType = ext === 'docx' ? 'docx' : 'pdf';
+
+        const res = await createDocument({
+          courses: selectedCourse,
+          user: user!.$id,
+          fileUrl: url,
+          fileName: documentFile!.name,
+          fileSize: documentFile!.size,
+          fileType: fileType,
+          description,
         });
-      };
 
-      const urls = await waitForUploads();
-
-      if (urls.length === 0) {
-        throw new Error("No files were uploaded successfully.");
-      }
-
-      const res = await createPost(selectedCourse, urls, description);
-      
-      if (res) {
-        setQueuedFiles([]);
-        
-        // Check if we hit a streak today
-        if (res.streakData && res.streakData.isFirstToday) {
+        if (res?.streakData && res.streakData.isFirstToday) {
           setStreakData({
             currentStreak: res.streakData.currentStreak,
             dayName: res.streakData.dayName,
           });
-          setShowStreakModal(true);
-        } else {
-          alert("Upload successful");
-          router.replace(`/courses/${selectedCourse}`);
         }
-      } else {
-        alert("Upload Failed. Try Again");
-      }
 
+        setDocumentFile(null);
+        setShowDocReviewModal(true);
+      }
     } catch (err: any) {
       console.error(err);
       alert(`Upload failed: ${err?.message || err}`);
@@ -230,6 +267,19 @@ export default function UploadPage() {
 
   const handleFiles = (incoming: FileList | null) => {
     if (!incoming) return;
+
+    if (uploadType === 'document') {
+      const file = incoming[0];
+      if (file) {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (ext === 'pdf' || ext === 'docx') {
+          setDocumentFile(file);
+        } else {
+          alert('Only PDF and DOCX files are allowed for Document upload.');
+        }
+      }
+      return;
+    }
 
     const incomingFiles = Array.from(incoming);
 
@@ -278,7 +328,20 @@ export default function UploadPage() {
               <p className="text-gray-500 mt-1">Contribute to the community by sharing your academic materials.</p>
             </div>
 
-
+            <div className="flex bg-gray-100 p-1 rounded-lg self-start md:self-auto">
+              <button
+                onClick={() => setUploadType('images')}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'images' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Images
+              </button>
+              <button
+                onClick={() => setUploadType('document')}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'document' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Document
+              </button>
+            </div>
           </div>
         </div>
 
@@ -334,40 +397,91 @@ export default function UploadPage() {
           <div className="lg:col-span-2 space-y-8">
 
             {/* Drag & Drop Zone */}
-            <div
-              className={`bg-white border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrag}
-            >
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
-                <UploadCloud size={32} />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Drag and drop your notes here</h3>
-              <p className="text-gray-500 text-sm mb-4">Or browse from your computer</p>
-              <p className="text-xs text-gray-400 mb-6">Supported: PDF, JPG, PNG, DOCX (Max 20MB per file)</p>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                id="fileInput"
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-
-              <button
-                onClick={() => document.getElementById("fileInput")?.click()}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-semibold shadow-sm
-                transition
-    active:scale-[0.98]
-    active:bg-gray-50
-    hover:shadow-md
-    cursor-pointer"
+            {uploadType === 'images' ? (
+              <div
+                className={`bg-white border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrag}
               >
-                Select Files
-              </button>
-            </div>
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                  <UploadCloud size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Drag and drop your notes here</h3>
+                <p className="text-gray-500 text-sm mb-4">Or browse from your computer</p>
+                <p className="text-xs text-gray-400 mb-6">Supported: JPG, PNG (Max 20MB per file)</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  id="fileInput"
+                  onChange={(e) => handleFiles(e.target.files)}
+                />
+
+                <button
+                  onClick={() => document.getElementById("fileInput")?.click()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-semibold shadow-sm
+                  transition
+      active:scale-[0.98]
+      active:bg-gray-50
+      hover:shadow-md
+      cursor-pointer"
+                >
+                  Select Files
+                </button>
+              </div>
+            ) : (
+              <div
+                className={`bg-white border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrag}
+              >
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                  <FileText size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Upload a Document</h3>
+                <p className="text-gray-500 text-sm mb-4">Select a single PDF or DOCX file</p>
+
+                {documentFile ? (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
+                    <FileText className="text-blue-500" />
+                    <span className="font-medium text-gray-700">{documentFile.name}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDocumentFile(null); }}
+                      className="ml-auto text-gray-400 hover:text-red-500"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 mb-6">Supported: PDF, DOCX (Max 20MB)</p>
+                )}
+
+                <input
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  hidden
+                  id="docInput"
+                  onChange={(e) => handleFiles(e.target.files)}
+                />
+
+                <button
+                  onClick={() => document.getElementById("docInput")?.click()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-semibold shadow-sm
+                  transition
+      active:scale-[0.98]
+      active:bg-gray-50
+      hover:shadow-md
+      cursor-pointer"
+                >
+                  {documentFile ? 'Change File' : 'Select Document'}
+                </button>
+              </div>
+            )}
 
           </div>
           {/* --- Ad Banner --- */}
@@ -377,7 +491,7 @@ export default function UploadPage() {
   </div>
 */}
 
-          {queuedFiles.length > 0 && (
+          {uploadType === 'images' && queuedFiles.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-4 overflow-x-auto">
               <div className="flex gap-4">
                 {queuedFiles.map((qf, index) => (
@@ -406,7 +520,7 @@ export default function UploadPage() {
                     >
                       <X size={12} />
                     </button>
-                    
+
                     {/* Upload Status Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
                       {qf.status === 'uploading' && (
@@ -418,7 +532,7 @@ export default function UploadPage() {
                         </div>
                       )}
                       {qf.status === 'failed' && (
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             uploadSingleFile(qf.id, qf.file);
@@ -512,21 +626,23 @@ export default function UploadPage() {
 
                 {/* Summary Stats */}
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Total Files</span>
-                  <span className="font-bold">{queuedFiles.length}</span>
+                  <span className="text-gray-500">{uploadType === 'images' ? 'Total Files' : 'Files'}</span>
+                  <span className="font-bold">{uploadType === 'images' ? queuedFiles.length : (documentFile ? 1 : 0)}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Total Size</span>
                   <span className="font-bold">
-                    {(queuedFiles.reduce((a, f) => a + f.file.size, 0) / 1024 / 1024).toFixed(2)} MB
+                    {uploadType === 'images'
+                      ? (queuedFiles.reduce((a, f) => a + f.file.size, 0) / 1024 / 1024).toFixed(2)
+                      : (documentFile ? (documentFile.size / 1024 / 1024).toFixed(2) : "0.00")} MB
                   </span>
                 </div>
 
 
                 {/* Upload Button */}
                 <button
-                  disabled={isUploading || !selectedCourse || queuedFiles.length === 0}
+                  disabled={isUploading || !selectedCourse || (uploadType === 'images' ? queuedFiles.length === 0 : !documentFile)}
                   onClick={handleUpload}
                   className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg disabled:opacity-50
                   transition
@@ -535,7 +651,7 @@ export default function UploadPage() {
     hover:shadow-md
     cursor-pointer"
                 >
-                  {isUploading ? "Processing..." : "Upload All Files"}
+                  {isUploading ? "Processing..." : (uploadType === 'images' ? "Upload All Files" : "Submit Document for Review")}
                 </button>
 
                 {/* --- Ad Banner --- */}
@@ -578,6 +694,55 @@ export default function UploadPage() {
           currentStreak={streakData.currentStreak}
           dayName={streakData.dayName}
         />
+      )}
+
+      {/* Document Review Modal */}
+      {showDocReviewModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative p-8 text-center animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => {
+                setShowDocReviewModal(false);
+                if (streakData) {
+                  setShowStreakModal(true);
+                } else {
+                  router.replace(`/courses/${selectedCourse}`);
+                }
+              }}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-20 h-20 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <FileText size={40} />
+            </div>
+
+            <h3 className="text-2xl font-black text-gray-900 mb-3">Document Under Review</h3>
+
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Your document has been submitted successfully! It is currently undergoing an automated AI copyright check to ensure it doesn't violate our policies against direct uploads of textbooks or official slides.
+            </p>
+
+            <p className="text-sm font-medium text-gray-500 mb-8">
+              This usually takes just a few seconds. The document will appear on the course page once approved.
+            </p>
+
+            <button
+              onClick={() => {
+                setShowDocReviewModal(false);
+                if (streakData) {
+                  setShowStreakModal(true);
+                } else {
+                  router.replace(`/courses/${selectedCourse}`);
+                }
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+            >
+              Go to Course Page
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

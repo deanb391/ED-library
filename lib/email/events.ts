@@ -6,6 +6,9 @@ import { subscriptionNotificationTemplate } from "./templates/subscriptionNotifi
 import { withdrawalSuccessTemplate } from "./templates/withdrawalSuccess";
 import { depositSuccessTemplate } from "./templates/depositSuccess";
 import { newFollowerTemplate } from "./templates/newFollower";
+import { streakReminderTemplate } from "./templates/streakReminder";
+import { newPostFollowersTemplate } from "./templates/newPostFollowers";
+import { newCourseFollowersTemplate } from "./templates/newCourseFollowers";
 
 export function sendContributorUnderReviewEmail(to: string, name: string) {
   sendEmail({
@@ -60,5 +63,30 @@ export function sendNewFollowerEmail(to: string, contributorName: string, follow
     to,
     subject: "New Follower - ED-Library",
     html: newFollowerTemplate(contributorName, followerName),
+  }).catch(console.error);
+}
+
+export function sendStreakReminderEmail(to: string, name: string, currentStreak: number, hasStreak: boolean) {
+  const subject = hasStreak ? "Keep your streak burning! 🔥" : "Start your upload streak today! ✨";
+  sendEmail({
+    to,
+    subject: `${subject} - ED-Library`,
+    html: streakReminderTemplate(name, currentStreak, hasStreak),
+  }).catch(console.error);
+}
+
+export function sendNewPostFollowersEmail(to: string, contributorName: string, courseTitle: string, noteDescription: string) {
+  sendEmail({
+    to,
+    subject: `New notes uploaded by ${contributorName}! 📝 - ED-Library`,
+    html: newPostFollowersTemplate(contributorName, courseTitle, noteDescription),
+  }).catch(console.error);
+}
+
+export function sendNewCourseFollowersEmail(to: string, contributorName: string, courseTitle: string, courseDescription: string) {
+  sendEmail({
+    to,
+    subject: `New course created by ${contributorName}! 🎓 - ED-Library`,
+    html: newCourseFollowersTemplate(contributorName, courseTitle, courseDescription),
   }).catch(console.error);
 }
