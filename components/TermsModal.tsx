@@ -18,7 +18,7 @@ function TermsModal({ open, onClose, onSubmit, loading = false }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 shrink-0">
           <h2 className="text-lg font-bold text-gray-900">
@@ -371,7 +371,7 @@ function TermsModal({ open, onClose, onSubmit, loading = false }: Props) {
 
         {/* Footer */}
         <div className="border-t border-gray-100 px-6 py-5 space-y-4 shrink-0 bg-gray-50">
-          
+
           <label className="flex items-center gap-3 text-sm text-gray-800 font-medium cursor-pointer select-none">
             <input
               type="checkbox"
@@ -385,11 +385,10 @@ function TermsModal({ open, onClose, onSubmit, loading = false }: Props) {
           <button
             onClick={onSubmit}
             disabled={!agreed || loading}
-            className={`w-full py-3.5 rounded-xl text-base font-semibold transition-all active:scale-[0.98] shadow-sm ${
-              agreed && !loading
+            className={`w-full py-3.5 rounded-xl text-base font-semibold transition-all active:scale-[0.98] shadow-sm ${agreed && !loading
                 ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}
+              }`}
           >
             {loading ? "Submitting..." : "Accept & Continue"}
           </button>
@@ -399,4 +398,4 @@ function TermsModal({ open, onClose, onSubmit, loading = false }: Props) {
   );
 }
 
-export default TermsModal;
+export default TermsModal;

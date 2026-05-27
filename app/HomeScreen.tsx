@@ -530,7 +530,7 @@ export default function EDLibraryHome() {
             <CourseSection title="Your Library" courses={library} />
 
             <RectangularAd
-              ads={smallSearchAds || []}   // or whichever ad array you want
+              ads={largeSearchAds || []}   // or whichever ad array you want
               className="my-6"
             />
 

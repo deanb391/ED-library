@@ -1,8 +1,8 @@
-// app/api/courses/create/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { createCourseService } from "@/lib/services/course.service";
 import { trackAnalyticsEvent } from "@/lib/analytics/services/analytics.service";
+import { getContributorByUserIdService } from "@/lib/services/contributors.service";
+import { notifyFollowersOfCourse } from "@/lib/services/follower-notifications.service";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -38,6 +38,18 @@ export async function POST(req: NextRequest) {
         : []),
     ]
   ).catch((err) => console.error("[Analytics] course creation tracking failed:", err));
+
+  // Notify followers of new course creation (fire-and-forget)
+  if (body.user) {
+    getContributorByUserIdService(body.user)
+      .then((contributor) => {
+        if (contributor) {
+          notifyFollowersOfCourse(contributor.$id, course.title || "Course", course.description || "")
+            .catch((err) => console.error("[Followers Notification] failed for course:", err));
+        }
+      })
+      .catch((err) => console.error("[Followers Notification] failed to fetch contributor:", err));
+  }
 
   return NextResponse.json(course);
 }

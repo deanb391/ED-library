@@ -144,7 +144,6 @@ export default function CreateCoursePage() {
         pageCount: 0,
       });
 
-
       alert("Course created successfully");
       router.push(`/courses/${response.$id}`);
     } catch (err) {

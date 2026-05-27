@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign } from "lucide-react";
+import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign, FileText } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -61,6 +61,12 @@ export default function AdminDashboard() {
             description="Review and approve new contributor applications."
             icon={<Users size={24} className="text-orange-600" />}
             href="/admin/contributor-review"
+          />
+          <ActionCard
+            title="Document Appeals"
+            description="Review human-review requests for auto-rejected documents."
+            icon={<FileText size={24} className="text-red-600" />}
+            href="/admin/document-reviews"
           />
         </div>
 
