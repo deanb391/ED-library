@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Lock, ShieldAlert, UserX, ArrowLeft, Home, LogIn, Timer } from "lucide-react";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 interface AccessWallProps {
   type: "user" | "contributor" | "admin";

@@ -175,3 +175,9 @@ export async function fetchContributors(
 
   return res.json();
 }
+
+export async function getContributorByUserId(userId: string) {
+  const res = await fetch(`/api/contributors/fetch_contributor_by_user?userId=${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch contributor");
+  return res.json();
+}

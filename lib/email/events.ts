@@ -9,6 +9,7 @@ import { newFollowerTemplate } from "./templates/newFollower";
 import { streakReminderTemplate } from "./templates/streakReminder";
 import { newPostFollowersTemplate } from "./templates/newPostFollowers";
 import { newCourseFollowersTemplate } from "./templates/newCourseFollowers";
+import { chatMessageDigestTemplate } from "./templates/chatMessageDigest";
 
 export function sendContributorUnderReviewEmail(to: string, name: string) {
   sendEmail({
@@ -88,5 +89,26 @@ export function sendNewCourseFollowersEmail(to: string, contributorName: string,
     to,
     subject: `New course created by ${contributorName}! 🎓 - ED-Library`,
     html: newCourseFollowersTemplate(contributorName, courseTitle, courseDescription),
+  }).catch(console.error);
+}
+
+export function sendChatMessageDigestEmail(
+  to: string,
+  params: {
+    recipientName: string;
+    senders: string[];
+    lastMessageSnippet?: string;
+    chatLink: string;
+  }
+) {
+  const isMultiple = params.senders.length > 1;
+  const subject = isMultiple
+    ? `New Messages from ${params.senders.slice(0, 2).join(" and ")}${params.senders.length > 2 ? " and others" : ""} - ED-Library`
+    : `New Message from ${params.senders[0]} - ED-Library`;
+
+  sendEmail({
+    to,
+    subject,
+    html: chatMessageDigestTemplate(params),
   }).catch(console.error);
 }

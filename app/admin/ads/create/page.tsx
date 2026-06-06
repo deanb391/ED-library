@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { useUser } from "@/context/UserContext";
 import { createAd, uploadAdImage, uploadAdVideo } from "@/lib/api/ads";
 

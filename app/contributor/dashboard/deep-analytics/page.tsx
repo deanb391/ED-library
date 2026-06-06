@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, Star, UserPlus, ArrowLeft } from "lucide-react";
 import AnalyticsChart from "@/components/AnalyticsChart2";
 import deskImg from "@/assets/images/desk.webp";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import { fetchContributorEarnings } from "@/lib/api/earnings";

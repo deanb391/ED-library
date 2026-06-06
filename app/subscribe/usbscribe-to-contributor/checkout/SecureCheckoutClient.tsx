@@ -8,7 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { fetchCourseById } from "@/lib/api/courses";
 import { payForCourse } from "@/lib/api/payments";
 import { fetchWallet } from "@/lib/api/wallet";

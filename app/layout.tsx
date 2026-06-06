@@ -10,6 +10,7 @@ import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
 import { PHProvider } from "@/app/providers";
 import AppProgressBar from "@/components/ProgressBar";
+import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -57,6 +58,7 @@ export default function RootLayout({
             </main>
 
             <Footer />
+            <ContributorChatFAB />
           </UserProvider>
         </PHProvider>
       </body>

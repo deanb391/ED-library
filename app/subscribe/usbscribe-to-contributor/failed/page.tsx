@@ -3,7 +3,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 const BRAND_BLUE = "#1C64F2";
 

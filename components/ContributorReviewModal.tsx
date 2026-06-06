@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Contributor } from "@/lib/services/contributors.service";
 import { editContributor } from "@/lib/api/contributors"; // 👈 your function
+import { useRouter } from "@/components/useRouter";
 
 type Status = "pending" | "live" | "rejected";
 
@@ -20,6 +21,7 @@ export default function ContributorReviewModal({
   onPreviewImages,
 }: Props) {
   const [loadingAction, setLoadingAction] = useState<"approve" | "reject" | null>(null);
+  const router = useRouter();
 
   const getBadgeStyles = (status: string) => {
     if (status === "live") return { bg: "#dcfce7", text: "#166534" };
@@ -98,14 +100,20 @@ export default function ContributorReviewModal({
       >
         {/* HEADER */}
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: "700" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#111827" }}>
             Contributor Details
           </h2>
           <button onClick={onClose}>✕</button>
         </div>
 
         {/* PROFILE */}
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div 
+          onClick={() => {
+            onClose();
+            router.push(`/contributor/account/${contributor.$id}`);
+          }}
+          style={{ display: "flex", gap: "1rem", alignItems: "center", cursor: "pointer" }}
+        >
           <img
             src={contributor.profileImage}
             alt={contributor.username}
@@ -117,7 +125,7 @@ export default function ContributorReviewModal({
             }}
           />
           <div>
-            <p style={{ fontWeight: "600" }}>{contributor.username}</p>
+            <p style={{ fontWeight: "600", color: "#111827" }}>{contributor.username}</p>
             <span
               style={{
                 fontSize: "0.75rem",
@@ -145,7 +153,7 @@ export default function ContributorReviewModal({
 
         {/* IMAGES */}
         <div>
-          <p style={{ fontWeight: "600", marginBottom: "0.5rem" }}>
+          <p style={{ fontWeight: "600", marginBottom: "0.5rem", color: "#111827" }}>
             Review Images
           </p>
 

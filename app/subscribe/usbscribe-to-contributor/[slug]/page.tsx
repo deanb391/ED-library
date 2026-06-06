@@ -6,7 +6,7 @@ import Image from "next/image";
 import deskImg from "@/assets/images/desk.webp";
 import { Course, fetchCoursesByAdmin } from "@/lib/api/courses";
 import { useParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { getContributor } from "@/lib/api/contributors";
 import { fetchLibrary } from "@/lib/api/library";
 import { checkSubscriptionAccess } from "@/lib/api/subscriptions";

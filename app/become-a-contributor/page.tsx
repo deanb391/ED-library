@@ -11,7 +11,7 @@ import {
   Lock,
   TrendingUp
 } from 'lucide-react';
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 export default function BecomeContributorPage() {
   const router = useRouter()

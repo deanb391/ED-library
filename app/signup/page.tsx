@@ -10,7 +10,7 @@ import {
   Building2,
   Layers,
 } from "lucide-react";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { Eye, EyeOff } from "lucide-react";
 import { createUser, googleSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";

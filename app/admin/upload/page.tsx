@@ -15,7 +15,7 @@ import {
   GraduationCap 
 } from 'lucide-react';
 import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/api/courses';
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';

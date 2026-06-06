@@ -19,7 +19,7 @@ import Link from "next/link";
 import { Course } from "@/lib/api/courses";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 // ✅ REAL API IMPORTS
 import { getContributor, toggleFollowContributor } from "@/lib/api/contributors";
@@ -246,7 +246,6 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
             followersIds = [];
           }
         }
-        console.log("FOllowers ID: ", followersIds, user?.$id)
 
         if (user?.$id && followersIds.includes(user.$id)) {
           setFollowing(true);

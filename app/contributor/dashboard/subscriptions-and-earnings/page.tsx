@@ -8,7 +8,7 @@ import {
   GraduationCap,
   ArrowLeft,
 } from "lucide-react";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { useUser } from "@/context/UserContext";
 import { fetchWallet } from "@/lib/api/wallet";
 import { fetchContributorEarnings } from "@/lib/api/earnings";

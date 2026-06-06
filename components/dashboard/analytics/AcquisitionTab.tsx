@@ -83,6 +83,28 @@ export default function AcquisitionTab() {
         />
       </div>
 
+      {/* Weekly Active Users */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <h3 className="text-sm font-bold text-gray-700 mb-5">Weekly Active Users</h3>
+        <TimeSeriesChart
+          data={data?.weeklyActiveUserSeries ?? []}
+          type="bar"
+          series={[{ dataKey: "value", label: "Weekly Active Users", color: "#10b981" }]}
+          loading={loading}
+        />
+      </div>
+
+      {/* Monthly Active Users */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <h3 className="text-sm font-bold text-gray-700 mb-5">Monthly Active Users</h3>
+        <TimeSeriesChart
+          data={data?.monthlyActiveUserSeries ?? []}
+          type="bar"
+          series={[{ dataKey: "value", label: "Monthly Active Users", color: "#f59e0b" }]}
+          loading={loading}
+        />
+      </div>
+
       {/* Department Breakdown */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h3 className="text-sm font-bold text-gray-700 mb-5">Signups by Department</h3>

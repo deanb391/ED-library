@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { verifyPayment } from "@/lib/api/wallet";
 
 export default function VerifyTopUpPage() {
