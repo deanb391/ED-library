@@ -184,7 +184,7 @@ export default function ContributorChatModal({ onClose }: Props) {
     <div
       style={{
         position: "fixed",
-        bottom: "1.5rem",
+        top: "6rem",
         right: "1.5rem",
         zIndex: 50,
         width: "calc(100vw - 2rem)", // Responsive width
@@ -198,8 +198,8 @@ export default function ContributorChatModal({ onClose }: Props) {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        transformOrigin: "bottom right",
-        animation: "fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        transformOrigin: "top right",
+        animation: "fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}
     >

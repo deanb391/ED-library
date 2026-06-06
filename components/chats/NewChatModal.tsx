@@ -2,19 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Search, X } from "lucide-react";
-import { databases } from "@/lib/appwrite";
-import { Query } from "appwrite";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const USER_COLLECTION = "user";
-
-type Contributor = {
-  $id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  isAdmin?: boolean;
-};
+import { fetchContributors } from "@/lib/api/contributors";
+import { Contributor } from "@/lib/services/contributors.service";
 
 interface Props {
   onClose: () => void;
@@ -27,33 +16,25 @@ export default function NewChatModal({ onClose, onSelectContributor }: Props) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchContributors = async () => {
+    const loadContributors = async () => {
       setLoading(true);
       try {
-        const queries = [
-          Query.limit(50),
-          Query.equal("isAdmin", false)
-        ];
-        if (search) {
-          queries.push(Query.search("username", search));
-        }
-        
-        const res = await databases.listDocuments(DATABASE_ID, USER_COLLECTION, queries);
-        setContributors(res.documents as unknown as Contributor[]);
+        const res = await fetchContributors(50, "live", undefined, search);
+        setContributors(res.contributors || []);
       } catch (err) {
-        console.error("Failed to fetch contributors", err);
+        console.error("Failed to fetch contributors:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    const debounce = setTimeout(fetchContributors, 300);
-    return () => clearTimeout(debounce);
+    const timer = setTimeout(loadContributors, 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style={{ top: "100px" }}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[65vh]">
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <h2 className="text-lg font-bold" style={{ color: "#111827" }}>New Chat</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full" style={{ color: "#6b7280" }}>
@@ -80,21 +61,21 @@ export default function NewChatModal({ onClose, onSelectContributor }: Props) {
             <div className="p-8 text-center" style={{ color: "#6b7280" }}>Loading...</div>
           ) : contributors.length > 0 ? (
             contributors.map((c) => (
-              <div 
-                key={c.$id} 
-                onClick={() => onSelectContributor(c.$id)}
+              <div
+                key={c.$id}
+                onClick={() => onSelectContributor(c.user)}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
               >
-                {c.avatar ? (
-                  <img src={c.avatar} alt={c.username} className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold" style={{ color: "#2563eb" }}>
-                    {c.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <p className="font-semibold" style={{ color: "#111827" }}>{c.username}</p>
-                  <p className="text-xs" style={{ color: "#6b7280" }}>{c.email}</p>
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold overflow-hidden shrink-0">
+                  {c.profileImage ? (
+                    <img src={c.profileImage} alt={c.username} className="w-full h-full object-cover" />
+                  ) : (
+                    c.username?.charAt(0).toUpperCase() || "?"
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate text-sm" style={{ color: "#111827" }}>{c.username}</div>
+                  <div className="text-xs truncate opacity-70" style={{ color: "#6b7280" }}>{c.institution || "Contributor"}</div>
                 </div>
               </div>
             ))
