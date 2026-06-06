@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { useUser } from "@/context/UserContext";
 import { fetchWallet, fetchWalletHistory } from "@/lib/api/wallet";
 import { Plus, ArrowDownLeft, ArrowUpRight, ArrowUp, ArrowDown } from "lucide-react";

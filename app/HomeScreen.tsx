@@ -21,7 +21,7 @@ import { Contributor } from '@/lib/services/contributors.service';
 import { fetchSmallAds } from '@/lib/ads';
 import { fetchMediumAds } from '@/lib/api/ads';
 import RectangularAd from '@/components/RectangularAd';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next-nprogress-bar";
 import FloatingActionButton from '@/components/FloatingActionButton';
 
 

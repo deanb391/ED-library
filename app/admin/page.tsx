@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign, FileText } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { useEffect } from "react";
 
 import AccessWall from "@/components/AccessWall";

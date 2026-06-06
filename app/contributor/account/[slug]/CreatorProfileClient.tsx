@@ -18,7 +18,8 @@ import deskImg from "@/assets/images/desk.webp";
 import Link from "next/link";
 import { Course } from "@/lib/api/courses";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 
 // ✅ REAL API IMPORTS
 import { getContributor, toggleFollowContributor } from "@/lib/api/contributors";

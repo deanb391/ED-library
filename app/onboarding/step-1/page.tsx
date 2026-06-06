@@ -14,7 +14,7 @@ import {
   Send,
 } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { uploadToServer } from "@/lib/upload";
 import { useUser } from "@/context/UserContext";
 import { editContributor } from "@/lib/api/contributors";

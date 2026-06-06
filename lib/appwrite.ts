@@ -81,16 +81,21 @@ export async function updateUser({
   userId: string,
   lastTime: Date
 }) {
-
-  return databases.updateDocument(
-    DATABASE_ID,
-    USER_COLLECTION,
-    userId,
-    {
-      lastTime: lastTime
-    }
-  )
-
+  try {
+    const jwtResponse = await account.createJWT();
+    const res = await fetch("/api/user/activity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwtResponse.jwt}`
+      },
+      body: JSON.stringify({ userId, lastTime })
+    });
+    return res.json();
+  } catch (error) {
+    console.error("Failed to update user activity", error);
+    return null;
+  }
 }
 
 

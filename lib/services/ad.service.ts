@@ -16,10 +16,8 @@ export function mapAd(doc: any) {
     videos: doc.videos || [],
     views: doc.views ?? 0,
     clicks: doc.clicks ?? 0,
-    uniqueUsers: doc.uniqueUsers || [],
     isExpired: doc.isExpired,
     endTime: doc.endTime,
-    user: doc.user,
     type: doc.type,
     link: doc?.link,
   };

@@ -38,6 +38,7 @@ import StreakReminderModal from '@/components/StreakReminderModal';
 import TopContributorAnnouncementModal from '@/components/TopContributorAnnouncementModal';
 import TopContributorAwardModal from '@/components/TopContributorAwardModal';
 import { fetchStreak, fetchTopContributor, type StreakData, type WeeklyAward } from '@/lib/api/rewards';
+import ShareProfileButton from '@/components/ShareProfileButton';
 
 function CourseSection({
   title,
@@ -374,12 +375,15 @@ export default function DashboardUnderReviewPage() {
                     <div className="text-xs font-bold uppercase tracking-widest text-slate-500">
                       Profile
                     </div>
-                    <Link
-                      href="/account"
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <ShareProfileButton contributorId={contributor?.$id || ""} />
+                      <Link
+                        href="/account"
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg"
+                      >
+                        Edit
+                      </Link>
+                    </div>
                   </div>
 
                   {/* CONTENT */}

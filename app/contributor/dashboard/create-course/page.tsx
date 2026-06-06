@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { uploadThumbnail, createCourse } from "@/lib/api/courses";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { useUser } from "@/context/UserContext";
 import NativeBanner from "@/components/ads/NativeBanner";
 import CoursePriceModalPast from "@/components/CoursePriceModalPast";

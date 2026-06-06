@@ -9,6 +9,7 @@ import TrackPageView from "@/components/TrackPageView";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
 import { PHProvider } from "@/app/providers";
+import AppProgressBar from "@/components/ProgressBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body
         className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}
       >
+        <AppProgressBar />
         <PHProvider>
           <UserProvider>
             <Header />

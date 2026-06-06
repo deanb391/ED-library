@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { verifyPayment } from "@/lib/api/wallet";
 
 export default function VerifyTopUpPage() {

@@ -8,7 +8,7 @@ import {
   Building2,
   Layers,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { account, databases } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
 import { createUserProfile } from "@/lib/services/auth.service";

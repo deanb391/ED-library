@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 
 const BRAND_BLUE = "#2563EB";
 
