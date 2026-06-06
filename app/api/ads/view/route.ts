@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import {
-  fetchAdByIdService,
+  fetchAdByIdRawService,
   updateAdService,
 } from "@/lib/services/ad.service";
 
@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
   try {
     const { adId, userId } = await req.json();
 
-    const ad = await fetchAdByIdService(adId);
+    const ad = await fetchAdByIdRawService(adId);
 
-    const uniqueUsers = new Set(ad.uniqueUsers);
+    const uniqueUsers = new Set(ad.uniqueUsers || []);
 
     if (userId) uniqueUsers.add(userId);
 

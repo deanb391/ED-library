@@ -3,7 +3,7 @@ import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from 
 // @ts-ignore: 'expo-web-browser' may not be installed in this environment
 
 
-const client = new Client()
+export const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 

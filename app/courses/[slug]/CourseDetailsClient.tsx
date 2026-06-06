@@ -21,7 +21,7 @@ import { Course, deleteCourse, deleteFileFromPost, deletePost, editCourse, editP
 import Image from 'next/image';
 import { getCurrentUser, updateUser } from '@/lib/appwrite';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';
 import ImageMessages from '@/components/ImageMessage';
 import { useUser } from '@/context/UserContext';

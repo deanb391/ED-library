@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { createWallet } from "@/lib/api/wallet";
 import { useUser } from "@/context/UserContext";
 

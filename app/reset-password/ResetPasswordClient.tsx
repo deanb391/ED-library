@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { useState } from "react";
 import { completePasswordRecovery } from "@/lib/appwrite";
 import { Eye, EyeOff } from "lucide-react";

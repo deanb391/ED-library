@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { signIn, sendPasswordRecovery, googleSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";
 

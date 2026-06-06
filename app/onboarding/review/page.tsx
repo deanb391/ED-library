@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { Clock } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 export default function ApplicationUnderReviewPage() {
   const { user, contributor, refetchContributor } = useUser();

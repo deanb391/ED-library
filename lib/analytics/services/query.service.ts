@@ -89,6 +89,48 @@ async function fetchDailyUsersSeries(
   }
 }
 
+async function fetchWeeklyUsersSeries(
+  startDate: string,
+  endDate: string
+): Promise<ChartDataPoint[]> {
+  try {
+    const res = await databases.listDocuments(DATABASE_ID, "weekly_users", [
+      Query.greaterThanEqual("date", startDate),
+      Query.lessThanEqual("date", endDate),
+      Query.orderAsc("date"),
+      Query.limit(800),
+    ]);
+    return res.documents.map((d) => ({
+      date: d.date as string,
+      value: d.count as number,
+    }));
+  } catch (err) {
+    console.error("[AnalyticsQuery] fetchWeeklyUsersSeries failed:", err);
+    return [];
+  }
+}
+
+async function fetchMonthlyUsersSeries(
+  startDate: string,
+  endDate: string
+): Promise<ChartDataPoint[]> {
+  try {
+    const res = await databases.listDocuments(DATABASE_ID, "monthly_users", [
+      Query.greaterThanEqual("date", startDate),
+      Query.lessThanEqual("date", endDate),
+      Query.orderAsc("date"),
+      Query.limit(800),
+    ]);
+    return res.documents.map((d) => ({
+      date: d.month as string, // Using month string for display
+      value: d.count as number,
+    }));
+  } catch (err) {
+    console.error("[AnalyticsQuery] fetchMonthlyUsersSeries failed:", err);
+    return [];
+  }
+}
+
 // ─── Acquisition ──────────────────────────────────────────────────────────────
 
 export async function getAcquisitionSummary(timeframe: Timeframe): Promise<AcquisitionSummary> {
@@ -107,6 +149,8 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
   const [
     signupSeries,
     activeUserSeries,
+    weeklyActiveUserSeries,
+    monthlyActiveUserSeries,
     totalUsersData,
     prevSignups,
     prevActiveSeries,
@@ -115,6 +159,8 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     fetchMetricSeries("DAILY_SIGNUPS", startDate, endDate),
     // ← sourced from the daily_users table (end-of-day snapshot job)
     fetchDailyUsersSeries(startDate, endDate),
+    fetchWeeklyUsersSeries(startDate, endDate),
+    fetchMonthlyUsersSeries(startDate, endDate),
     fetchMetricSeries("TOTAL_USERS", "2000-01-01", endDate),
     fetchMetricSum("DAILY_SIGNUPS", prevStartStr, prevEndStr),
     // previous period also comes from daily_users
@@ -148,6 +194,8 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     activeUsersThisPeriod,
     signupSeries: aggregateSeries(fillDateSeries(signupSeries, startDate, endDate), timeframe),
     activeUserSeries: aggregateSeries(fillDateSeries(activeUserSeries, startDate, endDate), timeframe),
+    weeklyActiveUserSeries: weeklyActiveUserSeries, // No aggregation since it's pre-computed weekly
+    monthlyActiveUserSeries: monthlyActiveUserSeries, // No aggregation since it's pre-computed monthly
     signupsByDept,
   };
 }

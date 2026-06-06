@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign, FileText } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 import { useEffect } from "react";
 
 import AccessWall from "@/components/AccessWall";
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <ActionCard
+          {/* <ActionCard
             title="Create Course"
             description="Launch a new course and publish learning materials."
             icon={<PlusCircle size={24} className="text-blue-600" />}
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
             description="Batch upload notes and course assets for published classes."
             icon={<UploadCloud size={24} className="text-purple-600" />}
             href="/admin/upload"
-          />
+          /> */}
           <ActionCard
             title="Manage Ads"
             description="Create and manage advertisement campaigns."
@@ -61,6 +61,12 @@ export default function AdminDashboard() {
             description="Review and approve new contributor applications."
             icon={<Users size={24} className="text-orange-600" />}
             href="/admin/contributor-review"
+          />
+          <ActionCard
+            title="Administrator Chat"
+            description="Communicate directly with contributors via chat."
+            icon={<Megaphone size={24} className="text-purple-600" />}
+            href="/admin/chats"
           />
           <ActionCard
             title="Document Appeals"

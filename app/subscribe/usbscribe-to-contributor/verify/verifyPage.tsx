@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next-nprogress-bar";
+import { useRouter } from "@/components/useRouter";
 
 const BRAND_BLUE = "#2563EB";
 

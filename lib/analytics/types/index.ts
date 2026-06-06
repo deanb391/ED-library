@@ -85,6 +85,8 @@ export interface AcquisitionSummary {
   activeUsersThisPeriod: number;
   signupSeries: ChartDataPoint[];
   activeUserSeries: ChartDataPoint[];
+  weeklyActiveUserSeries: ChartDataPoint[];
+  monthlyActiveUserSeries: ChartDataPoint[];
   signupsByDept: PieDataPoint[];
 }
 

@@ -67,6 +67,10 @@ export async function fetchAdByIdService(adId: string) {
   return mapAd(doc);
 }
 
+export async function fetchAdByIdRawService(adId: string) {
+  return databases.getDocument(DATABASE_ID, ADS_COLLECTION, adId);
+}
+
 export async function updateAdService(adId: string, data: any) {
   return databases.updateDocument(DATABASE_ID, ADS_COLLECTION, adId, data);
 }
