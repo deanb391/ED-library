@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import ContributorChatModal from "./ContributorChatModal";
 import { getChatForContributorService } from "@/lib/services/chats.service";
@@ -11,6 +12,7 @@ const DATABASE_ID = "69617e75000c6c010a75";
 const CHAT_COLLECTION = "chats";
 
 export default function ContributorChatFAB() {
+  const pathname = usePathname();
   const { user, contributor } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const isOpenRef = useRef(false);
@@ -91,12 +93,13 @@ export default function ContributorChatFAB() {
   // The subscription will catch the update and set unreadCount to 0.
 
   if (!user || !contributor || contributor.status !== "live") return null;
+  if (!pathname || !pathname.startsWith("/contributor/dashboard")) return null;
 
   return (
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[49] w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-transform hover:scale-105 active:scale-95"
+        className="fixed top-24 right-6 z-[49] w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-transform hover:scale-105 active:scale-95"
         style={{ color: "#ffffff" }}
         aria-label="Chat with Administrator"
       >
