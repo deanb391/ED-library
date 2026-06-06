@@ -5,6 +5,7 @@ import { getMyContributor } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
 import Image from "next/image";
 import EditContributorModal from "./EditContributorModal";
+import ShareProfileButton from "./ShareProfileButton";
 
 export default function ContributorSection({ userId }: { userId: string }) {
   const [contributor, setContributor] = useState<Contributor | null>(null);
@@ -31,12 +32,15 @@ export default function ContributorSection({ userId }: { userId: string }) {
     <div className="mt-6 rounded-2xl bg-white shadow-sm p-4 space-y-4">
       <div className="flex items-center justify-between border-b pb-4" style={{ marginBottom: 20, paddingBottom: 10 }}>
         <h3 className="text-lg font-semibold text-gray-900">Contributor Profile</h3>
-        <button
-          onClick={() => setIsEditing(true)}
-          className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors"
-        >
-          Edit Profile
-        </button>
+        <div className="flex items-center gap-2">
+          <ShareProfileButton contributorId={contributor.$id} />
+          <button
+            onClick={() => setIsEditing(true)}
+            className="px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+          >
+            Edit Profile
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4 items-start">

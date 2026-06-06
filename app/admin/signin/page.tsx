@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { GraduationCap, ArrowRight, Lock, Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next-nprogress-bar";
 import { signIn } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
 

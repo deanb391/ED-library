@@ -109,10 +109,17 @@ export async function editContributorService(
 ): Promise<Contributor> {
   const now = new Date().toISOString();
 
-  const payload = {
-    ...updates,
+  const payload: any = {
     $updatedAt: now,
   };
+
+  // Only allow client modification of these safe fields
+  const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed'];
+  for (const field of safeFields) {
+    if (updates[field as keyof ContributorDraft] !== undefined) {
+      payload[field] = updates[field as keyof ContributorDraft];
+    }
+  }
 
   const doc = await databases.updateDocument(
     DATABASE_ID,

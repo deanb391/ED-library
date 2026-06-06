@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { handleOAuthSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";
 

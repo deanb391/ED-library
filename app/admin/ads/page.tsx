@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { fetchAds } from "@/lib/api/ads";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 
 
 

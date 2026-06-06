@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, RefreshCw, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next-nprogress-bar";
 import { useUser } from "@/context/UserContext";
 import { fetchLibrary } from "@/lib/api/library";
 import { fetchCourseById, Course } from "@/lib/api/courses";
