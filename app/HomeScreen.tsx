@@ -16,7 +16,7 @@ import {
 
 import { useUser } from '@/context/UserContext';
 import { fetchLibraryCourse } from '@/lib/api/library';
-import { getTopContributors, searchContributors, toggleFollowContributor } from '@/lib/api/contributors';
+import { getTopContributors, searchContributors, toggleFollowContributor, getContributorByUserId } from '@/lib/api/contributors';
 import { Contributor } from '@/lib/services/contributors.service';
 import { fetchSmallAds } from '@/lib/ads';
 import { fetchMediumAds } from '@/lib/api/ads';
@@ -194,6 +194,88 @@ function ContributorSection({
   );
 }
 
+const globalContributorCache: Record<string, Contributor | undefined> = {};
+const globalContributorPromises: Record<string, Promise<any> | undefined> = {};
+
+function CourseContributor({ userId }: { userId: string }) {
+  const [contributor, setContributor] = useState<Contributor | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const cached = globalContributorCache[userId];
+    if (cached) {
+      setContributor(cached);
+      return;
+    }
+
+    const pendingPromise = globalContributorPromises[userId];
+    if (pendingPromise) {
+      pendingPromise.then((data) => {
+        setContributor(data);
+      });
+      return;
+    }
+
+    let isMounted = true;
+    setLoading(true);
+
+    globalContributorPromises[userId] = getContributorByUserId(userId)
+      .then((data) => {
+        if (data) {
+          globalContributorCache[userId] = data;
+        }
+        return data;
+      })
+      .catch((err) => {
+        console.error("Error loading contributor for card:", err);
+        return null;
+      });
+
+    globalContributorPromises[userId].then((data) => {
+      if (isMounted) {
+        setContributor(data);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  if (loading || !contributor) {
+    return (
+      <div className="flex items-center gap-1.5 animate-pulse mt-2 pt-2 border-t border-gray-100">
+        <div className="w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
+        <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.push(`/contributor/account/${contributor.$id}`);
+      }}
+      className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100 hover:opacity-80 transition-opacity"
+    >
+      <img
+        src={contributor.profileImage || "/assets/avatar-placeholder.png"}
+        alt={contributor.username}
+        className="w-5 h-5 rounded-full object-cover border border-gray-100"
+      />
+      <span className="text-[3px] font-medium text-gray-600 truncate hover:text-blue-600 transition-colors" style={{ fontSize: 11, marginLeft: 10 }}>
+        {contributor.username}
+      </span>
+    </div>
+  );
+}
+
 function CourseSection({
   title,
   courses,
@@ -259,20 +341,24 @@ function CourseSection({
                 />
               </div>
 
-              <div className="p-3 flex flex-col gap-2 flex-grow">
-                <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                  <span>{course.code}</span>
-                  <span>•</span>
-                  <span>{course.session}</span>
+              <div className="p-3 flex flex-col gap-2 flex-grow justify-between">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                    <span>{course.code}</span>
+                    <span>•</span>
+                    <span>{course.session}</span>
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                    {course.title}
+                  </h3>
+
+                  <p className="text-xs text-gray-500 line-clamp-2">
+                    {course.description}
+                  </p>
                 </div>
 
-                <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
-                  {course.title}
-                </h3>
-
-                <p className="text-xs text-gray-500 line-clamp-2">
-                  {course.description}
-                </p>
+                <CourseContributor userId={course.user} />
               </div>
             </Link>
           </React.Fragment>
