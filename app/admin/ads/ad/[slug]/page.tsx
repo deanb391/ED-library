@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useParams } from "next/navigation";
-import { editAd, fetchAdById, uploadAdImage, uploadAdVideo } from "@/lib/api/ads";
+import { editAd, fetchAdById, uploadAdImage, uploadAdVideo, fetchAdUniqueUsersCount } from "@/lib/api/ads";
 
 // replace with real calls
 // import { updateAd } from "@/lib/ads";
@@ -18,7 +18,7 @@ interface Ad {
   videos: string[];
   views: number;
   clicks: number;
-  uniqueUsers: string[];
+  uniqueUsers?: string[];
   isExpired: boolean;
   endTime: string;
   type: string;
@@ -33,6 +33,7 @@ export default function AdDetailsPage() {
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [uniqueUsersCount, setUniqueUsersCount] = useState<number>(0);
   const AD_TYPE_OPTIONS = [
     { label: "Daily", value: "daily" },
     { label: "2-Daily", value: "2-daily" },
@@ -47,8 +48,12 @@ export default function AdDetailsPage() {
 
     const load = async () => {
       try {
-        const data = await fetchAdById(slug);
-        setAd(data);
+        const [adData, countData] = await Promise.all([
+          fetchAdById(slug),
+          fetchAdUniqueUsersCount(slug).catch(() => ({ count: 0 }))
+        ]);
+        setAd(adData);
+        setUniqueUsersCount(countData.count);
       } catch (e) {
         console.error(e);
         alert("Failed to load ad");
@@ -118,7 +123,7 @@ export default function AdDetailsPage() {
             <Stat label="Clicks" value={ad.clicks} valueClass="text-blue-600" />
             <Stat
               label="Unique users"
-              value={ad.uniqueUsers.length}
+              value={uniqueUsersCount}
               valueClass="text-blue-600"
             />
             <Stat
@@ -137,7 +142,7 @@ export default function AdDetailsPage() {
 
           {/* Images */}
           <Section title="2.5 x 1 Images">
-            {ad.smallImages?.length === 0 ? (
+            {!ad.smallImages || ad.smallImages.length === 0 ? (
               <Empty text="No Square images attached" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -155,7 +160,7 @@ export default function AdDetailsPage() {
           </Section>
 
           <Section title="1.5 x 1 Images">
-            {ad.mediumImages?.length === 0 ? (
+            {!ad.mediumImages || ad.mediumImages.length === 0 ? (
               <Empty text="No Square images attached" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -174,7 +179,7 @@ export default function AdDetailsPage() {
 
           {/* Images */}
           <Section title="Banner Images">
-            {ad.largeImages?.length === 0 ? (
+            {!ad.largeImages || ad.largeImages.length === 0 ? (
               <Empty text="No Rectangular images attached" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -192,7 +197,7 @@ export default function AdDetailsPage() {
 
           {/* Videos */}
           <Section title="Videos">
-            {ad.videos.length === 0 ? (
+            {!ad.videos || ad.videos.length === 0 ? (
               <Empty text="No videos attached" />
             ) : (
               <div className="space-y-3">
@@ -237,10 +242,10 @@ function EditAdModal({
   const [isExpired, setIsExpired] = useState(ad.isExpired);
   const [link, setLink] = useState(ad.link)
 
-  const [existingSmallImages, setExistingSmallImages] = useState<string[]>(ad.smallImages);
-  const [existingLargeImages, setExistingLargeImages] = useState<string[]>(ad.largeImages);
-  const [existingMediumImages, setExistingMediumImages] = useState<string[]>(ad.mediumImages);
-  const [existingVideos, setExistingVideos] = useState<string[]>(ad.videos);
+  const [existingSmallImages, setExistingSmallImages] = useState<string[]>(ad.smallImages || []);
+  const [existingLargeImages, setExistingLargeImages] = useState<string[]>(ad.largeImages || []);
+  const [existingMediumImages, setExistingMediumImages] = useState<string[]>(ad.mediumImages || []);
+  const [existingVideos, setExistingVideos] = useState<string[]>(ad.videos || []);
 
   const [newSmallImages, setNewSmallImages] = useState<File[]>([]);
   const [newMediumImages, setNewMediumImages] = useState<File[]>([]);

@@ -185,3 +185,9 @@ export async function uploadAdImage(file: File): Promise<string> {
 export async function uploadAdVideo(file: File): Promise<string> {
   return uploadToServer(file, "ads/videos", "video");
 }
+
+export async function fetchAdUniqueUsersCount(id: string): Promise<{ count: number }> {
+  const res = await fetch(`/api/ads/unique-count?id=${id}`);
+  if (!res.ok) throw new Error("Failed to fetch unique users count");
+  return res.json();
+}
