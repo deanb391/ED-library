@@ -14,7 +14,7 @@ export default function FloatingActionButton({ className = "" }: FloatingActionB
   const toggleOpen = () => setIsOpen(!isOpen);
 
   return (
-    <div className={`fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4 ${className}`}>
+    <div className={`fixed bottom-8 right-8 z-40 flex flex-col items-end gap-4 ${className}`}>
       {/* Action Buttons */}
       <div className={`flex flex-col gap-3 transition-all duration-300 transform ${
         isOpen ? "scale-100 opacity-100 translate-y-0" : "scale-0 opacity-0 translate-y-10 pointer-events-none"
