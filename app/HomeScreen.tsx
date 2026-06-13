@@ -194,27 +194,34 @@ function ContributorSection({
   );
 }
 
-const globalContributorCache: Record<string, Contributor | undefined> = {};
+const globalContributorCache: Record<string, Contributor | null | undefined> = {};
 const globalContributorPromises: Record<string, Promise<any> | undefined> = {};
 
 function CourseContributor({ userId }: { userId: string }) {
   const [contributor, setContributor] = useState<Contributor | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setContributor(null);
+      setLoading(false);
+      return;
+    }
 
     const cached = globalContributorCache[userId];
-    if (cached) {
+    if (cached !== undefined) {
       setContributor(cached);
+      setLoading(false);
       return;
     }
 
     const pendingPromise = globalContributorPromises[userId];
     if (pendingPromise) {
+      setLoading(true);
       pendingPromise.then((data) => {
         setContributor(data);
+        setLoading(false);
       });
       return;
     }
@@ -226,11 +233,14 @@ function CourseContributor({ userId }: { userId: string }) {
       .then((data) => {
         if (data) {
           globalContributorCache[userId] = data;
+        } else {
+          globalContributorCache[userId] = null;
         }
         return data;
       })
       .catch((err) => {
         console.error("Error loading contributor for card:", err);
+        globalContributorCache[userId] = null;
         return null;
       });
 
@@ -246,13 +256,17 @@ function CourseContributor({ userId }: { userId: string }) {
     };
   }, [userId]);
 
-  if (loading || !contributor) {
+  if (loading) {
     return (
       <div className="flex items-center gap-1.5 animate-pulse mt-2 pt-2 border-t border-gray-100">
         <div className="w-5 h-5 rounded-full bg-gray-100 animate-pulse" />
         <div className="h-3 bg-gray-100 rounded w-16 animate-pulse" />
       </div>
     );
+  }
+
+  if (!contributor) {
+    return null;
   }
 
   return (
