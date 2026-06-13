@@ -121,7 +121,7 @@ export default function EditCourseModal({
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 100,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -367,7 +367,7 @@ export default function EditCourseModal({
                 gap: "12px",
               }}
             >
-              <button onClick={onClose} style={{ color: "#6b7280" }}>
+              <button type="button" onClick={onClose} style={{ color: "#6b7280" }}>
                 Cancel
               </button>
 

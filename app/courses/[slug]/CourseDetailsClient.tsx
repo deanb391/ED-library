@@ -1067,7 +1067,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               <section className="bg-white rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
 
                 {/* EDIT BUTTON */}
-                <button className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 transition text-white">
+                <button 
+                  onClick={() => setShowEditCourse(true)}
+                  className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 transition text-white"
+                >
                   Edit
                 </button>
 
