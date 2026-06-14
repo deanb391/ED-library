@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
     const cursor = searchParams.get("cursor");
     const type = searchParams.get("type");
     const isExpired = searchParams.get("isExpired");
+    const user = searchParams.get("user");
 
     const queries: any[] = [
       Query.orderDesc("$createdAt"),
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
 
     if (cursor) queries.push(Query.cursorAfter(cursor));
     if (type) queries.push(Query.equal("type", type));
+    if (user) queries.push(Query.equal("user", user));
     if (isExpired !== null)
       queries.push(Query.equal("isExpired", isExpired === "true"));
 

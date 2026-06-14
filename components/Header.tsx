@@ -117,6 +117,10 @@ export default function Header() {
 
       <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
 
+      <MenuItem icon={Megaphone} label="Advertise" href="/advertise" onSelect={onSelect} />
+
+      <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
+
       <MenuItem icon={CircleHelp} label="About" href="/about" onSelect={onSelect} />
 
       <div className="my-5 h-px bg-gray-100" style={{ marginTop: 10, marginBottom: 10 }} />
@@ -184,6 +188,9 @@ export default function Header() {
             )
           }
 
+          <Link href="/advertise" className="hover:text-blue-600">
+            Advertise
+          </Link>
           <Link href="/about" className="hover:text-blue-600">
             About
           </Link>

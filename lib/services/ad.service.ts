@@ -20,6 +20,8 @@ export function mapAd(doc: any) {
     endTime: doc.endTime,
     type: doc.type,
     link: doc?.link,
+    user: doc.user || "",
+    price: doc.price || 0,
   };
 }
 
@@ -32,7 +34,7 @@ export async function createAdService(data: any) {
       ...data,
       views: 0,
       uniqueUsers: [],
-      isExpired: false,
+      isExpired: data.isExpired !== undefined ? data.isExpired : false,
     }
   );
 }

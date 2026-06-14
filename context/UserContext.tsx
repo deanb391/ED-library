@@ -30,7 +30,7 @@ type UserContextType = {
   user: User | null;
   contributor: Contributor | null;
   loading: boolean;
-  hasWallet:boolean;
+  hasWallet: boolean;
   hasLibrary: boolean;
   refreshUser: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -126,18 +126,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-   const fetchBannerAds = async () => {
-  const ads = await fetchSquareAds();
-  if (!ads.length) return;
+  const fetchBannerAds = async () => {
+    const ads = await fetchSquareAds();
+    if (!ads.length) return;
 
-  const shuffled = shuffle(ads);
-  console.log("All Ads: ", shuffled)
+    const shuffled = shuffle(ads);
+    console.log("All Ads: ", shuffled)
 
-  // Set the same shuffled list for all banner usages
-  setHomeBannerAds(shuffled);
-  setCourseBannerAds(shuffled);
-  setAllScreenBannerAds(shuffled);
-};
+    // Set the same shuffled list for all banner usages
+    setHomeBannerAds(shuffled);
+    setCourseBannerAds(shuffled);
+    setAllScreenBannerAds(shuffled);
+  };
 
 
   useEffect(() => {
@@ -145,17 +145,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     fetchBannerAds();
   }, []);
 
-   const showAdHome  = (prob: number[] = [1, 0, 0]) => {
+  const showAdHome = (prob: number[] = [1, 0]) => {
     const shuffled = shuffle(prob);
     return shuffled[0] === 1;
   };
 
-  const showAdCourse  = (prob: number[] = [1, 0, 0, 0, 0]) => {
+  const showAdCourse = (prob: number[] = [1, 0, 0]) => {
     const shuffled = shuffle(prob);
     return shuffled[0] === 1;
   };
 
-  const showAdAll  = (prob: number[] = [1, 0, 0]) => {
+  const showAdAll = (prob: number[] = [1, 0]) => {
     const shuffled = shuffle(prob);
     return shuffled[0] === 1;
   };
