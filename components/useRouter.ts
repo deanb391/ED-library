@@ -1,21 +1,24 @@
 "use client";
 
 import { useRouter as useNextRouter } from "next/navigation";
+import { useMemo } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
 export function useRouter() {
   const router = useNextRouter();
 
-  return {
-    ...router,
-    push: (href: string, options?: any) => {
-      NProgress.start();
-      router.push(href, options);
-    },
-    replace: (href: string, options?: any) => {
-      NProgress.start();
-      router.replace(href, options);
-    },
-  };
+  return useMemo(() => {
+    return {
+      ...router,
+      push: (href: string, options?: any) => {
+        NProgress.start();
+        router.push(href, options);
+      },
+      replace: (href: string, options?: any) => {
+        NProgress.start();
+        router.replace(href, options);
+      },
+    };
+  }, [router]);
 }

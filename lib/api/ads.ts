@@ -22,6 +22,7 @@ export async function fetchAds({
     name?: string;
     type?: string;
     isExpired?: boolean;
+    user?: string;
   };
 } = {}) {
   const query = new URLSearchParams();
@@ -32,6 +33,7 @@ export async function fetchAds({
 
   if (filter?.name) query.append("name", filter.name);
   if (filter?.type) query.append("type", filter.type);
+  if (filter?.user) query.append("user", filter.user);
   if (filter?.isExpired !== undefined) {
     query.append("isExpired", String(filter.isExpired));
   }
@@ -189,5 +191,43 @@ export async function uploadAdVideo(file: File): Promise<string> {
 export async function fetchAdUniqueUsersCount(id: string): Promise<{ count: number }> {
   const res = await fetch(`/api/ads/unique-count?id=${id}`);
   if (!res.ok) throw new Error("Failed to fetch unique users count");
+  return res.json();
+}
+
+export async function createVendorAd(data: {
+  name: string;
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
+  videos: string[];
+  link?: string;
+  user: string;
+  email: string;
+}): Promise<{ success: boolean; checkoutUrl: string; paymentId: string; adId: string }> {
+  const res = await fetch("/api/ads/create-vendor", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create vendor ad campaign");
+  }
+
+  return res.json();
+}
+
+export async function verifyAdPayment(paymentId: string, adId?: string): Promise<{ success: boolean; message?: string }> {
+  const url = adId
+    ? `/api/ads/verify-payment?paymentId=${encodeURIComponent(paymentId)}&adId=${encodeURIComponent(adId)}`
+    : `/api/ads/verify-payment?paymentId=${encodeURIComponent(paymentId)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to verify ad payment");
+  }
   return res.json();
 }
