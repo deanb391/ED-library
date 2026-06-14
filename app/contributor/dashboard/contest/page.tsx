@@ -629,10 +629,11 @@ export default function ContestLandingPage() {
       </div>
     </div>
   );
+}
 
 // --- REUSABLE INLINE STYLES & MINI COMPONENTS ---
 
-const simButtonStyle = (color, bg) => ({
+const simButtonStyle = (color: string, bg: string): React.CSSProperties => ({
   padding: "0.375rem 0.75rem",
   backgroundColor: bg,
   color: color,
@@ -644,10 +645,19 @@ const simButtonStyle = (color, bg) => ({
   transition: "opacity 0.2s ease"
 });
 
-function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" }) {
+interface StatHighlightProps {
+  icon: React.ReactNode;
+  bg: string;
+  border: string;
+  label: string;
+  value: string;
+  valueColor?: string;
+}
+
+function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" }: StatHighlightProps) {
   return (
     <div style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem", display: "flex", alignItems: "center", gap: "1rem", transition: "border-color 0.2s ease" }} onPointerEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")} onPointerLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)")}>
-      <div style={{ width: "48px", height: "48px", backgroundColor: bg, border: `1px solid ${border}`, borderRadius: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div style={{ width: "48px", height: "48px", backgroundColor: bg, border: `1px solid ${border}`, borderRadius: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } as React.CSSProperties}>
         {icon}
       </div>
       <div>
@@ -658,7 +668,16 @@ function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" 
   );
 }
 
-function InputPair({ labelMe, valMe, onChangeMe, labelHigh, valHigh, onChangeHigh }) {
+interface InputPairProps {
+  labelMe: string;
+  valMe: string;
+  onChangeMe: (val: string) => void;
+  labelHigh: string;
+  valHigh: string;
+  onChangeHigh: (val: string) => void;
+}
+
+function InputPair({ labelMe, valMe, onChangeMe, labelHigh, valHigh, onChangeHigh }: InputPairProps) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -673,7 +692,7 @@ function InputPair({ labelMe, valMe, onChangeMe, labelHigh, valHigh, onChangeHig
   );
 }
 
-const darkInputStyle = {
+const darkInputStyle: React.CSSProperties = {
   width: "100%",
   backgroundColor: "rgba(0,0,0,0.4)",
   border: "1px solid #334155",
@@ -686,22 +705,35 @@ const darkInputStyle = {
   boxSizing: "border-box"
 };
 
-const handleDarkFocus = (e) => (e.currentTarget.style.borderColor = "#6366f1");
-const handleDarkBlur = (e) => (e.currentTarget.style.borderColor = "#334155");
+const handleDarkFocus = (e: React.FocusEvent<HTMLInputElement>) => (e.currentTarget.style.borderColor = "#6366f1");
+const handleDarkBlur = (e: React.FocusEvent<HTMLInputElement>) => (e.currentTarget.style.borderColor = "#334155");
 
-function ScoreRow({ label, score, max }) {
+interface ScoreRowProps {
+  label: string;
+  score: number;
+  max: string;
+}
+
+function ScoreRow({ label, score, max }: ScoreRowProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.5rem" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.5rem" } as React.CSSProperties}>
       <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{label}</span>
       <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#e2e8f0" }}>{score} <span style={{ color: "#64748b" }}>/ {max} pts</span></span>
     </div>
   );
 }
 
-function TimelineItem({ num, color, title, desc }) {
+interface TimelineItemProps {
+  num: string;
+  color: string;
+  title: string;
+  desc: string;
+}
+
+function TimelineItem({ num, color, title, desc }: TimelineItemProps) {
   return (
     <div style={{ position: "relative" }}>
-      <span style={{ position: "absolute", left: "-1.5rem", top: 0, transform: "translateX(-50%)", width: "1.25rem", height: "1.25rem", borderRadius: "50%", backgroundColor: color, border: "2px solid #030712", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: "800", color: "#000000", fontFamily: "monospace" }}>
+      <span style={{ position: "absolute", left: "-1.5rem", top: 0, transform: "translateX(-50%)", width: "1.25rem", height: "1.25rem", borderRadius: "50%", backgroundColor: color, border: "2px solid #030712", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: "800", color: "#000000", fontFamily: "monospace" } as React.CSSProperties}>
         {num}
       </span>
       <h3 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#e2e8f0", margin: "0 0 0.25rem 0" }}>{title}</h3>
@@ -710,12 +742,17 @@ function TimelineItem({ num, color, title, desc }) {
   );
 }
 
-function EconomyCard({ color, title, desc }) {
+interface EconomyCardProps {
+  color: string;
+  title: string;
+  desc: string;
+}
+
+function EconomyCard({ color, title, desc }: EconomyCardProps) {
   return (
     <div style={{ padding: "1rem", backgroundColor: "rgba(0,0,0,0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
       <div style={{ fontSize: "0.75rem", color: color, fontWeight: "800", marginBottom: "0.25rem" }}>{title}</div>
       <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0, lineHeight: "1.5" }}>{desc}</p>
     </div>
   );
-}
 }
