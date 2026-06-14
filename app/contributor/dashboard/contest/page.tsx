@@ -172,7 +172,7 @@ export default function ContestLandingPage() {
 
   const dashboardHref = `/contributor/dashboard/${user.$id}`;
 
- return (
+  return (
     <div
       style={{
         minHeight: "100vh",
@@ -185,7 +185,7 @@ export default function ContestLandingPage() {
       }}
     >
       <div style={{ maxWidth: "1152px", margin: "0 auto", padding: "2rem 1.5rem" }}>
-        
+
         {/* --- HEADER BAR --- */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "3rem" }}>
           <Link
@@ -206,7 +206,7 @@ export default function ContestLandingPage() {
             <ChevronLeft size={18} strokeWidth={2.5} />
             Back to Dashboard
           </Link>
-          
+
           <button
             onClick={() => setShowSimPanel(!showSimPanel)}
             style={{
@@ -246,7 +246,7 @@ export default function ContestLandingPage() {
             <p style={{ fontSize: "0.75rem", color: "rgba(253, 230, 138, 0.7)", marginBottom: "1.5rem" }}>
               Simulate start date updates to see countdowns, flags, and states change live across pages.
             </p>
-            
+
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 <button type="button" onClick={() => applyPreset(10)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 10s</button>
@@ -312,7 +312,7 @@ export default function ContestLandingPage() {
           >
             {/* Glowing orb effect behind countdown */}
             <div style={{ position: "absolute", top: "-50%", right: "-50%", width: "200px", height: "200px", background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%)", pointerEvents: "none" }} />
-            
+
             <div style={{ textAlign: "center", marginBottom: "2rem", position: "relative", zIndex: 10 }}>
               <span style={{ fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.1em", color: "#818cf8" }}>
                 {timeLeft.isPast ? "Event Status" : "Contest Countdown"}
@@ -406,7 +406,7 @@ export default function ContestLandingPage() {
 
         {/* --- TAB CONTENT PANELS --- */}
         <div style={{ minHeight: "300px" }}>
-          
+
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem", alignItems: "start" }}>
@@ -437,7 +437,7 @@ export default function ContestLandingPage() {
 
               <div style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem" }}>
                 <h3 style={{ fontSize: "0.75rem", fontWeight: "800", color: "#e2e8f0", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 1.5rem 0" }}>How Rewards Work</h3>
-                
+
                 <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1.5rem" }}>
                   <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>PROPORTIONAL FORMULA</div>
                   <div style={{ fontFamily: "monospace", fontSize: "0.875rem", fontWeight: "800", color: "#fcd34d", marginBottom: "0.5rem", lineHeight: "1.4" }}>
@@ -447,7 +447,7 @@ export default function ContestLandingPage() {
                     This rewards every point generated. If you contribute 15% of the total points, you claim exactly 15% of the cash prize pool!
                   </p>
                 </div>
-                
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Example 1 (John brings 2,000 pts, Sarah brings 1,000 pts)</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -468,7 +468,7 @@ export default function ContestLandingPage() {
           {/* SCORING TAB */}
           {activeTab === "scoring" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "4rem" }}>
-              
+
               {/* Point Categories Grid */}
               <div>
                 <h2 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#f8fafc", margin: "0 0 1.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -507,14 +507,14 @@ export default function ContestLandingPage() {
                 <p style={{ fontSize: "0.8125rem", color: "#94a3b8", margin: "0 0 2rem 0" }}>Input mock daily stats to test calculations and see how weight ratios map to point scores.</p>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
-                  
+
                   {/* Inputs Column */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     <InputPair labelMe="New Users (You)" valMe={calcInputs.userNew} onChangeMe={(val) => setCalcInputs({ ...calcInputs, userNew: val })} labelHigh="New Users (Highest)" valHigh={calcInputs.userNewHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, userNewHighest: val })} />
                     <InputPair labelMe="Student Reach (You)" valMe={calcInputs.reach} onChangeMe={(val) => setCalcInputs({ ...calcInputs, reach: val })} labelHigh="Student Reach (Highest)" valHigh={calcInputs.reachHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, reachHighest: val })} />
                     <InputPair labelMe="Returning Students (You)" valMe={calcInputs.returning} onChangeMe={(val) => setCalcInputs({ ...calcInputs, returning: val })} labelHigh="Returning (Highest)" valHigh={calcInputs.returningHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, returningHighest: val })} />
                     <InputPair labelMe="Courses Created (You)" valMe={calcInputs.courses} onChangeMe={(val) => setCalcInputs({ ...calcInputs, courses: val })} labelHigh="Courses Created (Highest)" valHigh={calcInputs.coursesHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, coursesHighest: val })} />
-                    
+
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
                         <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>Assessed Content Quality Score</label>
@@ -564,13 +564,13 @@ export default function ContestLandingPage() {
           {/* REWARDS TAB */}
           {activeTab === "rewards" && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem", alignItems: "start" }}>
-              
+
               {/* Timeline */}
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <h2 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#f8fafc", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Clock size={20} color="#818cf8" /> Milestone Timeline
                 </h2>
-                
+
                 <div style={{ position: "relative", paddingLeft: "1.5rem", borderLeft: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", gap: "2rem", marginLeft: "0.5rem" }}>
                   <TimelineItem num="1" color="#6366f1" title="Day 1 to 30: Active Campaign" desc="Contributors compete and points accumulate continuously. Performance metrics update daily on the dashboard." />
                   <TimelineItem num="2" color="#ec4899" title="Day 30: Frozen Standings" desc="At midnight of Day 30, the competition closes and all scores are frozen. No new uploads or actions count toward the final scoreboard." />
@@ -607,7 +607,6 @@ export default function ContestLandingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 {[
                   { title: "Active Contributor Status", desc: "Must hold an approved ED-Library contributor profile." },
-                  { title: "7-Day Age Requirement", desc: "Your account must be registered and active at least 7 days prior to the contest start date." },
                   { title: "Guidelines Compliance", desc: "All submitted files must comply with ED-Library academic guidelines (no plagiarism, correct tagging)." },
                   { title: "Zero Initial upload Limits", desc: "Anyone can join regardless of initial upload tallies. Points accumlate strictly from challenge launch date." }
                 ].map((item, idx) => (
