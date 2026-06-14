@@ -146,6 +146,23 @@ export default function DashboardUnderReviewPage() {
   const [showTopContributorAnnouncement, setShowTopContributorAnnouncement] = useState(false);
   const [showTopContributorAward, setShowTopContributorAward] = useState(false);
 
+  // Contest timer states
+  const [targetDate, setTargetDate] = useState<Date>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("contributor_contest_start_date");
+      if (stored) return new Date(stored);
+    }
+    return new Date("2026-06-26T00:00:00");
+  });
+
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isPast: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+
   useEffect(() => {
     const loadDashboard = async () => {
       if (!user) {
@@ -254,6 +271,50 @@ export default function DashboardUnderReviewPage() {
     }
   }, [contributor?.$id, contributor?.status, streakData]);
 
+  // Contest countdown logic
+  useEffect(() => {
+    const getTarget = () => {
+      const storedDate = localStorage.getItem("contributor_contest_start_date");
+      return storedDate ? new Date(storedDate) : new Date("2026-06-26T00:00:00");
+    };
+
+    const calculateTime = () => {
+      const currentTarget = getTarget();
+      setTargetDate(currentTarget);
+
+      const now = new Date();
+      const difference = currentTarget.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true });
+        return;
+      }
+
+      const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const h = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((difference / 1000 / 60) % 60);
+      const s = Math.floor((difference / 1000) % 60);
+
+      setTimeLeft({ days: d, hours: h, minutes: m, seconds: s, isPast: false });
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+
+    // Sync from localStorage changes
+    const syncTime = () => {
+      calculateTime();
+    };
+    window.addEventListener("storage", syncTime);
+    const pollInterval = setInterval(syncTime, 2000); // Poll local changes on the same tab
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(pollInterval);
+      window.removeEventListener("storage", syncTime);
+    };
+  }, []);
+
   const handleAgreeTerms = async () => {
     if (!contributor) return;
     setIsSubmittingTerms(true);
@@ -316,6 +377,63 @@ export default function DashboardUnderReviewPage() {
             My Dashboard
           </div>
           <div className="max-w-5xl mx-auto space-y-8">
+
+            {/* Screaming Contest Banner */}
+            <div
+              className="relative overflow-hidden rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-indigo-500/30 text-white"
+              style={{
+                background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #831843 100%)",
+                boxShadow: "0 10px 30px -5px rgba(76, 29, 149, 0.5), 0 0 20px rgba(131, 24, 67, 0.25)",
+              }}
+            >
+              {/* Decorative backgrounds */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-xl translate-y-12 -translate-x-12 pointer-events-none" />
+              
+              <div className="flex items-start gap-4 relative z-10">
+                <div
+                  className="mt-1 w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
+                  style={{
+                    animation: "dashboardFireBounce 1.5s ease-in-out infinite"
+                  }}
+                >
+                  🏆
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
+                    🔥 30-Day Contributor Challenge
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
+                    Win up to <span className="text-amber-300">₦100,000</span> in cash!
+                  </h3>
+                  <p className="text-xs md:text-sm text-white/90 leading-relaxed max-w-xl font-medium">
+                    Upload courses, reach unique students, generate new users, and climb the leaderboard to secure your share of the prize pool.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center md:items-end gap-3 shrink-0 relative z-10 w-full md:w-auto">
+                <div className="text-center md:text-right bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 w-full md:w-auto">
+                  <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">
+                    {timeLeft.isPast ? "Status: Challenge Active!" : "Count Down to Kickoff"}
+                  </div>
+                  <div className="font-mono text-lg font-black text-amber-300 tracking-wider">
+                    {timeLeft.isPast ? (
+                      <span className="text-green-400 animate-pulse">LIVE & ACTIVE</span>
+                    ) : (
+                      `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
+                    )}
+                  </div>
+                </div>
+                
+                <Link
+                  href="/contributor/dashboard/contest"
+                  className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
+                >
+                  {timeLeft.isPast ? "Enter Contest Arena" : "Join & View Rules"}
+                </Link>
+              </div>
+            </div>
 
             {/* Missing Wallet Banner */}
             {
