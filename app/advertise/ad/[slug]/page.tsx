@@ -668,7 +668,7 @@ function EditVendorAdModal({
               <input
                 type="text"
                 disabled
-                value={`${ad.type.toUpperCase()} PLAN - ₦${ad.price ? ad.price.toLocaleString() : "2,500"}`}
+                value={`${ad.type.toUpperCase()} PLAN - ₦${ad.price ? ad.price.toLocaleString() : "3,500"}`}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-xs font-semibold cursor-not-allowed"
               />
             </div>

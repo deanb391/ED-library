@@ -14,6 +14,7 @@ import {
   Send,
 } from "lucide-react";
 import TermsModal from "@/components/TermsModal";
+import Link from "next/link";
 import { useRouter } from "@/components/useRouter";
 import { uploadToServer } from "@/lib/upload";
 import { useUser } from "@/context/UserContext";
@@ -554,6 +555,8 @@ function Step3({
   updateDraft,
   uploadingImages,
   onReviewImageChange,
+  agreeTerms,
+  setAgreeTerms,
 }: {
   back: () => void;
   onSubmit: () => void;
@@ -564,6 +567,8 @@ function Step3({
     index: number,
     e: React.ChangeEvent<HTMLInputElement>
   ) => void;
+  agreeTerms: boolean;
+  setAgreeTerms: (val: boolean) => void;
 }) {
   const fileRefs = [
     useRef<HTMLInputElement | null>(null),
@@ -657,6 +662,27 @@ function Step3({
           ))}
         </div>
 
+        {/* Terms and conditions */}
+        <div className="flex items-start gap-3 pt-2 mb-2">
+          <input
+            id="agree-terms"
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="mt-1 h-4.5 w-4.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+          />
+          <label htmlFor="agree-terms" className="text-xs sm:text-sm text-gray-600 cursor-pointer">
+            I agree to the{" "}
+            <Link
+              href="/onboarding/terms"
+              className="text-blue-600 font-medium hover:underline"
+            >
+              terms and conditions
+            </Link>{" "}
+            governing contributor policies.
+          </label>
+        </div>
+
         {/* Actions */}
         <div className="flex justify-between pt-4">
           <button onClick={back} className="flex items-center gap-2" style={{ color: 'black' }}>
@@ -666,7 +692,7 @@ function Step3({
           <button
             className="bg-blue-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onSubmit}
-            disabled={!allImagesSelected}
+            disabled={!allImagesSelected || !agreeTerms}
           >
             Submit <Send size={16} />
           </button>
@@ -680,7 +706,7 @@ function Step3({
 
 export default function OnboardingFlow() {
   const [step, setStep] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingImages, setUploadingImages] = useState([false, false, false]);
@@ -761,13 +787,23 @@ export default function OnboardingFlow() {
       // Import the createContributor function
       const { createContributor } = await import("@/lib/api/contributors");
 
-
       // Get the current user ID from Appwrite account
-
       const userId = user?.$id;
 
       if (!userId) {
         throw new Error("User not authenticated");
+      }
+
+      // Track contributor application event with agreedToTerms metadata
+      try {
+        const { trackContributorApplication } = await import("@/lib/analytics/trackers");
+        trackContributorApplication(userId, {
+          username: draft.username,
+          institution: draft.institution,
+          agreedToTerms: agreeTerms,
+        });
+      } catch (trackErr) {
+        console.error("Failed to track contributor application:", trackErr);
       }
 
       const newContributor = await createContributor(draft, userId);
@@ -779,7 +815,6 @@ export default function OnboardingFlow() {
       console.error("Submission error:", err);
       setError(err instanceof Error ? err.message + JSON.stringify(err) : "Submission failed");
       setSubmitting(false);
-      setIsOpen(false);
     }
   };
 
@@ -864,11 +899,13 @@ export default function OnboardingFlow() {
           <div className="w-1/3 shrink-0 flex justify-center">
             <Step3
               back={() => setStep(1)}
-              onSubmit={() => setIsOpen(true)}
+              onSubmit={handleSubmitContributor}
               draft={draft}
               updateDraft={updateDraft}
               uploadingImages={uploadingImages}
               onReviewImageChange={handleReviewImageChange}
+              agreeTerms={agreeTerms}
+              setAgreeTerms={setAgreeTerms}
             />
           </div>
         </div>
@@ -879,15 +916,6 @@ export default function OnboardingFlow() {
           {error}
         </div>
       )}
-
-      <TermsModal
-        open={isOpen}
-        onClose={() => {
-          setIsOpen(false);
-        }}
-        onSubmit={handleSubmitContributor}
-        loading={submitting}
-      />
     </div>
   );
 }

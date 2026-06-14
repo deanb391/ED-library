@@ -397,7 +397,7 @@ export default function AdvertiseLandingPage() {
               </h3>
 
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", marginBottom: "1rem" }}>
-                <span style={{ fontSize: "3rem", fontWeight: "800", letterSpacing: "-0.025em", color: "#0f172a", lineHeight: 1 }}>₦2,500</span>
+                <span style={{ fontSize: "3rem", fontWeight: "800", letterSpacing: "-0.025em", color: "#0f172a", lineHeight: 1 }}>₦3,500</span>
                 <span style={{ marginLeft: "0.25rem", fontSize: "1rem", color: "#64748b", fontWeight: "500" }}>/ week</span>
               </div>
 

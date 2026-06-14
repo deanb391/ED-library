@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const price = 2500;
+    const price = 3500;
     const type = "weekly";
 
     const adPayload = {

@@ -13,19 +13,19 @@ import {
 } from "lucide-react";
 const metricCardStyle: React.CSSProperties = {
   backgroundColor: "#ffffff",
-  padding: "1.5rem",
-  borderRadius: "1.5rem",
+  padding: "1rem",
+  borderRadius: "1rem",
   border: "1px solid #e2e8f0",
   boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
   display: "flex",
   alignItems: "center",
-  gap: "1.25rem"
+  gap: "1rem"
 };
 
 const metricIconWrapperStyle: React.CSSProperties = {
-  width: "4rem",
-  height: "4rem",
-  borderRadius: "1rem",
+  width: "3rem",
+  height: "3rem",
+  borderRadius: "0.75rem",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -234,7 +234,7 @@ export default function AdvertiseDashboard() {
           }}
         >
           {/* Banner Image */}
-          <div style={{ height: "200px", width: "100%", position: "relative", backgroundColor: "#f1f5f9" }}>
+          <div style={{ height: "140px", width: "100%", position: "relative", backgroundColor: "#f1f5f9" }}>
             {business?.bannerImage ? (
               <img
                 src={business.bannerImage}
@@ -251,31 +251,31 @@ export default function AdvertiseDashboard() {
           {/* Profile Details (Straddling the banner) */}
           <div
             style={{
-              padding: "0 2rem 2rem 2rem",
+              padding: "0 1.5rem 1.5rem 1.5rem",
               display: "flex",
               flexWrap: "wrap",
               justifyContent: "space-between",
               alignItems: "flex-end",
-              marginTop: "-3.5rem", // Pulls content up over the banner
+              marginTop: "-2.5rem", // Pulls content up over the banner
               position: "relative",
               zIndex: 10,
-              gap: "1.5rem"
+              gap: "1rem"
             }}
           >
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "1.5rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "1rem" }}>
               {/* Avatar */}
               <div
                 style={{
-                  width: "110px",
-                  height: "110px",
-                  borderRadius: "1.25rem",
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "1rem",
                   border: "4px solid #ffffff",
                   backgroundColor: "#2563eb",
                   color: "#ffffff",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "3rem",
+                  fontSize: "2rem",
                   fontWeight: "800",
                   textTransform: "uppercase",
                   boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
@@ -286,17 +286,17 @@ export default function AdvertiseDashboard() {
               </div>
 
               {/* Text Info */}
-              <div style={{ paddingBottom: "0.5rem" }}>
-                <h1 style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0", letterSpacing: "-0.025em" }}>
+              <div style={{ paddingBottom: "0.25rem" }}>
+                <h1 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.125rem 0", letterSpacing: "-0.025em" }}>
                   {business?.name}
                 </h1>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "1.25rem", fontSize: "0.875rem", color: "#64748b", fontWeight: "500" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                    <Phone size={16} />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <Phone size={14} />
                     {business?.phone}
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                    <Globe size={16} />
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <Globe size={14} />
                     Vendor Account
                   </span>
                 </div>
@@ -307,27 +307,27 @@ export default function AdvertiseDashboard() {
             <button
               onClick={() => setIsEditModalOpen(true)}
               style={{
-                padding: "0.625rem 1.25rem",
+                padding: "0.5rem 1rem",
                 backgroundColor: "#f8fafc",
                 color: "#334155",
                 fontWeight: "600",
-                fontSize: "0.875rem",
-                borderRadius: "0.75rem",
+                fontSize: "0.75rem",
+                borderRadius: "0.5rem",
                 border: "1px solid #e2e8f0",
                 boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
+                gap: "0.375rem",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
-                marginBottom: "0.5rem"
+                marginBottom: "0.25rem"
               }}
               onPointerEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
               onPointerLeave={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
               onPointerDown={(e) => (e.currentTarget.style.transform = "scale(0.97)")}
               onPointerUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
             >
-              <Edit size={16} />
+              <Edit size={14} />
               Edit Profile
             </button>
           </div>
@@ -339,33 +339,33 @@ export default function AdvertiseDashboard() {
           {/* Active Campaigns */}
           <div style={metricCardStyle}>
             <div style={{ ...metricIconWrapperStyle, backgroundColor: "#eff6ff", color: "#2563eb" }}>
-              <Megaphone size={28} strokeWidth={2} />
+              <Megaphone size={20} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Active Campaigns</p>
-              <h3 style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{activeCampaigns}</h3>
+              <p style={{ fontSize: "0.6875rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Active Campaigns</p>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{activeCampaigns}</h3>
             </div>
           </div>
 
           {/* Total Views */}
           <div style={metricCardStyle}>
             <div style={{ ...metricIconWrapperStyle, backgroundColor: "#eef2ff", color: "#4f46e5" }}>
-              <Eye size={28} strokeWidth={2} />
+              <Eye size={20} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Total Views</p>
-              <h3 style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{totalViews.toLocaleString()}</h3>
+              <p style={{ fontSize: "0.6875rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Total Views</p>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{totalViews.toLocaleString()}</h3>
             </div>
           </div>
 
           {/* Total Clicks */}
           <div style={metricCardStyle}>
             <div style={{ ...metricIconWrapperStyle, backgroundColor: "#ecfdf5", color: "#059669" }}>
-              <MousePointer size={28} strokeWidth={2} />
+              <MousePointer size={20} strokeWidth={2} />
             </div>
             <div>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Total Clicks</p>
-              <h3 style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{totalClicks.toLocaleString()}</h3>
+              <p style={{ fontSize: "0.6875rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 0.25rem 0" }}>Total Clicks</p>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: 0, lineHeight: 1 }}>{totalClicks.toLocaleString()}</h3>
             </div>
           </div>
 
@@ -506,7 +506,7 @@ export default function AdvertiseDashboard() {
 
                     {/* Card Footer */}
                     <div style={{ backgroundColor: "#f8fafc", borderTop: "1px solid #f1f5f9", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "700" }}>₦{ad.price ? ad.price.toLocaleString() : "2,500"}</span>
+                      <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "700" }}>₦{ad.price ? ad.price.toLocaleString() : "3,500"}</span>
                       <Link
                         href={`/advertise/ad/${ad.id}`}
                         style={{ fontSize: "0.875rem", color: "#2563eb", fontWeight: "700", display: "flex", alignItems: "center", gap: "0.25rem", textDecoration: "none" }}
