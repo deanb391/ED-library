@@ -292,10 +292,10 @@ export default function CreateAdCampaignPage() {
               <Megaphone size={24} strokeWidth={2} />
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0", letterSpacing: "-0.025em" }}>
+              <h1 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0", letterSpacing: "-0.025em" }}>
                 Create Ad Campaign
               </h1>
-              <p style={{ fontSize: "0.875rem", color: "#64748b", margin: 0, fontWeight: "500" }}>
+              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0, fontWeight: "500" }}>
                 Design a new campaign and start promoting instantly.
               </p>
             </div>
@@ -365,14 +365,14 @@ export default function CreateAdCampaignPage() {
               <label style={labelStyle}>
                 Selected Billing Plan
               </label>
-              <div style={{ backgroundColor: "#f8fafc", borderRadius: "1rem", border: "1px solid #e2e8f0", padding: "1.25rem 1.5rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+              <div style={{ backgroundColor: "#f8fafc", borderRadius: "1rem", border: "1px solid #e2e8f0", padding: "0.875rem 1.125rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                 <div>
-                  <h4 style={{ fontSize: "1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0" }}>Weekly Billing Plan</h4>
-                  <p style={{ fontSize: "0.8125rem", color: "#64748b", margin: 0 }}>Perfect for consistent brand exposure. Estimated reach: <strong style={{ color: "#0f172a" }}>2,000 views</strong>.</p>
+                  <h4 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0" }}>Weekly Billing Plan</h4>
+                  <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>Perfect for consistent brand exposure. Estimated reach: <strong style={{ color: "#0f172a" }}>2,000 views</strong>.</p>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a" }}>₦2,500</span>
-                  <span style={{ fontSize: "0.8125rem", color: "#94a3b8", fontWeight: "600" }}> / week</span>
+                  <span style={{ fontSize: "1.25rem", fontWeight: "800", color: "#0f172a" }}>₦3,500</span>
+                  <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}> / week</span>
                 </div>
               </div>
             </div>
@@ -381,8 +381,8 @@ export default function CreateAdCampaignPage() {
             <div style={{ paddingTop: "1.5rem", borderTop: "1px solid #f1f5f9", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
               <div>
-                <h3 style={{ fontSize: "1.125rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0" }}>Campaign Creatives</h3>
-                <p style={{ fontSize: "0.875rem", color: "#64748b", margin: 0 }}>Upload files for one or more banner sizes to maximize placements.</p>
+                <h3 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: "0 0 0.25rem 0" }}>Campaign Creatives</h3>
+                <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>Upload files for one or more banner sizes to maximize placements.</p>
               </div>
 
               {/* Small Creatives */}
@@ -584,15 +584,15 @@ export default function CreateAdCampaignPage() {
             <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "1rem", marginTop: "1rem", marginBottom: "1.25rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8125rem", color: "#6b7280", marginBottom: "0.375rem" }}>
                 <span>Weekly Ad Plan:</span>
-                <span style={{ fontWeight: "600", color: "#111827" }}>₦2,500.00</span>
+                <span style={{ fontWeight: "600", color: "#111827" }}>₦3,500.00</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8125rem", color: "#6b7280", marginBottom: "0.375rem" }}>
                 <span>Processing Fee (1.5%):</span>
-                <span style={{ fontWeight: "600", color: "#111827" }}>₦37.50</span>
+                <span style={{ fontWeight: "600", color: "#111827" }}>₦52.50</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.875rem", fontWeight: "700", color: "#111827", paddingTop: "0.5rem", borderTop: "1px dashed #e5e7eb" }}>
                 <span>Total Amount:</span>
-                <span>₦2,537.50</span>
+                <span>₦3,552.50</span>
               </div>
             </div>
 
@@ -622,7 +622,7 @@ export default function CreateAdCampaignPage() {
 
 
 const labelStyle: React.CSSProperties = {
-  fontSize: "0.875rem",
+  fontSize: "0.75rem",
   fontWeight: "700",
   color: "#334155",
   margin: 0
@@ -630,10 +630,10 @@ const labelStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  padding: "0.875rem 1.25rem",
+  padding: "0.625rem 1rem",
   borderRadius: "0.75rem",
   border: "1px solid #cbd5e1",
-  fontSize: "0.9375rem",
+  fontSize: "0.8125rem",
   color: "#0f172a",
   outline: "none",
   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
@@ -652,7 +652,7 @@ const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
 };
 
 const creativeLabelStyle: React.CSSProperties = {
-  fontSize: "0.75rem",
+  fontSize: "0.6875rem",
   fontWeight: "800",
   textTransform: "uppercase",
   letterSpacing: "0.05em",
@@ -661,7 +661,7 @@ const creativeLabelStyle: React.CSSProperties = {
 };
 
 const uploadCountStyle: React.CSSProperties = {
-  fontSize: "0.75rem",
+  fontSize: "0.6875rem",
   fontWeight: "600",
   color: "#94a3b8"
 };
@@ -670,13 +670,13 @@ const uploadButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: "0.5rem",
-  padding: "0 1.25rem",
-  height: "44px", // Matches standard button height
+  padding: "0 1rem",
+  height: "36px",
   backgroundColor: "#f8fafc",
   border: "1px dashed #94a3b8",
   borderRadius: "0.75rem",
   color: "#475569",
-  fontSize: "0.875rem",
+  fontSize: "0.75rem",
   fontWeight: "600",
   transition: "border-color 0.2s, color 0.2s"
 };

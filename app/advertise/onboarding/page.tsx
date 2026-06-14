@@ -90,6 +90,18 @@ export default function AdvertiseOnboardingPage() {
         user: user!.$id,
       });
 
+      // Track the business profile creation with terms agreement status
+      const { trackEvent } = await import("@/lib/analytics/trackEvent");
+      trackEvent("BUSINESS_PROFILE_CREATED", {
+        distinctId: user!.$id,
+        userId: user!.$id,
+        metadata: {
+          businessName: name,
+          businessPhone: phone,
+          agreedToTerms: agreeTerms,
+        }
+      });
+
       // 3. Navigate to the dashboard
       router.push("/advertise/dashboard");
     } catch (err: any) {

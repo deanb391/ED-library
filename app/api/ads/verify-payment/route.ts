@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
               link: parsed.link || "",
               user: parsed.user,
               type: parsed.type || "weekly",
-              price: 2500,
+              price: 3500,
               isExpired: false,
               endTime,
             });

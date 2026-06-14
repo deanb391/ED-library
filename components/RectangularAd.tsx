@@ -45,7 +45,7 @@ export default function RectangularAd({
     if (!activeAd) return;
 
     if (activeAd.fileType === "image") {
-      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 4000);
+      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 7000);
     }
 
     return () => {
@@ -89,7 +89,7 @@ export default function RectangularAd({
         width: "100%",
         minHeight: height ? `${height}px` : "150px",
         maxHeight: "400px",
-        maxWidth:"1300px"
+        maxWidth: "1300px"
       }}
     >
       <div

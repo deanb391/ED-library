@@ -5,6 +5,8 @@ export type AnalyticsEvent =
   | "USER_SIGNED_UP"
   | "USER_SIGNED_IN"
   | "AUTH_FAILED"
+  // Business Onboarding
+  | "BUSINESS_PROFILE_CREATED"
   // Contributor lifecycle
   | "CONTRIBUTOR_APPLIED"
   | "CONTRIBUTOR_APPROVED"
