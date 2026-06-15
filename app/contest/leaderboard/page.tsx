@@ -105,7 +105,7 @@ export default function ContestLeaderboardPage() {
 
       {/* Leaderboard Screen Inner Container */}
       <div className="max-w-5xl mx-auto px-4 py-8 relative z-10">
-        
+
         {/* --- Top Navigation & Header --- */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <Link
@@ -142,8 +142,8 @@ export default function ContestLeaderboardPage() {
         </div>
 
         {/* --- LEADERBOARD TABLE CONTAINER --- */}
-        <div className="relative bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-          
+        <div className={`relative bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden shadow-2xl ${!timeLeft.isPastStart ? 'min-h-[480px]' : ''}`}>
+
           {/* Table Header */}
           <div className="px-6 py-5 border-b border-slate-800 flex items-center justify-between">
             <h3 className="font-extrabold text-white text-base">Participating Contributors</h3>
@@ -179,16 +179,15 @@ export default function ContestLeaderboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/40 text-sm">
-                  {contestants.map(( contestantItem, index) => {
+                  {contestants.map((contestantItem, index) => {
                     const rank = index + 1;
                     return (
                       <tr key={contestantItem.$id} className="hover:bg-slate-800/10 transition-colors">
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                            rank === 1 ? 'bg-amber-400 text-slate-950 font-black' :
-                            rank === 2 ? 'bg-slate-300 text-slate-900' :
-                            rank === 3 ? 'bg-amber-600 text-white' : 'text-slate-400 bg-slate-800/50'
-                          }`}>
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${rank === 1 ? 'bg-amber-400 text-slate-950 font-black' :
+                              rank === 2 ? 'bg-slate-300 text-slate-900' :
+                                rank === 3 ? 'bg-amber-600 text-white' : 'text-slate-400 bg-slate-800/50'
+                            }`}>
                             {rank}
                           </span>
                         </td>
@@ -223,13 +222,13 @@ export default function ContestLeaderboardPage() {
           {/* --- Pre-Start State Inactive Overlay --- */}
           {!timeLeft.isPastStart && (
             <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
-              <div className="max-w-md bg-slate-900 border border-indigo-500/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              <div className="w-full max-w-md bg-slate-900 border border-indigo-500/20 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
                 {/* Visual indicator */}
-                <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/35 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce">
-                  <Clock size={28} />
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-indigo-500/10 border border-indigo-500/35 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-bounce">
+                  <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 
-                <h4 className="text-xl font-black text-white mb-2">The Contest has not started yet</h4>
+                <h4 className="text-lg sm:text-xl font-black text-white mb-2">The Contest has not started yet</h4>
                 <p className="text-xs text-slate-400 mb-6 leading-relaxed">
                   The leaderboard dashboard is currently frozen. Rankings and scorecards will unlock once the challenge officially launches.
                 </p>
@@ -239,7 +238,7 @@ export default function ContestLeaderboardPage() {
                   <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">
                     Contest Starts In
                   </div>
-                  <div className="font-mono text-lg font-extrabold text-amber-300 tracking-wider">
+                  <div className="font-mono text-base sm:text-lg font-extrabold text-amber-300 tracking-wider">
                     {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
                   </div>
                 </div>
