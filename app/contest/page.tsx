@@ -101,7 +101,7 @@ export default function ContestLandingPage() {
   useEffect(() => {
     const calculateTime = () => {
       const now = new Date();
-      
+
       const pastStart = now.getTime() >= startDate.getTime();
       const pastEnd = now.getTime() >= endDate.getTime();
 
@@ -165,7 +165,7 @@ export default function ContestLandingPage() {
       const timer1 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step1: true })), 400);
       const timer2 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step2: true })), 1000);
       const timer3 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step3: true })), 1600);
-      
+
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
@@ -204,7 +204,7 @@ export default function ContestLandingPage() {
 
   const handleJoinContestTap = () => {
     const hasApprovedContributor = contributor && contributor.status === 'live';
-    
+
     if (!hasApprovedContributor) {
       setShowWarningModal(true);
     } else {
@@ -288,7 +288,7 @@ export default function ContestLandingPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#030712", 
+        backgroundColor: "#030712",
         backgroundImage: "radial-gradient(circle at top right, rgba(79, 70, 229, 0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%)",
         color: "#f8fafc",
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -319,108 +319,10 @@ export default function ContestLandingPage() {
             Back to Dashboard
           </Link>
 
-          {/* Quick simulator toggle */}
-          <button
-            onClick={() => setShowSimPanel(!showSimPanel)}
-            style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "0.75rem",
-              color: "#e2e8f0",
-              fontSize: "0.75rem",
-              fontWeight: "700",
-              cursor: "pointer",
-              transition: "all 0.2s ease"
-            }}
-          >
-            {showSimPanel ? "Hide Simulator" : "🔧 Simulator Panel"}
-          </button>
+
         </div>
 
-        {/* --- SIMULATION SETTINGS PANEL --- */}
-        {showSimPanel && (
-          <div
-            style={{
-              padding: "1.5rem",
-              backgroundColor: "rgba(30, 41, 59, 0.7)",
-              border: "1px solid rgba(99, 102, 241, 0.3)",
-              borderRadius: "1.25rem",
-              marginBottom: "3rem",
-              boxShadow: "0 10px 25px -5px rgba(0,0,0,0.3)"
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-              <Sparkles size={16} color="#fcd34d" />
-              <h4 style={{ margin: 0, fontSize: "0.875rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", color: "#f8fafc" }}>
-                Admin Time-Travel Controls
-              </h4>
-            </div>
-            
-            <p style={{ margin: "0 0 1rem 0", fontSize: "0.75rem", color: "#94a3b8" }}>
-              Test the countdown overlays, modals, and endpoints by simulating different target launch offsets.
-            </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                <button type="button" onClick={() => applyPreset(10)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 10s</button>
-                <button type="button" onClick={() => applyPreset(3600)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 1 hour</button>
-                <button type="button" onClick={() => applyPreset(86400 * 5)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 5 days</button>
-                <button type="button" onClick={() => applyPreset(-7200)} style={simButtonStyle("#f472b6", "rgba(219, 39, 119, 0.2)")}>Started 2h ago</button>
-                <button type="button" onClick={() => applyPreset(-86400 * 10)} style={simButtonStyle("#f472b6", "rgba(219, 39, 119, 0.2)")}>Started 10d ago</button>
-              </div>
-
-              <form onSubmit={handleCustomDateSubmit} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <input
-                  type="datetime-local"
-                  value={simDateInput}
-                  onChange={(e) => setSimDateInput(e.target.value)}
-                  style={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "0.5rem",
-                    padding: "0.375rem 0.5rem",
-                    color: "#f8fafc",
-                    fontSize: "0.75rem",
-                    outline: "none"
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: "0.375rem 0.75rem",
-                    backgroundColor: "#6366f1",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "0.5rem",
-                    fontSize: "0.75rem",
-                    fontWeight: "700",
-                    cursor: "pointer"
-                  }}
-                >
-                  Apply Date
-                </button>
-              </form>
-
-              <button
-                type="button"
-                onClick={resetPreset}
-                style={{
-                  padding: "0.375rem 0.75rem",
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  color: "#94a3b8",
-                  borderRadius: "0.5rem",
-                  fontSize: "0.75rem",
-                  fontWeight: "700",
-                  border: "none",
-                  cursor: "pointer"
-                }}
-              >
-                Reset Default
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* --- HERO SECTION --- */}
         <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto 3.5rem auto" }}>
@@ -797,13 +699,13 @@ export default function ContestLandingPage() {
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
             {/* Design accents */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-red-500 rounded-full" />
-            
+
             <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
               <Lock size={28} />
             </div>
 
             <h3 className="text-xl font-black text-white mb-2">Contributor Account Required</h3>
-            
+
             <p className="text-sm text-slate-400 mb-6 leading-relaxed">
               you do not have a contributor action
             </p>
@@ -893,15 +795,14 @@ export default function ContestLandingPage() {
               >
                 Cancel
               </button>
-              
+
               <button
                 disabled={!termsAccepted || isEnrolling}
                 onClick={handleEnrollConfirm}
-                className={`flex-1 font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${
-                  termsAccepted
+                className={`flex-1 font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${termsAccepted
                     ? "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 shadow-amber-500/10"
                     : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50"
-                }`}
+                  }`}
               >
                 {isEnrolling ? (
                   <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
@@ -923,7 +824,7 @@ export default function ContestLandingPage() {
             </div>
 
             <h3 className="text-xl font-extrabold text-white mb-2">Welcome to the Arena!</h3>
-            
+
             {/* Conditional text based on whether contest is live or future */}
             {!timeLeft.isPastStart ? (
               <div className="mb-6">
