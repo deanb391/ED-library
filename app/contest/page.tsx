@@ -76,18 +76,14 @@ export default function ContestLandingPage() {
   // Calculator inputs state
   const [calcInputs, setCalcInputs] = useState({
     userNew: "5",
-    userNewHighest: "10",
-    reach: "150",
-    reachHighest: "300",
-    returning: "40",
-    returningHighest: "80",
-    qualityRating: 12, // rating 0-15
+    engagedUsers: "10",
+    uploads: "10",
     courses: "2",
-    coursesHighest: "4",
   });
 
   // Onboarding Modal States
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -203,6 +199,11 @@ export default function ContestLandingPage() {
   };
 
   const handleJoinContestTap = () => {
+    if (!user) {
+      setShowSignUpModal(true);
+      return;
+    }
+
     const hasApprovedContributor = contributor && contributor.status === 'live';
 
     if (!hasApprovedContributor) {
@@ -237,40 +238,23 @@ export default function ContestLandingPage() {
     return isNaN(num) || num < 0 ? 0 : num;
   };
 
-  const calcNewUsersPoints = () => {
-    const myVal = parseNum(calcInputs.userNew);
-    const highestVal = parseNum(calcInputs.userNewHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(32, Math.round((myVal / highestVal) * 32 * 10) / 10);
+  const calcAcquisitionPoints = () => {
+    const users = parseNum(calcInputs.userNew);
+    return Math.min(50, users * 5);
   };
 
-  const calcReachPoints = () => {
-    const myVal = parseNum(calcInputs.reach);
-    const highestVal = parseNum(calcInputs.reachHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(32, Math.round((myVal / highestVal) * 32 * 10) / 10);
+  const calcEngagementPoints = () => {
+    const engaged = parseNum(calcInputs.engagedUsers);
+    return Math.min(40, engaged * 2);
   };
 
-  const calcReturningPoints = () => {
-    const myVal = parseNum(calcInputs.returning);
-    const highestVal = parseNum(calcInputs.returningHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(20, Math.round((myVal / highestVal) * 20 * 10) / 10);
+  const calcContentPoints = () => {
+    const uploads = parseNum(calcInputs.uploads);
+    const courses = parseNum(calcInputs.courses);
+    return Math.min(10, (uploads * 0.5) + (courses * 0.25));
   };
 
-  const calcCoursesPoints = () => {
-    const myVal = parseNum(calcInputs.courses);
-    const highestVal = parseNum(calcInputs.coursesHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(1, Math.round((myVal / highestVal) * 1 * 10) / 10);
-  };
-
-  const totalCalculatedPoints =
-    calcNewUsersPoints() +
-    calcReachPoints() +
-    calcReturningPoints() +
-    calcInputs.qualityRating +
-    calcCoursesPoints();
+  const totalCalculatedPoints = calcAcquisitionPoints() + calcEngagementPoints() + calcContentPoints();
 
   if (userLoading || contributorLoading) {
     return (
@@ -542,11 +526,9 @@ export default function ContestLandingPage() {
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
                   {[
-                    { title: "New Users Generated", weight: "32 Points Max", formula: "(Your New Users ÷ Highest Generated That Day) × 32", desc: "Measures new registration counts driven by your referral link or content shares." },
-                    { title: "Unique Students Reached", weight: "32 Points Max", formula: "(Your Views ÷ Highest Reach That Day) × 32", desc: "Measures distinct students opening and reading your courses or study materials." },
-                    { title: "Returning Students", weight: "20 Points Max", formula: "(Your Return Count ÷ Highest Return Count That Day) × 20", desc: "Rewards high-utility documents that students return to consult repeatedly." },
-                    { title: "Quality Content Uploads", weight: "15 Points Max", formula: "Assessed by editorial board (0 to 15)", desc: "Score awarded based on clear titles, categorization, visual layout, and academic value." },
-                    { title: "Courses Created", weight: "1 Points Max", formula: "(Your Course Count ÷ Highest Created That Day) × 1", desc: "Rewards building comprehensive, multi-unit courses structured logically." }
+                    { title: "Acquisition (New Users)", weight: "50 Points Max", formula: "New Users × 5", desc: "Measures the number of new users brought into the platform. Must be a first-time user properly attributed to you." },
+                    { title: "Engagement (User Activity)", weight: "40 Points Max", formula: "Engaged Users × 2", desc: "Measures real learning activity. Counts unique engaged users per day (viewing ≥ 2 mins, reading, downloading, returning)." },
+                    { title: "Content (Uploads & Courses)", weight: "10 Points Max", formula: "(Uploads × 0.5) + (Courses × 0.25)", desc: "Measures quality and quantity of academic content created. Valid approved content only." }
                   ].map((cat, idx) => (
                     <div key={idx} style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1.5rem" }}>
                       <div>
@@ -576,25 +558,10 @@ export default function ContestLandingPage() {
 
                   {/* Inputs Column */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <InputPair labelMe="New Users (You)" valMe={calcInputs.userNew} onChangeMe={(val) => setCalcInputs({ ...calcInputs, userNew: val })} labelHigh="New Users (Highest)" valHigh={calcInputs.userNewHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, userNewHighest: val })} />
-                    <InputPair labelMe="Student Reach (You)" valMe={calcInputs.reach} onChangeMe={(val) => setCalcInputs({ ...calcInputs, reach: val })} labelHigh="Student Reach (Highest)" valHigh={calcInputs.reachHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, reachHighest: val })} />
-                    <InputPair labelMe="Returning Students (You)" valMe={calcInputs.returning} onChangeMe={(val) => setCalcInputs({ ...calcInputs, returning: val })} labelHigh="Returning (Highest)" valHigh={calcInputs.returningHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, returningHighest: val })} />
-                    <InputPair labelMe="Courses Created (You)" valMe={calcInputs.courses} onChangeMe={(val) => setCalcInputs({ ...calcInputs, courses: val })} labelHigh="Courses Created (Highest)" valHigh={calcInputs.coursesHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, coursesHighest: val })} />
-
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>Assessed Content Quality Score</label>
-                        <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#818cf8" }}>{calcInputs.qualityRating} / 15 pts</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="15"
-                        value={calcInputs.qualityRating}
-                        onChange={(e) => setCalcInputs({ ...calcInputs, qualityRating: parseInt(e.target.value) })}
-                        style={{ width: "100%", accentColor: "#6366f1", height: "4px", backgroundColor: "#1e293b", borderRadius: "2px", outline: "none", cursor: "pointer" }}
-                      />
-                    </div>
+                    <InputSingle labelMe="New Users (You)" valMe={calcInputs.userNew} onChangeMe={(val) => setCalcInputs({ ...calcInputs, userNew: val })} />
+                    <InputSingle labelMe="Engaged Users (You)" valMe={calcInputs.engagedUsers} onChangeMe={(val) => setCalcInputs({ ...calcInputs, engagedUsers: val })} />
+                    <InputSingle labelMe="Uploads (You)" valMe={calcInputs.uploads} onChangeMe={(val) => setCalcInputs({ ...calcInputs, uploads: val })} />
+                    <InputSingle labelMe="Courses Created (You)" valMe={calcInputs.courses} onChangeMe={(val) => setCalcInputs({ ...calcInputs, courses: val })} />
                   </div>
 
                   {/* Output Column */}
@@ -602,11 +569,9 @@ export default function ContestLandingPage() {
                     <div>
                       <h4 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#e2e8f0", margin: "0 0 1rem 0" }}>Calculated Daily Score Sheet</h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        <ScoreRow label="1. Referral Users points" score={calcNewUsersPoints()} max="32" />
-                        <ScoreRow label="2. Student Reach points" score={calcReachPoints()} max="32" />
-                        <ScoreRow label="3. Returning Users points" score={calcReturningPoints()} max="20" />
-                        <ScoreRow label="4. Editorial Quality points" score={calcInputs.qualityRating} max="15" />
-                        <ScoreRow label="5. Course Creation points" score={calcCoursesPoints()} max="1" />
+                        <ScoreRow label="1. Acquisition points" score={calcAcquisitionPoints()} max="50" />
+                        <ScoreRow label="2. Engagement points" score={calcEngagementPoints()} max="40" />
+                        <ScoreRow label="3. Content points" score={calcContentPoints()} max="10" />
                       </div>
                     </div>
 
@@ -718,6 +683,42 @@ export default function ContestLandingPage() {
               className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-red-600/10 cursor-pointer"
             >
               Start Contributor Onboarding
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- WARNING MODAL: NO SIGNED IN USER --- */}
+      {showSignUpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
+            {/* Design accents */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-amber-500 rounded-full" />
+
+            <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+              <Lock size={28} />
+            </div>
+
+            <h3 className="text-xl font-black text-white mb-2">Account Required</h3>
+
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              You must create an account and become a contributor before joining the contest arena.
+            </p>
+
+            <button
+              onClick={() => {
+                setShowSignUpModal(false);
+                router.push("/signup");
+              }}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-amber-500/10 cursor-pointer"
+            >
+              Sign Up Now
+            </button>
+            <button
+              onClick={() => setShowSignUpModal(false)}
+              className="w-full mt-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-2xl transition cursor-pointer"
+            >
+              Cancel
             </button>
           </div>
         </div>
@@ -917,25 +918,18 @@ function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" 
   );
 }
 
-interface InputPairProps {
+interface InputSingleProps {
   labelMe: string;
   valMe: string;
   onChangeMe: (val: string) => void;
-  labelHigh: string;
-  valHigh: string;
-  onChangeHigh: (val: string) => void;
 }
 
-function InputPair({ labelMe, valMe, onChangeMe, labelHigh, valHigh, onChangeHigh }: InputPairProps) {
+function InputSingle({ labelMe, valMe, onChangeMe }: InputSingleProps) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
         <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>{labelMe}</label>
         <input type="number" value={valMe} onChange={(e) => onChangeMe(e.target.value)} style={darkInputStyle} onFocus={handleDarkFocus} onBlur={handleDarkBlur} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>{labelHigh}</label>
-        <input type="number" value={valHigh} onChange={(e) => onChangeHigh(e.target.value)} style={darkInputStyle} onFocus={handleDarkFocus} onBlur={handleDarkBlur} />
       </div>
     </div>
   );

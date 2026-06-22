@@ -5,7 +5,7 @@ import { useUser } from "@/context/UserContext";
 import AccessWall from "@/components/AccessWall";
 import { ChevronLeft, Trophy, Search, Save, Check } from "lucide-react";
 import Link from "next/link";
-import { Contributor } from "@/types";
+import { Contributor } from "@/lib/services/contributors.service";
 import { ContestPerformance } from "@/lib/services/contest_performance.service";
 
 export default function ContestScoringAdminPage() {
