@@ -19,7 +19,8 @@ import {
   GraduationCap,
   Flame,
   Trophy,
-  Crown
+  Crown,
+  Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -499,6 +500,12 @@ export default function DashboardUnderReviewPage() {
                   >
                     View Contest Leaderboard
                   </Link>
+                  <Link
+                    href="/contributor/dashboard/referrals"
+                    className="w-full sm:w-auto text-center bg-slate-800 hover:bg-slate-700 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-slate-900/10 text-decoration-none border border-slate-700"
+                  >
+                    My Referrals
+                  </Link>
                 </div>
               </div>
             )}
@@ -763,6 +770,15 @@ export default function DashboardUnderReviewPage() {
                 enabled={isContributorActive}
                 link={`/contributor/dashboard/subscriptions-and-earnings`}
                 index={3}
+              />
+
+              <ActionCard
+                icon={<Share2 size={20} />}
+                title="Referrals & Contests"
+                desc="Track referral clicks, sign-ups, and get your custom link."
+                enabled={isContributorActive}
+                link={`/contributor/dashboard/referrals`}
+                index={4}
               />
 
             </div>

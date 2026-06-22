@@ -14,6 +14,7 @@ import { useRouter } from "@/components/useRouter";
 import { Eye, EyeOff } from "lucide-react";
 import { createUser, googleSignIn } from "@/lib/services/auth.service";
 import { useUser } from "@/context/UserContext";
+import { trackReferralSignup } from "@/lib/api/contest_performance";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -27,7 +28,48 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isContributorSignUp, setIsContributorSignUp] = useState(false);
   const { refreshUser } = useUser()
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRef = urlParams.get("ref");
+      const urlMRef = urlParams.get("mref");
+      
+      if (urlMRef) {
+        const trackedMRef = localStorage.getItem("media_source_tracked");
+        if (trackedMRef !== urlMRef) {
+          import("@/lib/api/sources").then(({ trackSourceClick }) => {
+            trackSourceClick(urlMRef)
+              .then(success => {
+                if (success) {
+                  localStorage.setItem("media_source_tracked", urlMRef);
+                  localStorage.setItem("media_source_id", urlMRef);
+                }
+              })
+              .catch(err => console.error("Media track error:", err));
+          });
+        }
+      }
+      
+      if (urlRef) {
+        const trackedRef = localStorage.getItem("contest_referral_tracked");
+        if (trackedRef !== urlRef) {
+          import("@/lib/api/contest_performance").then(({ trackReferralClick }) => {
+            trackReferralClick(urlRef)
+              .then(success => {
+                if (success) {
+                  localStorage.setItem("contest_referral_tracked", urlRef);
+                  localStorage.setItem("contest_referral_id", urlRef);
+                }
+              })
+              .catch(err => console.error("Referral track error:", err));
+          });
+        }
+      }
+    }
+  }, []);
 
   const LEVELS = ["Pre-Degree", 100, 200, 300, 400, 500, 600, "Post-Graduate"];
 
@@ -61,7 +103,38 @@ export default function SignUpPage() {
     try {
       await createUser({ email, password, username, level: num_level, department })
       await refreshUser()
-      router.replace("/");
+      
+      // Track referral signup if exists
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRef = urlParams.get("ref");
+      const ref = urlRef || localStorage.getItem("contest_referral_id");
+      
+      if (ref) {
+        try {
+          await trackReferralSignup(ref);
+          // Clear it so it doesn't trigger again
+          localStorage.removeItem("contest_referral_id");
+          localStorage.removeItem("contest_referral_time");
+        } catch (err) {
+          console.error("Referral signup track error:", err);
+        }
+      }
+
+      const urlMRef = urlParams.get("mref");
+      const mref = urlMRef || localStorage.getItem("media_source_id");
+      
+      if (mref) {
+        import("@/lib/api/sources").then(({ trackSourceSignup }) => {
+          trackSourceSignup(mref).catch(err => console.error(err));
+          localStorage.removeItem("media_source_id");
+        });
+      }
+
+      if (isContributorSignUp) {
+        router.replace("/onboarding/step-1");
+      } else {
+        router.replace("/");
+      }
     } catch (err: any) {
       // console.error(err)
       let message = err.message;
@@ -195,6 +268,26 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Sign Up As Contributor Switch */}
+          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100">
+            <div>
+              <p className="text-sm font-bold text-gray-800">Sign Up As Contributor</p>
+              <p className="text-xs text-gray-500">Enable to apply as a contributor after signing up.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsContributorSignUp(v => !v)}
+              className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${
+                isContributorSignUp ? "bg-blue-600" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
+                  isContributorSignUp ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
 
           {/* Submit */}
           <button

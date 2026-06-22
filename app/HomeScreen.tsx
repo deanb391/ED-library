@@ -455,6 +455,7 @@ function pickRandom<T>(arr: T[]): T | null {
 
 
 export default function EDLibraryHome() {
+  const router = useRouter();
   const { user, loading: userLoading, contributor, homeBannerAds, showAdHome } = useUser();
 
   const [popular, setPopular] = useState<Course[]>([]);
@@ -592,6 +593,20 @@ export default function EDLibraryHome() {
   return (
     <div className="min-h-screen bg-[#F8F9FB]">
       <main className="max-w-7xl mx-auto px-5 py-10">
+
+        {/* Contest Banner */}
+        <div 
+          onClick={() => router.push("/contest")}
+          className="w-full max-w-4xl mx-auto mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-all active:scale-[0.98] flex flex-col md:flex-row items-center justify-between shadow-md"
+        >
+          <div>
+            <h3 className="text-xl font-bold mb-1">🎉 Join the Content Creator Contest!</h3>
+            <p className="text-blue-100 text-sm">Win exciting prizes by sharing your knowledge and growing the community.</p>
+          </div>
+          <button className="mt-4 md:mt-0 bg-white text-blue-600 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors shrink-0 shadow-sm">
+            View Contest
+          </button>
+        </div>
 
         <CourseSearch
           onCourseResults={setResults}

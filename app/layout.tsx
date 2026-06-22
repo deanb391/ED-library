@@ -11,6 +11,7 @@ import Script from "next/script";
 import { PHProvider } from "@/app/providers";
 import AppProgressBar from "@/components/ProgressBar";
 import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
+import ReferralTracker from "@/components/ReferralTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -54,6 +55,7 @@ export default function RootLayout({
             <main className="flex-grow w-full">
               <GoogleAnalytics />
               <TrackPageView />
+              <ReferralTracker />
               {children}
             </main>
 

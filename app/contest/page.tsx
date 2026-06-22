@@ -241,14 +241,14 @@ export default function ContestLandingPage() {
     const myVal = parseNum(calcInputs.userNew);
     const highestVal = parseNum(calcInputs.userNewHighest);
     if (highestVal === 0) return 0;
-    return Math.min(30, Math.round((myVal / highestVal) * 30 * 10) / 10);
+    return Math.min(32, Math.round((myVal / highestVal) * 32 * 10) / 10);
   };
 
   const calcReachPoints = () => {
     const myVal = parseNum(calcInputs.reach);
     const highestVal = parseNum(calcInputs.reachHighest);
     if (highestVal === 0) return 0;
-    return Math.min(30, Math.round((myVal / highestVal) * 30 * 10) / 10);
+    return Math.min(32, Math.round((myVal / highestVal) * 32 * 10) / 10);
   };
 
   const calcReturningPoints = () => {
@@ -262,7 +262,7 @@ export default function ContestLandingPage() {
     const myVal = parseNum(calcInputs.courses);
     const highestVal = parseNum(calcInputs.coursesHighest);
     if (highestVal === 0) return 0;
-    return Math.min(5, Math.round((myVal / highestVal) * 5 * 10) / 10);
+    return Math.min(1, Math.round((myVal / highestVal) * 1 * 10) / 10);
   };
 
   const totalCalculatedPoints =
@@ -354,12 +354,12 @@ export default function ContestLandingPage() {
                 🚀 Join Contest Arena
               </button>
             )}
-            <Link
+            {/* <Link
               href="/contest/leaderboard"
               className="w-full sm:w-auto text-center bg-slate-900/60 border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-sm font-bold py-4 px-8 rounded-2xl transition-all duration-300 text-decoration-none"
             >
               Check Leaderboard
-            </Link>
+            </Link> */}
           </div>
         </div>
 
@@ -542,11 +542,11 @@ export default function ContestLandingPage() {
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
                   {[
-                    { title: "New Users Generated", weight: "30 Points Max", formula: "(Your New Users ÷ Highest Generated That Day) × 30", desc: "Measures new registration counts driven by your referral link or content shares." },
-                    { title: "Unique Students Reached", weight: "30 Points Max", formula: "(Your Views ÷ Highest Reach That Day) × 30", desc: "Measures distinct students opening and reading your courses or study materials." },
+                    { title: "New Users Generated", weight: "32 Points Max", formula: "(Your New Users ÷ Highest Generated That Day) × 32", desc: "Measures new registration counts driven by your referral link or content shares." },
+                    { title: "Unique Students Reached", weight: "32 Points Max", formula: "(Your Views ÷ Highest Reach That Day) × 32", desc: "Measures distinct students opening and reading your courses or study materials." },
                     { title: "Returning Students", weight: "20 Points Max", formula: "(Your Return Count ÷ Highest Return Count That Day) × 20", desc: "Rewards high-utility documents that students return to consult repeatedly." },
                     { title: "Quality Content Uploads", weight: "15 Points Max", formula: "Assessed by editorial board (0 to 15)", desc: "Score awarded based on clear titles, categorization, visual layout, and academic value." },
-                    { title: "Courses Created", weight: "5 Points Max", formula: "(Your Course Count ÷ Highest Created That Day) × 5", desc: "Rewards building comprehensive, multi-unit courses structured logically." }
+                    { title: "Courses Created", weight: "1 Points Max", formula: "(Your Course Count ÷ Highest Created That Day) × 1", desc: "Rewards building comprehensive, multi-unit courses structured logically." }
                   ].map((cat, idx) => (
                     <div key={idx} style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1.5rem" }}>
                       <div>
@@ -602,11 +602,11 @@ export default function ContestLandingPage() {
                     <div>
                       <h4 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#e2e8f0", margin: "0 0 1rem 0" }}>Calculated Daily Score Sheet</h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        <ScoreRow label="1. Referral Users points" score={calcNewUsersPoints()} max="30" />
-                        <ScoreRow label="2. Student Reach points" score={calcReachPoints()} max="30" />
+                        <ScoreRow label="1. Referral Users points" score={calcNewUsersPoints()} max="32" />
+                        <ScoreRow label="2. Student Reach points" score={calcReachPoints()} max="32" />
                         <ScoreRow label="3. Returning Users points" score={calcReturningPoints()} max="20" />
                         <ScoreRow label="4. Editorial Quality points" score={calcInputs.qualityRating} max="15" />
-                        <ScoreRow label="5. Course Creation points" score={calcCoursesPoints()} max="5" />
+                        <ScoreRow label="5. Course Creation points" score={calcCoursesPoints()} max="1" />
                       </div>
                     </div>
 
@@ -800,8 +800,8 @@ export default function ContestLandingPage() {
                 disabled={!termsAccepted || isEnrolling}
                 onClick={handleEnrollConfirm}
                 className={`flex-1 font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${termsAccepted
-                    ? "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 shadow-amber-500/10"
-                    : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50"
+                  ? "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 shadow-amber-500/10"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50"
                   }`}
               >
                 {isEnrolling ? (

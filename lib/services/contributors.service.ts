@@ -4,6 +4,7 @@ import { fetchCoursesByAdminService, updateCourseService } from "./course.servic
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
 import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -133,6 +134,17 @@ export async function editContributorService(
     contributorId,
     payload
   );
+
+  if (updates.joinedContest === true) {
+    try {
+      const existingPerf = await getContestPerformanceByContributorService(contributorId);
+      if (!existingPerf) {
+        await createContestPerformanceService(contributorId);
+      }
+    } catch (e) {
+      console.error("Failed to init contest performance doc", e);
+    }
+  }
 
   if (type) {
     let status = "";

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronLeft, BarChart2, Star, Users, Calendar, Coins, TrendingUp, BookOpen, Calculator, Info, Trophy } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, BarChart2, Star, Users, Calendar, Coins, TrendingUp, BookOpen, Calculator, Info, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext";
 import AccessWall from "@/components/AccessWall";
+import { ContestPerformance } from "@/lib/services/contest_performance.service";
 
 export default function ContributorPerformancePage() {
   const { user, contributor, loading: userLoading, contributorLoading } = useUser();
@@ -12,6 +13,57 @@ export default function ContributorPerformancePage() {
   // Interactive Projected Reward Calculator State
   const [estimatedShare, setEstimatedShare] = useState(10); // Percentage share (10%)
   const [estimatedPool, setEstimatedPool] = useState(150000); // Pool amount (₦150,000)
+
+  // Real performance data state
+  const [performance, setPerformance] = useState<ContestPerformance | null>(null);
+  const [perfLoading, setPerfLoading] = useState(true);
+
+  // Compute current day key
+  const [dayKey, setDayKey] = useState("day 1");
+  useEffect(() => {
+    const startDate = new Date("2026-06-26T00:00:00Z");
+    const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
+    const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    setDayKey(`day ${dayNumber}`);
+  }, []);
+
+  // Calendar accordion state
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    dailyPoints: true,
+  });
+
+  const toggleSection = (key: string) => {
+    setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const calendarMetrics = [
+    { id: 'dailyPoints', title: 'Total Daily Points', dataKey: 'dailyPoints', maxVal: 100 },
+    { id: 'newUsers', title: 'Acquisition (New Users)', dataKey: 'newUsers', maxVal: 10 },
+    { id: 'uniqueUsersReached', title: 'Engagement (Active Users)', dataKey: 'uniqueUsersReached', maxVal: 20 },
+    { id: 'uploadsCreated', title: 'Uploads Created', dataKey: 'uploadsCreated', maxVal: 20 },
+    { id: 'coursesPoints', title: 'Courses Created', dataKey: 'coursesPoints', maxVal: 40 },
+  ];
+
+  useEffect(() => {
+    if (contributor && contributor.joinedContest) {
+      const fetchPerf = async () => {
+        try {
+          const res = await fetch(`/api/contest/performance?contributorId=${contributor.$id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setPerformance(data.performance);
+          }
+        } catch (err) {
+          console.error("Failed to fetch performance:", err);
+        } finally {
+          setPerfLoading(false);
+        }
+      };
+      fetchPerf();
+    } else {
+      setPerfLoading(false);
+    }
+  }, [contributor]);
 
   if (userLoading || contributorLoading) {
     return (
@@ -104,14 +156,14 @@ export default function ContributorPerformancePage() {
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
             <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Followers</div>
-            <div className="text-2xl font-black text-indigo-450 text-indigo-400">{contributor.followers || 0}</div>
+            <div className="text-2xl font-black text-indigo-400">{contributor.followers || 0}</div>
             <div className="text-[10px] text-slate-500 mt-2">Active student audience size.</div>
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
             <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Contest Points</div>
-            <div className="text-2xl font-black text-amber-300">0 pts</div>
-            <div className="text-[10px] text-slate-500 mt-2">Points are currently frozen at 0.</div>
+            <div className="text-2xl font-black text-amber-300">{perfLoading ? "..." : (performance?.totalPoints || 0)} pts</div>
+            <div className="text-[10px] text-slate-500 mt-2">Your total verified points.</div>
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
@@ -134,11 +186,30 @@ export default function ContributorPerformancePage() {
           <div className="space-y-4">
             
             {[
-              { title: "New Users Generated", value: "0 Referrals", maxVal: "30 pts", desc: "Signups driven by your unique referral code.", formula: "(Your referrals ÷ Highest referrals) × 30" },
-              { title: "Unique Students Reached", value: "0 Views", maxVal: "30 pts", desc: "Distinct student sessions reviewing your assets.", formula: "(Your views ÷ Highest reach) × 30" },
-              { title: "Returning Students", value: "0 Return Views", maxVal: "20 pts", desc: "Students consulting your courses repeatedly.", formula: "(Your return count ÷ Highest return count) × 20" },
-              { title: "Quality Content Uploads", value: "Pending evaluation", maxVal: "15 pts", desc: "Score awarded by our editorial board.", formula: "Assessed quality index (0 to 15)" },
-              { title: "Courses Created", value: "0 Courses", maxVal: "5 pts", desc: "Full structured unit courses completed.", formula: "(Your course count ÷ Highest courses) × 5" }
+              { 
+                title: "Acquisition (New Users)", 
+                value: perfLoading ? "..." : `${JSON.parse(performance?.newUsers || "{}")[dayKey] || 0} Users`, 
+                maxVal: "50 pts", 
+                desc: "New users brought into the platform.", 
+                formula: "New Users × 5",
+                calculated: Math.min(50, (JSON.parse(performance?.newUsers || "{}")[dayKey] || 0) * 5)
+              },
+              { 
+                title: "Engagement (Active Learning)", 
+                value: perfLoading ? "..." : `${JSON.parse(performance?.uniqueUsersReached || "{}")[dayKey] || 0} Users`, 
+                maxVal: "40 pts", 
+                desc: "Unique engaged users per day.", 
+                formula: "Engaged Users × 2",
+                calculated: Math.min(40, (JSON.parse(performance?.uniqueUsersReached || "{}")[dayKey] || 0) * 2)
+              },
+              { 
+                title: "Content (Uploads & Courses)", 
+                value: perfLoading ? "..." : `${JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0} U, ${JSON.parse(performance?.coursesPoints || "{}")[dayKey] || 0} C`, 
+                maxVal: "10 pts", 
+                desc: "Quality and quantity of academic content created.", 
+                formula: "(Uploads × 0.5) + (Courses × 0.25)",
+                calculated: Math.min(10, ((JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0) * 0.5) + ((JSON.parse(performance?.coursesPoints || "{}")[dayKey] || 0) * 0.25))
+              }
             ].map((metric, index) => (
               <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-950/45 border border-slate-850 rounded-2xl gap-3">
                 <div className="flex-1">
@@ -154,11 +225,74 @@ export default function ContributorPerformancePage() {
                 <div className="text-left sm:text-right shrink-0 border-t border-slate-850 pt-2 sm:pt-0 sm:border-0">
                   <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Current Value</div>
                   <div className="text-sm font-black text-amber-300">{metric.value}</div>
-                  <div className="text-xs text-slate-400 mt-0.5">0.0 pts</div>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {perfLoading ? "0.0" : metric.calculated.toFixed(1)} pts
+                  </div>
                 </div>
               </div>
             ))}
 
+          </div>
+        </div>
+
+        {/* --- 30-DAY CALENDAR VIEW --- */}
+        <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-6 mb-8">
+          <h3 className="font-extrabold text-white text-base mb-2 flex items-center gap-2">
+            <Calendar className="text-pink-400" size={18} /> 30-Day Performance Calendar
+          </h3>
+          <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            Visualize your daily progress across all parameters throughout the duration of the contest.
+          </p>
+
+          <div className="space-y-4">
+            {calendarMetrics.map((metric) => {
+              const isExpanded = expandedSections[metric.id];
+              const parsedData = perfLoading ? {} : JSON.parse((performance as any)?.[metric.dataKey] || "{}");
+
+              return (
+                <div key={metric.id} className="bg-slate-950/60 border border-slate-850 rounded-2xl overflow-hidden transition-all duration-300">
+                  <button 
+                    onClick={() => toggleSection(metric.id)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-slate-900/50 transition outline-none"
+                  >
+                    <div className="font-bold text-sm text-slate-200">{metric.title}</div>
+                    <div className="text-slate-500">
+                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </div>
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="p-4 border-t border-slate-850/50">
+                      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                        {Array.from({ length: 30 }).map((_, i) => {
+                          const dayNum = i + 1;
+                          const dKey = `day ${dayNum}`;
+                          const val = parsedData[dKey] || 0;
+                          
+                          const intensity = Math.min(100, Math.max(0, (val / (metric.maxVal || 1)) * 100));
+                          
+                          return (
+                            <div 
+                              key={dayNum} 
+                              className="aspect-square flex flex-col items-center justify-center rounded-xl border border-slate-800/80 transition-colors duration-300"
+                              style={{ 
+                                backgroundColor: val > 0 ? `rgba(99, 102, 241, ${0.1 + (intensity * 0.7 / 100)})` : 'transparent',
+                                borderColor: val > 0 ? 'rgba(99, 102, 241, 0.3)' : ''
+                              }}
+                            >
+                              <span className="text-[10px] text-slate-500 mb-0.5">D{dayNum}</span>
+                              <span className="text-xs font-bold text-slate-300">
+                                {typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(1)) : val}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
