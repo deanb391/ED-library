@@ -80,7 +80,7 @@ export default function ContestScoringAdminPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FB] p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
-        
+
         {/* Navigation */}
         <div>
           <Link
@@ -97,7 +97,7 @@ export default function ContestScoringAdminPage() {
               </h1>
               <p className="text-gray-600">Review content and score contributors manually for {dayKey}. Max 15 points.</p>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded-xl px-4 py-2 flex items-center gap-3">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Day</span>
               <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{dayKey.toUpperCase()}</span>
@@ -109,9 +109,9 @@ export default function ContestScoringAdminPage() {
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
             <Search size={18} className="text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search contributors..." 
+            <input
+              type="text"
+              placeholder="Search contributors..."
               className="bg-transparent border-none outline-none text-sm text-gray-700 w-full"
             />
           </div>
@@ -137,18 +137,18 @@ export default function ContestScoringAdminPage() {
                   </tr>
                 ) : (
                   contributors.map((contributor) => {
-                    const perf = performances.find(p => p.contributor === contributor.$id);
+                    const perf = performances.find(p => p?.contributors === contributor.$id);
                     const uploadQuality = JSON.parse(perf?.uploadQuality || "{}");
                     const currentScore = uploadQuality[dayKey];
                     const isScored = currentScore !== undefined;
 
                     return (
-                      <ScoringRow 
-                        key={contributor.$id} 
-                        contributor={contributor} 
-                        currentScore={currentScore} 
+                      <ScoringRow
+                        key={contributor.$id}
+                        contributor={contributor}
+                        currentScore={currentScore}
                         isScored={isScored}
-                        onSubmit={(score) => handleScoreSubmit(contributor.$id, score)} 
+                        onSubmit={(score) => handleScoreSubmit(contributor.$id, score)}
                       />
                     );
                   })
@@ -163,16 +163,16 @@ export default function ContestScoringAdminPage() {
   );
 }
 
-function ScoringRow({ 
-  contributor, 
-  currentScore, 
+function ScoringRow({
+  contributor,
+  currentScore,
   isScored,
-  onSubmit 
-}: { 
-  contributor: Contributor, 
-  currentScore: number | undefined, 
+  onSubmit
+}: {
+  contributor: Contributor,
+  currentScore: number | undefined,
   isScored: boolean,
-  onSubmit: (score: number) => void 
+  onSubmit: (score: number) => void
 }) {
   const [score, setScore] = useState<number | string>(isScored ? currentScore! : "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -205,11 +205,11 @@ function ScoringRow({
         {contributor.institution || "-"}
       </td>
       <td className="px-6 py-4 text-center">
-        <input 
-          type="number" 
-          min="0" 
-          max="15" 
-          value={score} 
+        <input
+          type="number"
+          min="0"
+          max="15"
+          value={score}
           onChange={(e) => setScore(e.target.value)}
           placeholder="0-15"
           className="w-20 px-2 py-1.5 text-center border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-medium text-gray-900"
@@ -221,7 +221,7 @@ function ScoringRow({
             <Check size={14} /> Scored
           </div>
         ) : (
-          <button 
+          <button
             onClick={handleSubmit}
             disabled={isSubmitting || score === ""}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition"
