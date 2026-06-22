@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       // 3. Optional: Trigger email sending logic here
       // We need to fetch the User document using contributor id to get email
       try {
-        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", perf.contributor);
+        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", perf.contributors);
         const userDoc = await databases.getDocument(DATABASE_ID, "user", contDoc.user);
         if (userDoc.email) {
           sendContestDailySummaryEmail(userDoc.email, { points: todaysPoints, total: totalPoints });
