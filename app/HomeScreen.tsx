@@ -600,7 +600,7 @@ export default function EDLibraryHome() {
           className="w-full max-w-4xl mx-auto mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-all active:scale-[0.98] flex flex-col md:flex-row items-center justify-between shadow-md"
         >
           <div>
-            <h3 className="text-xl font-bold mb-1">🎉 Join the Content Creator Contest!</h3>
+            <h3 className="text-xl font-bold mb-1">🎉 Join The 15 days Contributor Challenge!</h3>
             <p className="text-blue-100 text-sm">Win exciting prizes by sharing your knowledge and growing the community.</p>
           </div>
           <button className="mt-4 md:mt-0 bg-white text-blue-600 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors shrink-0 shadow-sm">

@@ -238,7 +238,7 @@ export default function ContributorPerformancePage() {
         {/* --- 30-DAY CALENDAR VIEW --- */}
         <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-6 mb-8">
           <h3 className="font-extrabold text-white text-base mb-2 flex items-center gap-2">
-            <Calendar className="text-pink-400" size={18} /> 30-Day Performance Calendar
+            <Calendar className="text-pink-400" size={18} /> 15-Day Performance Calendar
           </h3>
           <p className="text-xs text-slate-400 mb-6 leading-relaxed">
             Visualize your daily progress across all parameters throughout the duration of the contest.
@@ -264,7 +264,7 @@ export default function ContributorPerformancePage() {
                   {isExpanded && (
                     <div className="p-4 border-t border-slate-850/50">
                       <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                        {Array.from({ length: 30 }).map((_, i) => {
+                        {Array.from({ length: 15 }).map((_, i) => {
                           const dayNum = i + 1;
                           const dKey = `day ${dayNum}`;
                           const val = parsedData[dKey] || 0;
