@@ -137,7 +137,7 @@ export default function ContestLeaderboardPage() {
             Contest Arena Standing
           </h1>
           <p className="text-sm text-slate-400 max-w-xl">
-            Meet the active academic contributors enrolled in the 30-Day challenge. All participants start on equal footing.
+            Meet the active academic contributors enrolled in the 15-Day challenge. All participants start on equal footing.
           </p>
         </div>
 
