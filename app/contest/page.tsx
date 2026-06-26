@@ -45,14 +45,14 @@ export default function ContestLandingPage() {
   // Calculate endDate: 30 days after startDate
   const [endDate, setEndDate] = useState<Date>(() => {
     const end = new Date(startDate.getTime());
-    end.setDate(end.getDate() + 30);
+    end.setDate(end.getDate() + 15);
     return end;
   });
 
   // Re-sync end date whenever start date changes
   useEffect(() => {
     const end = new Date(startDate.getTime());
-    end.setDate(end.getDate() + 30);
+    end.setDate(end.getDate() + 15);
     setEndDate(end);
   }, [startDate]);
 
@@ -411,7 +411,7 @@ export default function ContestLandingPage() {
 
         {/* --- STATS OVERVIEW --- */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "4rem" }}>
-          <StatHighlight icon={<Calendar size={22} color="#818cf8" />} bg="rgba(99,102,241,0.1)" border="rgba(99,102,241,0.2)" label="Duration" value="30 Days Campaign" />
+          <StatHighlight icon={<Calendar size={22} color="#818cf8" />} bg="rgba(99,102,241,0.1)" border="rgba(99,102,241,0.2)" label="Duration" value="15 Days Campaign" />
           <StatHighlight icon={<Coins size={22} color="#34d399" />} bg="rgba(16,185,129,0.1)" border="rgba(16,185,129,0.2)" label="Cash Prize Pool" value="₦100,000 - ₦200,000" valueColor="#34d399" />
           <StatHighlight icon={<Users size={22} color="#f472b6" />} bg="rgba(236,72,153,0.1)" border="rgba(236,72,153,0.2)" label="Top Reward Share" value="Proportional Payout" />
         </div>
