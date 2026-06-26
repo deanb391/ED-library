@@ -33,13 +33,13 @@ export default function ContestLandingPage() {
   const { user, contributor, loading: userLoading, contributorLoading, refetchContributor } = useUser();
   const router = useRouter();
 
-  // Target contest start date (defaults to June 26, 2026)
+  // Target contest start date (defaults to June 29, 2026)
   const [startDate, setStartDate] = useState<Date>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
     }
-    return new Date("2026-06-26T00:00:00");
+    return new Date("2026-06-29T00:00:00");
   });
 
   // Calculate endDate: 30 days after startDate
@@ -147,7 +147,7 @@ export default function ContestLandingPage() {
       if (storedDate) {
         setStartDate(new Date(storedDate));
       } else {
-        setStartDate(new Date("2026-06-26T00:00:00"));
+        setStartDate(new Date("2026-06-29T00:00:00"));
       }
     };
     window.addEventListener("storage", syncTime);
@@ -192,7 +192,7 @@ export default function ContestLandingPage() {
   };
 
   const resetPreset = () => {
-    const defaultDate = new Date("2026-06-26T00:00:00");
+    const defaultDate = new Date("2026-06-29T00:00:00");
     setStartDate(defaultDate);
     localStorage.removeItem("contributor_contest_start_date");
     window.dispatchEvent(new Event("storage"));
