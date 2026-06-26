@@ -287,7 +287,7 @@ export default function DashboardUnderReviewPage() {
 
       const now = new Date();
       const end = new Date(currentTarget.getTime());
-      end.setDate(end.getDate() + 30);
+      end.setDate(end.getDate() + 15);
 
       const pastStart = now.getTime() >= currentTarget.getTime();
       const pastEnd = now.getTime() >= end.getTime();
@@ -432,7 +432,7 @@ export default function DashboardUnderReviewPage() {
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
-                      🔥 30-Day Contributor Challenge
+                      🔥 15-Day Contributor Challenge
                     </div>
                     <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
                       Win up to <span className="text-amber-300">₦100,000</span> in cash!
