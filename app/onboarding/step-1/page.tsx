@@ -809,6 +809,15 @@ export default function OnboardingFlow() {
       const newContributor = await createContributor(draft, userId);
       await editContributor(newContributor.$id, { agreed: true });
 
+      // Track source contributor if exists
+      const mref = localStorage.getItem("media_source_id");
+      if (mref) {
+        import("@/lib/api/sources").then(({ trackSourceContributor }) => {
+          trackSourceContributor(mref).catch(err => console.error(err));
+          localStorage.removeItem("media_source_id");
+        });
+      }
+
       // On success, navigate to review page
       router.push("/onboarding/review");
     } catch (err) {

@@ -18,17 +18,23 @@ import {
   ShieldCheck,
   Zap,
   Star,
-  Coins
+  Coins,
+  Check,
+  Lock
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import AccessWall from "@/components/AccessWall";
+import TermsModal from "@/components/TermsModal";
+import { editContributor } from "@/lib/api/contributors";
 
 export default function ContestLandingPage() {
-  const { user, contributor, loading: userLoading, contributorLoading } = useUser();
+  const { user, contributor, loading: userLoading, contributorLoading, refetchContributor } = useUser();
+  const router = useRouter();
 
-  // Target contest start date
-  const [targetDate, setTargetDate] = useState<Date>(() => {
+  // Target contest start date (defaults to June 26, 2026)
+  const [startDate, setStartDate] = useState<Date>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
@@ -36,13 +42,28 @@ export default function ContestLandingPage() {
     return new Date("2026-06-26T00:00:00");
   });
 
+  // Calculate endDate: 30 days after startDate
+  const [endDate, setEndDate] = useState<Date>(() => {
+    const end = new Date(startDate.getTime());
+    end.setDate(end.getDate() + 30);
+    return end;
+  });
+
+  // Re-sync end date whenever start date changes
+  useEffect(() => {
+    const end = new Date(startDate.getTime());
+    end.setDate(end.getDate() + 30);
+    setEndDate(end);
+  }, [startDate]);
+
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
-    isPast: false,
+    isPastStart: false,
+    isPastEnd: false,
   });
 
   // Simulation controls state
@@ -55,24 +76,47 @@ export default function ContestLandingPage() {
   // Calculator inputs state
   const [calcInputs, setCalcInputs] = useState({
     userNew: "5",
-    userNewHighest: "10",
-    reach: "150",
-    reachHighest: "300",
-    returning: "40",
-    returningHighest: "80",
-    qualityRating: 12, // rating 0-15
+    engagedUsers: "10",
+    uploads: "10",
     courses: "2",
-    coursesHighest: "4",
   });
+
+  // Onboarding Modal States
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  // Enrollment process states
+  const [checklistAnim, setChecklistAnim] = useState({ step1: false, step2: false, step3: false });
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   // Calculate countdown
   useEffect(() => {
     const calculateTime = () => {
       const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
 
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true });
+      const pastStart = now.getTime() >= startDate.getTime();
+      const pastEnd = now.getTime() >= endDate.getTime();
+
+      let targetTime = startDate.getTime();
+      if (pastStart && !pastEnd) {
+        targetTime = endDate.getTime();
+      }
+
+      const difference = targetTime - now.getTime();
+
+      if (difference <= 0 || pastEnd) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          isPastStart: pastStart,
+          isPastEnd: pastEnd
+        });
         return;
       }
 
@@ -81,18 +125,55 @@ export default function ContestLandingPage() {
       const m = Math.floor((difference / 1000 / 60) % 60);
       const s = Math.floor((difference / 1000) % 60);
 
-      setTimeLeft({ days: d, hours: h, minutes: m, seconds: s, isPast: false });
+      setTimeLeft({
+        days: d,
+        hours: h,
+        minutes: m,
+        seconds: s,
+        isPastStart: pastStart,
+        isPastEnd: pastEnd
+      });
     };
 
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [startDate, endDate]);
 
-  // Handle preset date configurations
+  // Sync state with local storage updates (Simulator preset clicks on dashboard trigger this)
+  useEffect(() => {
+    const syncTime = () => {
+      const storedDate = localStorage.getItem("contributor_contest_start_date");
+      if (storedDate) {
+        setStartDate(new Date(storedDate));
+      } else {
+        setStartDate(new Date("2026-06-26T00:00:00"));
+      }
+    };
+    window.addEventListener("storage", syncTime);
+    return () => window.removeEventListener("storage", syncTime);
+  }, []);
+
+  // Run sequential check animations when Enrollment Modal opens
+  useEffect(() => {
+    if (showEnrollmentModal) {
+      setChecklistAnim({ step1: false, step2: false, step3: false });
+      const timer1 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step1: true })), 400);
+      const timer2 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step2: true })), 1000);
+      const timer3 = setTimeout(() => setChecklistAnim(prev => ({ ...prev, step3: true })), 1600);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+  }, [showEnrollmentModal]);
+
+  // Handle Preset configurations
   const applyPreset = (secondsOffset: number) => {
     const newDate = new Date(Date.now() + secondsOffset * 1000);
-    setTargetDate(newDate);
+    setStartDate(newDate);
     localStorage.setItem("contributor_contest_start_date", newDate.toISOString());
     window.dispatchEvent(new Event("storage"));
   };
@@ -105,16 +186,50 @@ export default function ContestLandingPage() {
       alert("Invalid date format. Please use a valid date.");
       return;
     }
-    setTargetDate(newDate);
+    setStartDate(newDate);
     localStorage.setItem("contributor_contest_start_date", newDate.toISOString());
     window.dispatchEvent(new Event("storage"));
   };
 
   const resetPreset = () => {
     const defaultDate = new Date("2026-06-26T00:00:00");
-    setTargetDate(defaultDate);
+    setStartDate(defaultDate);
     localStorage.removeItem("contributor_contest_start_date");
     window.dispatchEvent(new Event("storage"));
+  };
+
+  const handleJoinContestTap = () => {
+    if (!user) {
+      setShowSignUpModal(true);
+      return;
+    }
+
+    const hasApprovedContributor = contributor && contributor.status === 'live';
+
+    if (!hasApprovedContributor) {
+      setShowWarningModal(true);
+    } else {
+      setShowEnrollmentModal(true);
+    }
+  };
+
+  const handleEnrollConfirm = async () => {
+    if (!contributor || isEnrolling) return;
+    setIsEnrolling(true);
+    try {
+      await editContributor(contributor.$id, {
+        joinedContest: true,
+        joinedContestAt: new Date().toISOString()
+      });
+      await refetchContributor();
+      setShowEnrollmentModal(false);
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error("Failed to enroll contributor in contest:", err);
+      alert("Something went wrong while joining the contest. Please try again.");
+    } finally {
+      setIsEnrolling(false);
+    }
   };
 
   // Point scoring calculator logic
@@ -123,40 +238,23 @@ export default function ContestLandingPage() {
     return isNaN(num) || num < 0 ? 0 : num;
   };
 
-  const calcNewUsersPoints = () => {
-    const myVal = parseNum(calcInputs.userNew);
-    const highestVal = parseNum(calcInputs.userNewHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(30, Math.round((myVal / highestVal) * 30 * 10) / 10);
+  const calcAcquisitionPoints = () => {
+    const users = parseNum(calcInputs.userNew);
+    return Math.min(50, users * 5);
   };
 
-  const calcReachPoints = () => {
-    const myVal = parseNum(calcInputs.reach);
-    const highestVal = parseNum(calcInputs.reachHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(30, Math.round((myVal / highestVal) * 30 * 10) / 10);
+  const calcEngagementPoints = () => {
+    const engaged = parseNum(calcInputs.engagedUsers);
+    return Math.min(40, engaged * 2);
   };
 
-  const calcReturningPoints = () => {
-    const myVal = parseNum(calcInputs.returning);
-    const highestVal = parseNum(calcInputs.returningHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(20, Math.round((myVal / highestVal) * 20 * 10) / 10);
+  const calcContentPoints = () => {
+    const uploads = parseNum(calcInputs.uploads);
+    const courses = parseNum(calcInputs.courses);
+    return Math.min(10, (uploads * 0.5) + (courses * 0.25));
   };
 
-  const calcCoursesPoints = () => {
-    const myVal = parseNum(calcInputs.courses);
-    const highestVal = parseNum(calcInputs.coursesHighest);
-    if (highestVal === 0) return 0;
-    return Math.min(5, Math.round((myVal / highestVal) * 5 * 10) / 10);
-  };
-
-  const totalCalculatedPoints =
-    calcNewUsersPoints() +
-    calcReachPoints() +
-    calcReturningPoints() +
-    calcInputs.qualityRating +
-    calcCoursesPoints();
+  const totalCalculatedPoints = calcAcquisitionPoints() + calcEngagementPoints() + calcContentPoints();
 
   if (userLoading || contributorLoading) {
     return (
@@ -167,17 +265,15 @@ export default function ContestLandingPage() {
     );
   }
 
-  if (!user) return <AccessWall type="user" />;
-  if (!contributor) return <AccessWall type="contributor" />;
-
-  const dashboardHref = `/contributor/dashboard/${user.$id}`;
+  // Base Dashboard href
+  const dashboardHref = user ? `/contributor/dashboard/${user.$id}` : "/";
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#030712", // Deeper, richer black/blue background
-        backgroundImage: "radial-gradient(circle at top right, rgba(79, 70, 229, 0.1), transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.05), transparent 40%)",
+        backgroundColor: "#030712",
+        backgroundImage: "radial-gradient(circle at top right, rgba(79, 70, 229, 0.15), transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 40%)",
         color: "#f8fafc",
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         paddingBottom: "5rem",
@@ -207,83 +303,13 @@ export default function ContestLandingPage() {
             Back to Dashboard
           </Link>
 
-          <button
-            onClick={() => setShowSimPanel(!showSimPanel)}
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: "700",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.5rem",
-              border: "1px solid rgba(99, 102, 241, 0.3)",
-              backgroundColor: "rgba(99, 102, 241, 0.1)",
-              color: "#818cf8",
-              cursor: "pointer",
-              transition: "all 0.2s ease"
-            }}
-            onPointerEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(99, 102, 241, 0.2)")}
-            onPointerLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(99, 102, 241, 0.1)")}
-          >
-            {showSimPanel ? "Hide Simulation Tools" : "Developer Simulation Panel 🛠️"}
-          </button>
+
         </div>
 
-        {/* --- SIMULATION PANEL --- */}
-        {showSimPanel && (
-          <div
-            style={{
-              marginBottom: "3rem",
-              padding: "1.5rem",
-              borderRadius: "1rem",
-              border: "1px solid rgba(245, 158, 11, 0.2)",
-              backgroundColor: "rgba(245, 158, 11, 0.05)",
-              backdropFilter: "blur(12px)",
-              boxShadow: "0 10px 30px -10px rgba(245, 158, 11, 0.1)"
-            }}
-          >
-            <h3 style={{ fontSize: "0.875rem", fontWeight: "700", color: "#fcd34d", marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Zap size={16} /> Contributor Challenge Start Date Simulator
-            </h3>
-            <p style={{ fontSize: "0.75rem", color: "rgba(253, 230, 138, 0.7)", marginBottom: "1.5rem" }}>
-              Simulate start date updates to see countdowns, flags, and states change live across pages.
-            </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                <button type="button" onClick={() => applyPreset(10)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 10s</button>
-                <button type="button" onClick={() => applyPreset(3600)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 1 hour</button>
-                <button type="button" onClick={() => applyPreset(86400 * 5)} style={simButtonStyle("#fcd34d", "rgba(245, 158, 11, 0.2)")}>Starts in 5 days</button>
-                <button type="button" onClick={() => applyPreset(-86400 * 12)} style={simButtonStyle("#86efac", "rgba(34, 197, 94, 0.2)")}>Started 12 days ago (Live)</button>
-              </div>
-
-              <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", margin: "0 0.5rem" }}>OR</span>
-
-              <form onSubmit={handleCustomDateSubmit} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <input
-                  type="datetime-local"
-                  value={simDateInput}
-                  onChange={(e) => setSimDateInput(e.target.value)}
-                  style={{ backgroundColor: "rgba(0,0,0,0.5)", border: "1px solid #334155", borderRadius: "0.5rem", padding: "0.375rem 0.75rem", fontSize: "0.75rem", color: "#f8fafc", outline: "none", colorScheme: "dark" }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "#6366f1")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "#334155")}
-                />
-                <button type="submit" style={{ padding: "0.5rem 1rem", backgroundColor: "#4f46e5", color: "#ffffff", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: "700", border: "none", cursor: "pointer" }}>
-                  Apply Date
-                </button>
-              </form>
-
-              <button
-                type="button"
-                onClick={resetPreset}
-                style={{ fontSize: "0.75rem", color: "#94a3b8", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", marginLeft: "auto" }}
-              >
-                Reset Default
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* --- HERO SECTION --- */}
-        <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto 4rem auto" }}>
+        <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto 3.5rem auto" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.25rem 0.75rem", borderRadius: "9999px", backgroundColor: "rgba(99, 102, 241, 0.1)", border: "1px solid rgba(99, 102, 241, 0.2)", color: "#818cf8", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1.5rem" }}>
             <Trophy size={14} color="#fbbf24" />
             Official Contributor Challenge
@@ -291,9 +317,34 @@ export default function ContestLandingPage() {
           <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: "800", letterSpacing: "-0.025em", margin: "0 0 1rem 0", background: "linear-gradient(to right, #ffffff, #e2e8f0, #a5b4fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             ED-Library Contributor Challenge
           </h1>
-          <p style={{ fontSize: "1.125rem", color: "#94a3b8", lineHeight: "1.6", margin: 0, fontWeight: "400" }}>
+          <p style={{ fontSize: "1.125rem", color: "#94a3b8", lineHeight: "1.6", margin: "0 0 2rem 0", fontWeight: "400" }}>
             Create high-quality course materials, share knowledge, and attract unique students. Win cash rewards and help shape the next generation of academic success.
           </p>
+
+          {/* Core Join CTA Button */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {contributor?.joinedContest ? (
+              <Link
+                href="/contest/leaderboard"
+                className="w-full sm:w-auto text-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-sm font-black py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-emerald-500/20 hover:scale-[1.03] active:scale-[0.98] uppercase tracking-wider text-decoration-none"
+              >
+                📊 View Contest Leaderboard
+              </Link>
+            ) : (
+              <button
+                onClick={handleJoinContestTap}
+                className="w-full sm:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-sm font-black py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] uppercase tracking-wider cursor-pointer border border-amber-300/30"
+              >
+                🚀 Join Contest Arena
+              </button>
+            )}
+            {/* <Link
+              href="/contest/leaderboard"
+              className="w-full sm:w-auto text-center bg-slate-900/60 border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-sm font-bold py-4 px-8 rounded-2xl transition-all duration-300 text-decoration-none"
+            >
+              Check Leaderboard
+            </Link> */}
+          </div>
         </div>
 
         {/* --- LIVE COUNTDOWN CLOCK --- */}
@@ -315,27 +366,26 @@ export default function ContestLandingPage() {
 
             <div style={{ textAlign: "center", marginBottom: "2rem", position: "relative", zIndex: 10 }}>
               <span style={{ fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.1em", color: "#818cf8" }}>
-                {timeLeft.isPast ? "Event Status" : "Contest Countdown"}
+                {timeLeft.isPastEnd ? "Event Ended" : timeLeft.isPastStart ? "Contest Countdown (Ending)" : "Contest Countdown (Starting)"}
               </span>
               <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#f8fafc", margin: "0.25rem 0 0 0" }}>
-                {timeLeft.isPast ? (
-                  <span style={{ color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-                    <Zap size={18} /> The Challenge is Currently Live!
+                {timeLeft.isPastEnd ? (
+                  <span style={{ color: "#ef4444" }}>The Challenge has Ended!</span>
+                ) : timeLeft.isPastStart ? (
+                  <span style={{ color: "#fbbf24", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                    <Zap size={18} /> Contest is LIVE! Ends: {endDate.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
                   </span>
                 ) : (
-                  `Starts: ${targetDate.toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}`
+                  `Starts: ${startDate.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`
                 )}
               </h2>
             </div>
 
-            {timeLeft.isPast ? (
-              <div style={{ textAlign: "center", padding: "1.5rem", backgroundColor: "rgba(74, 222, 128, 0.05)", border: "1px solid rgba(74, 222, 128, 0.2)", borderRadius: "1rem", position: "relative", zIndex: 10 }}>
-                <p style={{ fontSize: "0.875rem", color: "#86efac", lineHeight: "1.6", fontWeight: "600", margin: "0 0 1rem 0" }}>
-                  Scoreboards have frozen and points are tracking live! Upload assets, courses, and refer students daily to build your scoring tally.
+            {timeLeft.isPastEnd ? (
+              <div style={{ textAlign: "center", padding: "1.5rem", backgroundColor: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "1rem", position: "relative", zIndex: 10 }}>
+                <p style={{ fontSize: "0.875rem", color: "#fca5a5", lineHeight: "1.6", fontWeight: "600", margin: 0 }}>
+                  Standings are frozen and final quality audits are underway. Payout logs will update shortly.
                 </p>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: "0.75rem", color: "#818cf8", fontWeight: "800" }}>
-                  View Scoring guidelines below <ArrowRight size={14} />
-                </div>
               </div>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem", position: "relative", zIndex: 10 }}>
@@ -346,7 +396,7 @@ export default function ContestLandingPage() {
                   { value: timeLeft.seconds, label: "Seconds" }
                 ].map((item, idx) => (
                   <div key={idx} style={{ padding: "1rem 0.5rem", backgroundColor: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1rem", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "inset 0 2px 4px rgba(0,0,0,0.5)" }}>
-                    <span style={{ fontFamily: "monospace", fontSize: "2rem", fontWeight: "900", color: "#fcd34d", letterSpacing: "0.05em", lineHeight: 1 }}>
+                    <span style={{ fontFamily: "monospace", fontSize: "2rem", fontWeight: "900", color: timeLeft.isPastStart ? "#10b981" : "#fcd34d", letterSpacing: "0.05em", lineHeight: 1 }}>
                       {String(item.value).padStart(2, "0")}
                     </span>
                     <span style={{ fontSize: "0.6rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "0.5rem" }}>
@@ -362,7 +412,7 @@ export default function ContestLandingPage() {
         {/* --- STATS OVERVIEW --- */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "4rem" }}>
           <StatHighlight icon={<Calendar size={22} color="#818cf8" />} bg="rgba(99,102,241,0.1)" border="rgba(99,102,241,0.2)" label="Duration" value="30 Days Campaign" />
-          <StatHighlight icon={<Coins size={22} color="#34d399" />} bg="rgba(16,185,129,0.1)" border="rgba(16,185,129,0.2)" label="Cash Prize Pool" value="₦100,000" valueColor="#34d399" />
+          <StatHighlight icon={<Coins size={22} color="#34d399" />} bg="rgba(16,185,129,0.1)" border="rgba(16,185,129,0.2)" label="Cash Prize Pool" value="₦100,000 - ₦200,000" valueColor="#34d399" />
           <StatHighlight icon={<Users size={22} color="#f472b6" />} bg="rgba(236,72,153,0.1)" border="rgba(236,72,153,0.2)" label="Top Reward Share" value="Proportional Payout" />
         </div>
 
@@ -449,15 +499,15 @@ export default function ContestLandingPage() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Example 1 (John brings 2,000 pts, Sarah brings 1,000 pts)</div>
+                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Example (John brings 2,000 pts, Sarah brings 1,000 pts with ₦100,000 pool)</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                     <div style={{ padding: "1rem", backgroundColor: "rgba(0,0,0,0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>John (20% share)</div>
-                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦20,000</div>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>John (66.6% share)</div>
+                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦66,666</div>
                     </div>
                     <div style={{ padding: "1rem", backgroundColor: "rgba(0,0,0,0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>Sarah (10% share)</div>
-                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦10,000</div>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>Sarah (33.3% share)</div>
+                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦33,333</div>
                     </div>
                   </div>
                 </div>
@@ -476,11 +526,9 @@ export default function ContestLandingPage() {
                 </h2>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
                   {[
-                    { title: "New Users Generated", weight: "30 Points Max", formula: "(Your New Users ÷ Highest Generated That Day) × 30", desc: "Measures new registration counts driven by your referral link or content shares." },
-                    { title: "Unique Students Reached", weight: "30 Points Max", formula: "(Your Views ÷ Highest Reach That Day) × 30", desc: "Measures distinct students opening and reading your courses or study materials." },
-                    { title: "Returning Students", weight: "20 Points Max", formula: "(Your Return Count ÷ Highest Return Count That Day) × 20", desc: "Rewards high-utility documents that students return to consult repeatedly." },
-                    { title: "Quality Content Uploads", weight: "15 Points Max", formula: "Assessed by editorial board (0 to 15)", desc: "Score awarded based on clear titles, categorization, visual layout, and academic value." },
-                    { title: "Courses Created", weight: "5 Points Max", formula: "(Your Course Count ÷ Highest Created That Day) × 5", desc: "Rewards building comprehensive, multi-unit courses structured logically." }
+                    { title: "Acquisition (New Users)", weight: "50 Points Max", formula: "New Users × 5", desc: "Measures the number of new users brought into the platform. Must be a first-time user properly attributed to you." },
+                    { title: "Engagement (User Activity)", weight: "40 Points Max", formula: "Engaged Users × 2", desc: "Measures real learning activity. Counts unique engaged users per day (viewing ≥ 2 mins, reading, downloading, returning)." },
+                    { title: "Content (Uploads & Courses)", weight: "10 Points Max", formula: "(Uploads × 0.5) + (Courses × 0.25)", desc: "Measures quality and quantity of academic content created. Valid approved content only." }
                   ].map((cat, idx) => (
                     <div key={idx} style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1.5rem" }}>
                       <div>
@@ -510,25 +558,10 @@ export default function ContestLandingPage() {
 
                   {/* Inputs Column */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <InputPair labelMe="New Users (You)" valMe={calcInputs.userNew} onChangeMe={(val) => setCalcInputs({ ...calcInputs, userNew: val })} labelHigh="New Users (Highest)" valHigh={calcInputs.userNewHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, userNewHighest: val })} />
-                    <InputPair labelMe="Student Reach (You)" valMe={calcInputs.reach} onChangeMe={(val) => setCalcInputs({ ...calcInputs, reach: val })} labelHigh="Student Reach (Highest)" valHigh={calcInputs.reachHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, reachHighest: val })} />
-                    <InputPair labelMe="Returning Students (You)" valMe={calcInputs.returning} onChangeMe={(val) => setCalcInputs({ ...calcInputs, returning: val })} labelHigh="Returning (Highest)" valHigh={calcInputs.returningHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, returningHighest: val })} />
-                    <InputPair labelMe="Courses Created (You)" valMe={calcInputs.courses} onChangeMe={(val) => setCalcInputs({ ...calcInputs, courses: val })} labelHigh="Courses Created (Highest)" valHigh={calcInputs.coursesHighest} onChangeHigh={(val) => setCalcInputs({ ...calcInputs, coursesHighest: val })} />
-
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>Assessed Content Quality Score</label>
-                        <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#818cf8" }}>{calcInputs.qualityRating} / 15 pts</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="15"
-                        value={calcInputs.qualityRating}
-                        onChange={(e) => setCalcInputs({ ...calcInputs, qualityRating: parseInt(e.target.value) })}
-                        style={{ width: "100%", accentColor: "#6366f1", height: "4px", backgroundColor: "#1e293b", borderRadius: "2px", outline: "none", cursor: "pointer" }}
-                      />
-                    </div>
+                    <InputSingle labelMe="New Users (You)" valMe={calcInputs.userNew} onChangeMe={(val) => setCalcInputs({ ...calcInputs, userNew: val })} />
+                    <InputSingle labelMe="Engaged Users (You)" valMe={calcInputs.engagedUsers} onChangeMe={(val) => setCalcInputs({ ...calcInputs, engagedUsers: val })} />
+                    <InputSingle labelMe="Uploads (You)" valMe={calcInputs.uploads} onChangeMe={(val) => setCalcInputs({ ...calcInputs, uploads: val })} />
+                    <InputSingle labelMe="Courses Created (You)" valMe={calcInputs.courses} onChangeMe={(val) => setCalcInputs({ ...calcInputs, courses: val })} />
                   </div>
 
                   {/* Output Column */}
@@ -536,11 +569,9 @@ export default function ContestLandingPage() {
                     <div>
                       <h4 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#e2e8f0", margin: "0 0 1rem 0" }}>Calculated Daily Score Sheet</h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        <ScoreRow label="1. Referral Users points" score={calcNewUsersPoints()} max="30" />
-                        <ScoreRow label="2. Student Reach points" score={calcReachPoints()} max="30" />
-                        <ScoreRow label="3. Returning Users points" score={calcReturningPoints()} max="20" />
-                        <ScoreRow label="4. Editorial Quality points" score={calcInputs.qualityRating} max="15" />
-                        <ScoreRow label="5. Course Creation points" score={calcCoursesPoints()} max="5" />
+                        <ScoreRow label="1. Acquisition points" score={calcAcquisitionPoints()} max="50" />
+                        <ScoreRow label="2. Engagement points" score={calcEngagementPoints()} max="40" />
+                        <ScoreRow label="3. Content points" score={calcContentPoints()} max="10" />
                       </div>
                     </div>
 
@@ -626,6 +657,226 @@ export default function ContestLandingPage() {
 
         </div>
       </div>
+
+      {/* --- WARNING MODAL: NO CONTRIBUTOR ACTION --- */}
+      {showWarningModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
+            {/* Design accents */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-red-500 rounded-full" />
+
+            <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+              <Lock size={28} />
+            </div>
+
+            <h3 className="text-xl font-black text-white mb-2">Contributor Account Required</h3>
+
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              you do not have a contributor action
+            </p>
+
+            <button
+              onClick={() => {
+                setShowWarningModal(false);
+                router.push("/onboarding/step-1");
+              }}
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-red-600/10 cursor-pointer"
+            >
+              Start Contributor Onboarding
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- WARNING MODAL: NO SIGNED IN USER --- */}
+      {showSignUpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden">
+            {/* Design accents */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-amber-500 rounded-full" />
+
+            <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20">
+              <Lock size={28} />
+            </div>
+
+            <h3 className="text-xl font-black text-white mb-2">Account Required</h3>
+
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              You must create an account and become a contributor before joining the contest arena.
+            </p>
+
+            <button
+              onClick={() => {
+                setShowSignUpModal(false);
+                router.push("/signup");
+              }}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3.5 px-6 rounded-2xl transition-all shadow-md shadow-amber-500/10 cursor-pointer"
+            >
+              Sign Up Now
+            </button>
+            <button
+              onClick={() => setShowSignUpModal(false)}
+              className="w-full mt-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-2xl transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- ENROLLMENT MODAL (APPROVED CONTRIBUTORS) --- */}
+      {showEnrollmentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 text-slate-100 shadow-2xl relative">
+            <h3 className="text-xl font-extrabold text-white mb-4 flex items-center gap-2">
+              <Trophy size={22} className="text-amber-400 animate-pulse" />
+              Contest Enrollment Checklist
+            </h3>
+
+            {/* Verification checklist with animations */}
+            <div className="space-y-4 mb-6">
+              <div className={`flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800 transition-all duration-500 ${checklistAnim.step1 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                <div className="w-6 h-6 rounded-full bg-emerald-500/25 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 1</div>
+                  <div className="text-sm font-semibold text-white">Approved Contributor Account</div>
+                </div>
+              </div>
+
+              <div className={`flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800 transition-all duration-500 ${checklistAnim.step2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                <div className="w-6 h-6 rounded-full bg-emerald-500/25 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 2</div>
+                  <div className="text-sm font-semibold text-white">Active Account Standing</div>
+                </div>
+              </div>
+
+              <div className={`flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800 transition-all duration-500 ${checklistAnim.step3 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+                <div className="w-6 h-6 rounded-full bg-emerald-500/25 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 3</div>
+                  <div className="text-sm font-semibold text-white">Platform Guidelines Checked</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms Agreement Checkbox (matching ads creation flow) */}
+            <div className="flex items-start gap-3 p-3 bg-slate-950/40 rounded-2xl border border-slate-850 mb-6">
+              <input
+                id="agree-terms"
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-5 w-5 rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+              <label htmlFor="agree-terms" className="text-xs sm:text-sm text-slate-355 cursor-pointer leading-relaxed">
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-indigo-400 hover:text-indigo-300 font-bold underline cursor-pointer"
+                >
+                  terms and conditions
+                </button>{" "}
+                governing the ED-Library Contributor Challenge policies.
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEnrollmentModal(false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                disabled={!termsAccepted || isEnrolling}
+                onClick={handleEnrollConfirm}
+                className={`flex-1 font-bold py-3 px-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${termsAccepted
+                  ? "bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 shadow-amber-500/10"
+                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50"
+                  }`}
+              >
+                {isEnrolling ? (
+                  <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                ) : (
+                  "Join Challenge"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- SUCCESS ENROLLMENT MODAL --- */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl relative">
+            <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+              <Trophy size={28} />
+            </div>
+
+            <h3 className="text-xl font-extrabold text-white mb-2">Welcome to the Arena!</h3>
+
+            {/* Conditional text based on whether contest is live or future */}
+            {!timeLeft.isPastStart ? (
+              <div className="mb-6">
+                <p className="text-sm text-slate-300 mb-4">
+                  You have successfully enrolled in the Contributor Challenge!
+                </p>
+                <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                  <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">
+                    The contest starts in
+                  </div>
+                  <div className="font-mono text-xl font-black text-amber-300 tracking-wider">
+                    {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-350 mb-6 leading-relaxed">
+                You're officially registered! The contest is active. Head over to your dashboard, upload study courses, and claim your share of the prize pool.
+              </p>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  router.push("/contest/leaderboard");
+                }}
+                className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 text-white font-bold py-3.5 px-6 rounded-2xl transition cursor-pointer"
+              >
+                Go to Leaderboard
+              </button>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-2xl transition cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- STANDALONE TERMS AND CONDITIONS TEXT MODAL --- */}
+      <TermsModal
+        open={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onSubmit={() => {
+          setTermsAccepted(true);
+          setShowTermsModal(false);
+        }}
+      />
     </div>
   );
 }
@@ -657,7 +908,7 @@ function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" 
   return (
     <div style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem", display: "flex", alignItems: "center", gap: "1rem", transition: "border-color 0.2s ease" }} onPointerEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")} onPointerLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)")}>
       <div style={{ width: "48px", height: "48px", backgroundColor: bg, border: `1px solid ${border}`, borderRadius: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } as React.CSSProperties}>
-        {icon}
+        <div style={{ margin: "auto" }}>{icon}</div>
       </div>
       <div>
         <div style={{ fontSize: "0.65rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>{label}</div>
@@ -667,25 +918,18 @@ function StatHighlight({ icon, bg, border, label, value, valueColor = "#f8fafc" 
   );
 }
 
-interface InputPairProps {
+interface InputSingleProps {
   labelMe: string;
   valMe: string;
   onChangeMe: (val: string) => void;
-  labelHigh: string;
-  valHigh: string;
-  onChangeHigh: (val: string) => void;
 }
 
-function InputPair({ labelMe, valMe, onChangeMe, labelHigh, valHigh, onChangeHigh }: InputPairProps) {
+function InputSingle({ labelMe, valMe, onChangeMe }: InputSingleProps) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
         <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>{labelMe}</label>
         <input type="number" value={valMe} onChange={(e) => onChangeMe(e.target.value)} style={darkInputStyle} onFocus={handleDarkFocus} onBlur={handleDarkBlur} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>{labelHigh}</label>
-        <input type="number" value={valHigh} onChange={(e) => onChangeHigh(e.target.value)} style={darkInputStyle} onFocus={handleDarkFocus} onBlur={handleDarkBlur} />
       </div>
     </div>
   );
@@ -733,7 +977,7 @@ function TimelineItem({ num, color, title, desc }: TimelineItemProps) {
   return (
     <div style={{ position: "relative" }}>
       <span style={{ position: "absolute", left: "-1.5rem", top: 0, transform: "translateX(-50%)", width: "1.25rem", height: "1.25rem", borderRadius: "50%", backgroundColor: color, border: "2px solid #030712", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6rem", fontWeight: "800", color: "#000000", fontFamily: "monospace" } as React.CSSProperties}>
-        {num}
+        <span style={{ margin: "auto" }}>{num}</span>
       </span>
       <h3 style={{ fontSize: "0.875rem", fontWeight: "800", color: "#e2e8f0", margin: "0 0 0.25rem 0" }}>{title}</h3>
       <p style={{ fontSize: "0.8125rem", color: "#94a3b8", lineHeight: "1.5", margin: 0 }}>{desc}</p>

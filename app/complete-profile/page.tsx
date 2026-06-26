@@ -22,6 +22,7 @@ export default function CompleteProfilePage() {
   const [department, setDepartment] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
+  const [isContributorSignUp, setIsContributorSignUp] = useState(false);
 
   const LEVELS = [100, 200, 300, 400, 500, 600];
 
@@ -55,7 +56,11 @@ export default function CompleteProfilePage() {
       });
 
       await refreshUser();
-      router.replace("/");
+      if (isContributorSignUp) {
+        router.replace("/onboarding/step-1");
+      } else {
+        router.replace("/");
+      }
     } catch (error) {
       console.error("Error completing profile:", error);
       alert("Something went wrong. Please try again.");
@@ -133,6 +138,27 @@ export default function CompleteProfilePage() {
             onChange={setDepartment}
             placeholder="Mechanical Engineering"
           />
+
+          {/* Sign Up As Contributor Switch */}
+          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100">
+            <div>
+              <p className="text-sm font-bold text-gray-800">Sign Up As Contributor</p>
+              <p className="text-xs text-gray-500">Enable to apply as a contributor after completing profile.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsContributorSignUp(v => !v)}
+              className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${
+                isContributorSignUp ? "bg-blue-600" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
+                  isContributorSignUp ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
 
           {/* Submit */}
           <button

@@ -19,7 +19,8 @@ import {
   GraduationCap,
   Flame,
   Trophy,
-  Crown
+  Crown,
+  Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -161,7 +162,9 @@ export default function DashboardUnderReviewPage() {
     minutes: number;
     seconds: number;
     isPast: boolean;
-  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+    isPastStart: boolean;
+    isPastEnd: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false, isPastStart: false, isPastEnd: false });
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -283,10 +286,29 @@ export default function DashboardUnderReviewPage() {
       setTargetDate(currentTarget);
 
       const now = new Date();
-      const difference = currentTarget.getTime() - now.getTime();
+      const end = new Date(currentTarget.getTime());
+      end.setDate(end.getDate() + 30);
 
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true });
+      const pastStart = now.getTime() >= currentTarget.getTime();
+      const pastEnd = now.getTime() >= end.getTime();
+
+      let targetTime = currentTarget.getTime();
+      if (pastStart && !pastEnd) {
+        targetTime = end.getTime();
+      }
+
+      const difference = targetTime - now.getTime();
+
+      if (difference <= 0 || pastEnd) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          isPast: pastStart,
+          isPastStart: pastStart,
+          isPastEnd: pastEnd
+        });
         return;
       }
 
@@ -295,7 +317,15 @@ export default function DashboardUnderReviewPage() {
       const m = Math.floor((difference / 1000 / 60) % 60);
       const s = Math.floor((difference / 1000) % 60);
 
-      setTimeLeft({ days: d, hours: h, minutes: m, seconds: s, isPast: false });
+      setTimeLeft({
+        days: d,
+        hours: h,
+        minutes: m,
+        seconds: s,
+        isPast: pastStart,
+        isPastStart: pastStart,
+        isPastEnd: pastEnd
+      });
     };
 
     calculateTime();
@@ -378,62 +408,107 @@ export default function DashboardUnderReviewPage() {
           </div>
           <div className="max-w-5xl mx-auto space-y-8">
 
-            {/* Screaming Contest Banner */}
-            <div
-              className="relative overflow-hidden rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-indigo-500/30 text-white"
-              style={{
-                background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #831843 100%)",
-                boxShadow: "0 10px 30px -5px rgba(76, 29, 149, 0.5), 0 0 20px rgba(131, 24, 67, 0.25)",
-              }}
-            >
-              {/* Decorative backgrounds */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-xl translate-y-12 -translate-x-12 pointer-events-none" />
-              
-              <div className="flex items-start gap-4 relative z-10">
-                <div
-                  className="mt-1 w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
-                  style={{
-                    animation: "dashboardFireBounce 1.5s ease-in-out infinite"
-                  }}
-                >
-                  🏆
-                </div>
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
-                    🔥 30-Day Contributor Challenge
+            {/* Screaming Contest Banner (When NOT Enrolled) */}
+            {!contributor.joinedContest && (
+              <div
+                className="relative overflow-hidden rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-indigo-500/30 text-white animate-fade-in"
+                style={{
+                  background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #831843 100%)",
+                  boxShadow: "0 10px 30px -5px rgba(76, 29, 149, 0.5), 0 0 20px rgba(131, 24, 67, 0.25)",
+                }}
+              >
+                {/* Decorative backgrounds */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-xl translate-y-12 -translate-x-12 pointer-events-none" />
+
+                <div className="flex items-start gap-4 relative z-10">
+                  <div
+                    className="mt-1 w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
+                    style={{
+                      animation: "dashboardFireBounce 1.5s ease-in-out infinite"
+                    }}
+                  >
+                    🏆
                   </div>
-                  <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
-                    Win up to <span className="text-amber-300">₦100,000</span> in cash!
-                  </h3>
-                  <p className="text-xs md:text-sm text-white/90 leading-relaxed max-w-xl font-medium">
-                    Upload courses, reach unique students, generate new users, and climb the leaderboard to secure your share of the prize pool.
-                  </p>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
+                      🔥 30-Day Contributor Challenge
+                    </div>
+                    <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
+                      Win up to <span className="text-amber-300">₦100,000</span> in cash!
+                    </h3>
+                    <p className="text-xs md:text-sm text-white/90 leading-relaxed max-w-xl font-medium">
+                      Upload courses, reach unique students, generate new users, and climb the leaderboard to secure your share of the prize pool.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center md:items-end gap-3 shrink-0 relative z-10 w-full md:w-auto">
+                  <div className="text-center md:text-right bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 w-full md:w-auto">
+                    <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">
+                      {timeLeft.isPastEnd ? "Contest Finished" : timeLeft.isPastStart ? "Contest Ends In" : "Count Down to Kickoff"}
+                    </div>
+                    <div className="font-mono text-lg font-black text-amber-300 tracking-wider">
+                      {timeLeft.isPastEnd ? (
+                        <span className="text-red-400">ENDED</span>
+                      ) : (
+                        `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
+                      )}
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/contest"
+                    className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
+                  >
+                    {timeLeft.isPastStart ? "Enter Contest Arena" : "Join & View Rules"}
+                  </Link>
                 </div>
               </div>
-              
-              <div className="flex flex-col items-center md:items-end gap-3 shrink-0 relative z-10 w-full md:w-auto">
-                <div className="text-center md:text-right bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 w-full md:w-auto">
-                  <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">
-                    {timeLeft.isPast ? "Status: Challenge Active!" : "Count Down to Kickoff"}
+            )}
+
+            {/* Compact Contest Banner (When Enrolled) */}
+            {contributor.joinedContest && (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md text-white animate-fade-in">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center text-xl shrink-0 border border-indigo-500/20">
+                    🏆
                   </div>
-                  <div className="font-mono text-lg font-black text-amber-300 tracking-wider">
-                    {timeLeft.isPast ? (
-                      <span className="text-green-400 animate-pulse">LIVE & ACTIVE</span>
-                    ) : (
-                      `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
-                    )}
+                  <div>
+                    <h4 className="text-sm font-extrabold text-white">Challenge Arena Access</h4>
+                    <p className="text-xs text-slate-405">You are registered in the Contributor Challenge.</p>
                   </div>
                 </div>
-                
-                <Link
-                  href="/contributor/dashboard/contest"
-                  className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
-                >
-                  {timeLeft.isPast ? "Enter Contest Arena" : "Join & View Rules"}
-                </Link>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                  <div className="bg-slate-950/60 border border-slate-800 px-4 py-2 rounded-xl text-center md:text-right shrink-0 w-full sm:w-auto">
+                    <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                      {timeLeft.isPastEnd ? "Contest Finished" : timeLeft.isPastStart ? "Contest Ends In" : "Contest Starts In"}
+                    </div>
+                    <div className="font-mono text-sm font-bold text-amber-300">
+                      {timeLeft.isPastEnd ? (
+                        <span className="text-red-400">ENDED</span>
+                      ) : (
+                        `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
+                      )}
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/contest/leaderboard"
+                    className="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-550 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-indigo-600/10 text-decoration-none"
+                  >
+                    View Contest Leaderboard
+                  </Link>
+                  <Link
+                    href="/contributor/dashboard/referrals"
+                    className="w-full sm:w-auto text-center bg-slate-800 hover:bg-slate-700 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-slate-900/10 text-decoration-none border border-slate-700"
+                  >
+                    My Referrals
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Missing Wallet Banner */}
             {
@@ -695,6 +770,15 @@ export default function DashboardUnderReviewPage() {
                 enabled={isContributorActive}
                 link={`/contributor/dashboard/subscriptions-and-earnings`}
                 index={3}
+              />
+
+              <ActionCard
+                icon={<Share2 size={20} />}
+                title="Referrals & Contests"
+                desc="Track referral clicks, sign-ups, and get your custom link."
+                enabled={isContributorActive}
+                link={`/contributor/dashboard/referrals`}
+                index={4}
               />
 
             </div>

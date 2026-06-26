@@ -34,12 +34,54 @@ function mapCourse(doc: any) {
 /* ================= COURSES ================= */
 
 export async function createCourseService(data: any) {
-  return databases.createDocument(
+  const doc = await databases.createDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
     ID.unique(),
     data
   );
+
+  // --- Contest Performance Tracking ---
+  try {
+    const courseAuthorUserId = data.user;
+    if (courseAuthorUserId) {
+      const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
+        Query.equal("user", courseAuthorUserId)
+      ]);
+      
+      if (contRes.documents.length > 0) {
+        const contributor = contRes.documents[0];
+        
+        if (contributor.joinedContest) {
+          const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
+            Query.equal("contributors", contributor.$id)
+          ]);
+          
+          if (perfRes.documents.length > 0) {
+            const perf = perfRes.documents[0];
+            
+            const startDate = new Date("2026-06-26T00:00:00Z");
+            if (new Date() >= startDate) {
+              const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
+              const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+              const dayKey = `day ${dayNumber}`;
+              
+              const coursesPoints = JSON.parse(perf.coursesPoints || "{}");
+              coursesPoints[dayKey] = (coursesPoints[dayKey] || 0) + 1;
+              
+              await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
+                coursesPoints: JSON.stringify(coursesPoints)
+              });
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error updating contest performance on course creation:", err);
+  }
+
+  return doc;
 }
 
 export async function fetchCoursesService(queries: any[]) {
@@ -482,6 +524,73 @@ export async function recordCourseVisitService(courseId: string, userId: string)
     userId: userId,
     metadata: { courseId, title: courseDoc.title }
   });
+
+  // --- Contest Performance Tracking ---
+  try {
+    const courseAuthorUserId = typeof courseDoc.user === "string" ? courseDoc.user : courseDoc.user?.$id;
+    if (courseAuthorUserId && courseAuthorUserId !== userId) {
+      // Fetch Contributor
+      const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
+        Query.equal("user", courseAuthorUserId)
+      ]);
+      
+      if (contRes.documents.length > 0) {
+        const contributor = contRes.documents[0];
+        
+        if (contributor.joinedContest) {
+          // Fetch ContestPerformance
+          const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
+            Query.equal("contributor", contributor.$id)
+          ]);
+          
+          if (perfRes.documents.length > 0) {
+            const perf = perfRes.documents[0];
+            
+            const startDate = new Date("2026-06-26T00:00:00Z");
+            if (new Date() >= startDate) {
+              const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
+              const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+              const dayKey = `day ${dayNumber}`;
+              
+              const usersReachedIds = JSON.parse(perf.usersReachedIds || "{}");
+              const uniqueUsersReached = JSON.parse(perf.uniqueUsersReached || "{}");
+              const returningUsers = JSON.parse(perf.returningUsers || "{}");
+              
+              const todaysIds: string[] = usersReachedIds[dayKey] || [];
+              
+              if (!todaysIds.includes(userId)) {
+                todaysIds.push(userId);
+                usersReachedIds[dayKey] = todaysIds;
+                
+                // Check if user is returning (appeared in any previous day)
+                let isReturning = false;
+                for (const [key, ids] of Object.entries(usersReachedIds)) {
+                  if (key !== dayKey && (ids as string[]).includes(userId)) {
+                    isReturning = true;
+                    break;
+                  }
+                }
+                
+                if (isReturning) {
+                  returningUsers[dayKey] = (returningUsers[dayKey] || 0) + 1;
+                }
+                
+                uniqueUsersReached[dayKey] = todaysIds.length;
+                
+                await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
+                  usersReachedIds: JSON.stringify(usersReachedIds),
+                  uniqueUsersReached: JSON.stringify(uniqueUsersReached),
+                  returningUsers: JSON.stringify(returningUsers)
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error updating contest performance on visit:", err);
+  }
 }
 
 

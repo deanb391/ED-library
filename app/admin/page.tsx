@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign, FileText } from "lucide-react";
+import { PlusCircle, UploadCloud, Megaphone, Users, BarChart2, TrendingUp, DollarSign, FileText, Trophy } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "@/components/useRouter";
 import { useEffect } from "react";

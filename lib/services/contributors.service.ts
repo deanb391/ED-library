@@ -4,6 +4,7 @@ import { fetchCoursesByAdminService, updateCourseService } from "./course.servic
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
 import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -23,6 +24,8 @@ export type ContributorDraft = {
   weeklyUploadCount?: number;
   isTopContributor?: boolean;
   topContributorWeek?: string;
+  joinedContest?: boolean;
+  joinedContestAt?: string;
 };
 
 export type Contributor = ContributorDraft & {
@@ -37,6 +40,8 @@ export type Contributor = ContributorDraft & {
   weeklyUploadCount?: number;
   isTopContributor?: boolean;
   topContributorWeek?: string;
+  joinedContest?: boolean;
+  joinedContestAt?: string;
 };
 
 function mapContributor(doc: any): Contributor {
@@ -62,6 +67,8 @@ function mapContributor(doc: any): Contributor {
     weeklyUploadCount: doc.weeklyUploadCount || 0,
     isTopContributor: doc.isTopContributor || false,
     topContributorWeek: doc.topContributorWeek || "",
+    joinedContest: doc.joinedContest || false,
+    joinedContestAt: doc.joinedContestAt || "",
   };
 }
 
@@ -114,7 +121,7 @@ export async function editContributorService(
   };
 
   // Only allow client modification of these safe fields
-  const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed'];
+  const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
   for (const field of safeFields) {
     if (updates[field as keyof ContributorDraft] !== undefined) {
       payload[field] = updates[field as keyof ContributorDraft];
@@ -127,6 +134,17 @@ export async function editContributorService(
     contributorId,
     payload
   );
+
+  if (updates.joinedContest === true) {
+    try {
+      const existingPerf = await getContestPerformanceByContributorService(contributorId);
+      if (!existingPerf) {
+        await createContestPerformanceService(contributorId);
+      }
+    } catch (e) {
+      console.error("Failed to init contest performance doc", e);
+    }
+  }
 
   if (type) {
     let status = "";
@@ -284,6 +302,19 @@ export async function fetchTopContributorsCoursesService(limit = 50, offset = 0)
       Query.orderDesc("followers"),
       Query.limit(limit),
       Query.offset(offset),
+    ]
+  );
+
+  return res.documents.map(mapContributor);
+}
+
+export async function fetchContestContributorsService(): Promise<Contributor[]> {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    CONTRIBUTORS_COLLECTION,
+    [
+      Query.equal("joinedContest", true),
+      Query.limit(100),
     ]
   );
 

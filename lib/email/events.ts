@@ -112,3 +112,22 @@ export function sendChatMessageDigestEmail(
     html: chatMessageDigestTemplate(params),
   }).catch(console.error);
 }
+
+export function sendContestDailySummaryEmail(to: string, data: { points: number, total: number }) {
+  sendEmail({
+    to,
+    subject: "Your Daily Contest Performance Update 🏆 - ED-Library",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #4f46e5;">Contest Daily Summary</h2>
+        <p>Your performance points for the day have been calculated!</p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0 0 10px 0;"><strong>Points Earned Today:</strong> <span style="color: #10b981; font-size: 1.2em;">${data.points.toFixed(1)}</span></p>
+          <p style="margin: 0;"><strong>Total Contest Points:</strong> <span style="color: #6366f1; font-size: 1.2em;">${data.total.toFixed(1)}</span></p>
+        </div>
+        <p>Keep uploading high-quality content and sharing your course links to maximize your rewards.</p>
+        <p>Best,<br/>ED-Library Team</p>
+      </div>
+    `,
+  }).catch(console.error);
+}
