@@ -13,10 +13,11 @@ export type ContestPerformance = {
   newUsers: string;
   usersReachedIds: string;
   returningUsers: string;
-  coursesPoints: string;
-  uploadQuality: string;
-  referralClicks: string;
-  uploadsCreated: string;
+  acquisitionScore: number;
+  engagementScore: number;
+  contentScore: number;
+  engagementActivity: string;
+  dailyCourseRatings: string;
 };
 
 export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {
@@ -28,10 +29,11 @@ export async function createContestPerformanceService(contributorId: string): Pr
     newUsers: "{}",
     usersReachedIds: "{}",
     returningUsers: "{}",
-    coursesPoints: "{}",
-    uploadQuality: "{}",
-    referralClicks: "{}",
-    uploadsCreated: "{}",
+    acquisitionScore: 0,
+    engagementScore: 0,
+    contentScore: 0,
+    engagementActivity: "{}",
+    dailyCourseRatings: "{}",
   };
 
   const doc = await databases.createDocument(

@@ -153,7 +153,7 @@ export default function DashboardUnderReviewPage() {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
     }
-    return new Date("2026-06-29T00:00:00");
+    return new Date("2026-06-27T00:00:00");
   });
 
   const [timeLeft, setTimeLeft] = useState<{
@@ -278,7 +278,7 @@ export default function DashboardUnderReviewPage() {
   useEffect(() => {
     const getTarget = () => {
       const storedDate = localStorage.getItem("contributor_contest_start_date");
-      return storedDate ? new Date(storedDate) : new Date("2026-06-29T00:00:00");
+      return storedDate ? new Date(storedDate) : new Date("2026-06-27T00:00:00");
     };
 
     const calculateTime = () => {

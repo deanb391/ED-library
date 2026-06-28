@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { contributorId, updates, type } = body;
+    const { contributorId, updates, type, editingUserId } = body;
 
     if (!contributorId || !updates) {
       return NextResponse.json(
@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
     const contributor = await editContributorService(
       contributorId,
       updates as Partial<ContributorDraft>,
-      type
+      type,
+      editingUserId
     );
+    console.log("contributor: ", contributor)
 
     return NextResponse.json({ success: true, data: contributor });
   } catch (err) {

@@ -3,6 +3,7 @@ import { fetchAllContestPerformancesService, updateContestPerformanceService } f
 import { getContributorByUserIdService } from "@/lib/services/contributors.service";
 import { databases } from "@/lib/appwrite/server";
 import { sendContestDailySummaryEmail } from "@/lib/email/events";
+import { Query } from "node-appwrite";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 
@@ -21,27 +22,56 @@ export async function POST(request: Request) {
     }
 
     // Determine current dayKey
-    const startDate = new Date("2026-06-26T00:00:00Z");
+    const startDate = new Date("2026-06-27T00:00:00Z");
     const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayKey = `day ${dayNumber}`;
 
     // 1. Calculate and assign points for each contributor
     for (const perf of performances) {
+      // -- A (Acquisition) --
       const newUsersCount = JSON.parse(perf.newUsers || "{}")[dayKey] || 0;
-      const reachCount = JSON.parse(perf.uniqueUsersReached || "{}")[dayKey] || 0;
-      const coursesCount = JSON.parse(perf.coursesPoints || "{}")[dayKey] || 0;
-      // We will cast to any to bypass strict type checking for the new property
-      const uploadsCount = JSON.parse((perf as any).uploadsCreated || "{}")[dayKey] || 0;
-
-      // Calculate A (Acquisition) - Max 50 points
       const acquisitionScore = Math.min(50, newUsersCount * 5);
 
-      // Calculate E (Engagement) - Max 40 points
-      const engagementScore = Math.min(40, reachCount * 2);
+      // -- E (Engagement) --
+      const engagementActivity = JSON.parse(perf.engagementActivity || "{}");
+      const activeMins = engagementActivity[dayKey]?.activeMinutes || 0;
+      // 1 point per 10 minutes, max 40 points
+      const engagementScore = Math.min(40, Math.floor(activeMins / 10));
 
-      // Calculate C (Content) - Max 10 points
-      const contentScore = Math.min(10, (uploadsCount * 0.5) + (coursesCount * 0.25));
+      // -- C (Content Quality) --
+      // Fetch all courses owned by this contributor
+      let contentScore = 0;
+      let totalRatingSum = 0;
+      let ratedCoursesCount = 0;
+      try {
+        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", perf.contributors);
+        const coursesRes = await databases.listDocuments(DATABASE_ID, "courses", [
+          Query.equal("user", contDoc.user)
+        ]);
+        
+        for (const course of coursesRes.documents) {
+          // Fetch reviews for this course
+          const reviewsRes = await databases.listDocuments(DATABASE_ID, "course_review_and_rating", [
+            Query.equal("courses", course.$id)
+          ]);
+          
+          if (reviewsRes.documents.length > 0) {
+            const sum = reviewsRes.documents.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+            const avg = sum / reviewsRes.documents.length;
+            totalRatingSum += avg;
+            ratedCoursesCount++;
+          }
+        }
+      } catch (err) {
+        console.error("Error calculating content score:", err);
+      }
+
+      if (ratedCoursesCount > 0) {
+        const overallAverage = totalRatingSum / ratedCoursesCount;
+        // Normalize 0-5 scale to 0-10 points: (avg / 5) * 10 = avg * 2
+        contentScore = Math.min(10, overallAverage * 2);
+      }
 
       const todaysPoints = acquisitionScore + engagementScore + contentScore;
 
@@ -54,7 +84,10 @@ export async function POST(request: Request) {
 
       await updateContestPerformanceService(perf.$id!, {
         dailyPoints: JSON.stringify(dailyPoints),
-        totalPoints: totalPoints
+        totalPoints: totalPoints,
+        acquisitionScore: acquisitionScore, // Save latest or total? The schema says it's a float attribute. We'll save today's for the dashboard.
+        engagementScore: engagementScore,
+        contentScore: contentScore,
       });
 
       // 3. Optional: Trigger email sending logic here

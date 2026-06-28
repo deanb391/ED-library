@@ -325,7 +325,60 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
 
   const router = useRouter();
-  const { user, loading, showAdCourse, courseBannerAds } = useUser()
+  const { user, loading, showAdCourse, courseBannerAds } = useUser();
+
+  const isActiveRef = useRef(false);
+
+  // Engagement Tracker
+  useEffect(() => {
+    if (!user || !course || !course.user) return;
+
+    const interval = setInterval(() => {
+      if (isActiveRef.current) {
+        fetch("/api/engagement/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            courseId: course.id,
+            contributorId: course.user,
+            userId: user.$id,
+            activeTimeMs: 300000
+          })
+        }).catch(console.error);
+        isActiveRef.current = false;
+      }
+    }, 300000);
+
+    const activityListener = () => { isActiveRef.current = true; };
+    window.addEventListener("scroll", activityListener, { passive: true });
+    window.addEventListener("click", activityListener, { passive: true });
+    window.addEventListener("keydown", activityListener, { passive: true });
+    window.addEventListener("mousemove", activityListener, { passive: true });
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("scroll", activityListener);
+      window.removeEventListener("click", activityListener);
+      window.removeEventListener("keydown", activityListener);
+      window.removeEventListener("mousemove", activityListener);
+    };
+  }, [user, course]);
+
+  // 2-Minute Review Modal Tracker
+  useEffect(() => {
+    if (!user || !course) return;
+
+    const storageKey = `asked_review_${course.id}_${user.$id}`;
+    if (localStorage.getItem(storageKey)) return;
+
+    const timer = setTimeout(() => {
+      setReviewModalOpen(true);
+      localStorage.setItem(storageKey, "true");
+    }, 120000);
+
+    return () => clearTimeout(timer);
+  }, [user, course]);
+
 
   const fetchTimeLine = async () => {
     const { posts: firstPosts, lastId } = await fetchPosts(courseId);

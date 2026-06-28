@@ -17,7 +17,7 @@ export default function ContestScoringAdminPage() {
   // Compute current day key
   const [dayKey, setDayKey] = useState("day 1");
   useEffect(() => {
-    const startDate = new Date("2026-06-26T00:00:00Z");
+    const startDate = new Date("2026-06-27T00:00:00Z");
     const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     setDayKey(`day ${dayNumber}`);

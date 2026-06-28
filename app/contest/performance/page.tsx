@@ -21,7 +21,7 @@ export default function ContributorPerformancePage() {
   // Compute current day key
   const [dayKey, setDayKey] = useState("day 1");
   useEffect(() => {
-    const startDate = new Date("2026-06-29T00:00:00Z");
+    const startDate = new Date("2026-06-27T00:00:00Z");
     const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     setDayKey(`day ${dayNumber}`);
@@ -204,11 +204,11 @@ export default function ContributorPerformancePage() {
               },
               { 
                 title: "Content (Uploads & Courses)", 
-                value: perfLoading ? "..." : `${JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0} U, ${JSON.parse(performance?.coursesPoints || "{}")[dayKey] || 0} C`, 
+                value: perfLoading ? "..." : `${JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0} U, ${JSON.parse((performance as any)?.coursesPoints || "{}")[dayKey] || 0} C`, 
                 maxVal: "10 pts", 
                 desc: "Quality and quantity of academic content created.", 
                 formula: "(Uploads × 0.5) + (Courses × 0.25)",
-                calculated: Math.min(10, ((JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0) * 0.5) + ((JSON.parse(performance?.coursesPoints || "{}")[dayKey] || 0) * 0.25))
+                calculated: Math.min(10, ((JSON.parse((performance as any)?.uploadsCreated || "{}")[dayKey] || 0) * 0.5) + ((JSON.parse((performance as any)?.coursesPoints || "{}")[dayKey] || 0) * 0.25))
               }
             ].map((metric, index) => (
               <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-950/45 border border-slate-850 rounded-2xl gap-3">
@@ -296,81 +296,7 @@ export default function ContributorPerformancePage() {
           </div>
         </div>
 
-        {/* --- INTERACTIVE PROJECTED REWARDS ESTIMATOR --- */}
-        <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-6">
-          <h3 className="font-extrabold text-white text-base mb-2 flex items-center gap-2">
-            <Calculator className="text-indigo-400" size={18} /> Projected Rewards Estimator
-          </h3>
-          <p className="text-xs text-slate-400 mb-6">
-            Proportional share estimator. Drag the sliders to project cash payouts from the prize pool.
-          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Slider Inputs */}
-            <div className="space-y-6">
-              
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-slate-350">Estimated Points Share</label>
-                  <span className="text-sm font-black text-indigo-400">{estimatedShare}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={estimatedShare}
-                  onChange={(e) => setEstimatedShare(parseInt(e.target.value))}
-                  className="w-full bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-500 outline-none"
-                />
-                <div className="flex justify-between text-[10px] text-slate-550 mt-1">
-                  <span>1% share</span>
-                  <span>100% share</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-slate-350">Contest Final Prize Pool</label>
-                  <span className="text-sm font-black text-emerald-450 text-emerald-400">₦{estimatedPool.toLocaleString()}</span>
-                </div>
-                <input
-                  type="range"
-                  min="100000"
-                  max="200000"
-                  step="10000"
-                  value={estimatedPool}
-                  onChange={(e) => setEstimatedPool(parseInt(e.target.value))}
-                  className="w-full bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer accent-emerald-500 outline-none"
-                />
-                <div className="flex justify-between text-[10px] text-slate-550 mt-1">
-                  <span>₦100,000</span>
-                  <span>₦200,000</span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Payout Display Card */}
-            <div className="bg-slate-950/50 border border-slate-850 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                  Projected Wallet Deposit
-                </span>
-                <h4 className="text-3xl font-black text-emerald-400 leading-none">
-                  ₦{projectedEarnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </h4>
-              </div>
-
-              <div className="flex items-start gap-2.5 bg-indigo-500/5 border border-indigo-500/10 p-3 rounded-xl mt-4">
-                <Info size={14} className="text-indigo-450 text-indigo-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-slate-450 leading-relaxed margin-0">
-                  This calculation utilizes the contest proportional reward payout formula: <br />
-                  <code className="text-amber-300 font-mono text-[9px]">Earnings = (Your Pts ÷ Total Pts) × Pool</code>. Payouts transfer on Day 35.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
       </div>
     </div>
