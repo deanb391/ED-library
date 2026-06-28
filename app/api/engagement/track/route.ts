@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get current date key, e.g., "day 1" based on contest start
-    const startDate = new Date("2026-06-27T00:00:00Z");
+    const startDate = new Date("2026-06-29T12:00:00Z");
     const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayKey = `day ${dayNumber}`;

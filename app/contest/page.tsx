@@ -39,7 +39,7 @@ export default function ContestLandingPage() {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
     }
-    return new Date("2026-06-27T00:00:00");
+    return new Date("2026-06-29T12:00:00");
   });
 
   // Calculate endDate: 30 days after startDate
@@ -147,7 +147,7 @@ export default function ContestLandingPage() {
       if (storedDate) {
         setStartDate(new Date(storedDate));
       } else {
-        setStartDate(new Date("2026-06-27T00:00:00"));
+        setStartDate(new Date("2026-06-29T12:00:00"));
       }
     };
     window.addEventListener("storage", syncTime);
@@ -192,7 +192,7 @@ export default function ContestLandingPage() {
   };
 
   const resetPreset = () => {
-    const defaultDate = new Date("2026-06-27T00:00:00");
+    const defaultDate = new Date("2026-06-29T12:00:00");
     setStartDate(defaultDate);
     localStorage.removeItem("contributor_contest_start_date");
     window.dispatchEvent(new Event("storage"));
