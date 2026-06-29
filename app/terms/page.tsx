@@ -25,7 +25,7 @@ export default function TermsPage() {
             using the platform.
           </p>
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 border border-blue-100">
-            Effective Date: June 29, 2026
+            Effective Date: January 9, 2026
           </div>
         </header>
 

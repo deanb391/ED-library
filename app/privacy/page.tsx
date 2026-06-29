@@ -246,7 +246,7 @@ export default function PrivacyPage() {
             your data — clearly and honestly.
           </p>
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 border border-blue-100">
-            Last updated: June 29, 2026
+            Last updated: January 9, 2026
           </div>
         </header>
 
