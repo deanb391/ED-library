@@ -342,12 +342,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             courseId: course.id,
             contributorId: course.user,
             userId: user.$id,
-            activeTimeMs: 300000
+            activeTimeMs: 120000
           })
         }).catch(console.error);
         isActiveRef.current = false;
       }
-    }, 300000);
+    }, 120000);
 
     const activityListener = () => { isActiveRef.current = true; };
     window.addEventListener("scroll", activityListener, { passive: true });
@@ -368,13 +368,13 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   useEffect(() => {
     if (!user || !course) return;
 
-    const storageKey = `asked_review_${course.id}_${user.$id}`;
+    const storageKey = `asked_review_${course.id}_${user.$id}_okay`;
     if (localStorage.getItem(storageKey)) return;
 
     const timer = setTimeout(() => {
       setReviewModalOpen(true);
       localStorage.setItem(storageKey, "true");
-    }, 120000);
+    }, 80000);
 
     return () => clearTimeout(timer);
   }, [user, course]);
@@ -1531,13 +1531,6 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 </div>
               )}
             </section>
-
-            <ReviewModal
-              isOpen={reviewModalOpen}
-              isSaving={isReviewSaving}
-              onClose={() => setReviewModalOpen(false)}
-              onSubmit={({ rating, comment }) => handleCreateReview({ rating, comment })}
-            />
           </div>
         )
 
@@ -1675,6 +1668,13 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             }
           />
         )}
+
+        <ReviewModal
+          isOpen={reviewModalOpen}
+          isSaving={isReviewSaving}
+          onClose={() => setReviewModalOpen(false)}
+          onSubmit={({ rating, comment }) => handleCreateReview({ rating, comment })}
+        />
 
         <ConfirmCourseDelete
           isOpen={isCourseDeleteOpen}
