@@ -53,7 +53,7 @@ export default function AdvertiseLandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-white font-sans overflow-x-hidden transition-colors duration-200">
       {/* --- HERO SECTION --- */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white pt-24 pb-32 px-6 text-center overflow-hidden">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-950 to-slate-900 text-white pt-24 pb-32 px-6 text-center overflow-hidden">
         {/* Subtle decorative background glows */}
         <div className="absolute -top-[20%] -right-[10%] w-1/2 h-1/2 bg-[radial-gradient(circle,rgba(96,165,250,0.15)_0%,rgba(0,0,0,0)_70%)] pointer-events-none" />
         <div className="absolute -bottom-[20%] -left-[10%] w-1/2 h-1/2 bg-[radial-gradient(circle,rgba(56,189,248,0.1)_0%,rgba(0,0,0,0)_70%)] pointer-events-none" />
@@ -66,7 +66,7 @@ export default function AdvertiseLandingPage() {
           </div>
 
           {/* Main Headline with Text Gradient */}
-          <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold tracking-tight leading-[1.1] mb-6 bg-gradient-to-r from-white via-slate-200 to-blue-200 bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-extrabold tracking-tight leading-[1.1] mb-6 bg-linear-to-r from-white via-slate-200 to-blue-200 bg-clip-text text-transparent drop-shadow-sm">
             Promote Your Brand to Thousands of Learners
           </h1>
 
@@ -117,7 +117,7 @@ export default function AdvertiseLandingPage() {
         {/* Responsive Grid */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-8">
           {/* Card 1 */}
-          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-[1.5rem] border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
+          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
               <Users size={28} strokeWidth={2} />
             </div>
@@ -130,7 +130,7 @@ export default function AdvertiseLandingPage() {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-[1.5rem] border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
+          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
               <Zap size={28} strokeWidth={2} />
             </div>
@@ -143,7 +143,7 @@ export default function AdvertiseLandingPage() {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-[1.5rem] border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
+          <div className="bg-white dark:bg-gray-900 py-10 px-8 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm flex flex-col items-center text-center transition-transform duration-200 cursor-default hover:-translate-y-1">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
               <ShieldCheck size={28} strokeWidth={2} />
             </div>
@@ -170,7 +170,7 @@ export default function AdvertiseLandingPage() {
           </div>
 
           {/* Pricing Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-[1.5rem] border border-slate-200 dark:border-gray-800 shadow-xl dark:shadow-none max-w-md mx-auto relative overflow-hidden transition-colors duration-200">
+          <div className="bg-white dark:bg-gray-900  rounded-3xl border border-slate-200 dark:border-gray-800 shadow-xl dark:shadow-none max-w-md mx-auto relative overflow-hidden transition-colors duration-200">
             {/* Top Accent Bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-600" />
 
