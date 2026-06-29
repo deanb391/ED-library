@@ -13,10 +13,15 @@ export type ContestPerformance = {
   newUsers: string;
   usersReachedIds: string;
   returningUsers: string;
-  coursesPoints: string;
-  uploadQuality: string;
-  referralClicks: string;
-  uploadsCreated: string;
+  acquisitionScore: number;
+  engagementScore: number;
+  contentScore: number;
+  engagementActivity: string;
+  dailyCourseRatings: string;
+  coursesPoints?: string;
+  uploadQuality?: string;
+  referralClicks?: string;
+  uploadsCreated?: string;
 };
 
 export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {
@@ -28,10 +33,11 @@ export async function createContestPerformanceService(contributorId: string): Pr
     newUsers: "{}",
     usersReachedIds: "{}",
     returningUsers: "{}",
-    coursesPoints: "{}",
-    uploadQuality: "{}",
-    referralClicks: "{}",
-    uploadsCreated: "{}",
+    acquisitionScore: 0,
+    engagementScore: 0,
+    contentScore: 0,
+    engagementActivity: "{}",
+    dailyCourseRatings: "{}",
   };
 
   const doc = await databases.createDocument(
@@ -71,6 +77,15 @@ export async function updateContestPerformanceService(
   performanceId: string,
   updates: Partial<ContestPerformance>
 ): Promise<ContestPerformance> {
+  try {
+    const current = await databases.getDocument(DATABASE_ID, CONTEST_PERFORMANCE_COLLECTION, performanceId);
+    if (current.contributors) {
+      updates.contributors = typeof current.contributors === 'object' 
+        ? (Array.isArray(current.contributors) ? current.contributors[0]?.$id : current.contributors.$id)
+        : current.contributors;
+    }
+  } catch(e) {}
+  
   const doc = await databases.updateDocument(
     DATABASE_ID,
     CONTEST_PERFORMANCE_COLLECTION,

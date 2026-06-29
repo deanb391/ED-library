@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contributor ID is required" }, { status: 400 });
     }
 
-    const startDate = new Date("2026-06-29T00:00:00Z");
+    const startDate = new Date("2026-06-29T12:00:00Z");
     if (new Date() < startDate) {
       return NextResponse.json({ success: true, message: "Contest not started yet" });
     }

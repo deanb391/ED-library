@@ -39,7 +39,7 @@ export default function ContestLandingPage() {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
     }
-    return new Date("2026-06-29T00:00:00");
+    return new Date("2026-06-29T12:00:00");
   });
 
   // Calculate endDate: 30 days after startDate
@@ -147,7 +147,7 @@ export default function ContestLandingPage() {
       if (storedDate) {
         setStartDate(new Date(storedDate));
       } else {
-        setStartDate(new Date("2026-06-29T00:00:00"));
+        setStartDate(new Date("2026-06-29T12:00:00"));
       }
     };
     window.addEventListener("storage", syncTime);
@@ -192,7 +192,7 @@ export default function ContestLandingPage() {
   };
 
   const resetPreset = () => {
-    const defaultDate = new Date("2026-06-29T00:00:00");
+    const defaultDate = new Date("2026-06-29T12:00:00");
     setStartDate(defaultDate);
     localStorage.removeItem("contributor_contest_start_date");
     window.dispatchEvent(new Event("storage"));
@@ -411,8 +411,8 @@ export default function ContestLandingPage() {
 
         {/* --- STATS OVERVIEW --- */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "4rem" }}>
-          <StatHighlight icon={<Calendar size={22} color="#818cf8" />} bg="rgba(99,102,241,0.1)" border="rgba(99,102,241,0.2)" label="Duration" value="15 Days Campaign" />
-          <StatHighlight icon={<Coins size={22} color="#34d399" />} bg="rgba(16,185,129,0.1)" border="rgba(16,185,129,0.2)" label="Cash Prize Pool" value="₦100,000 - ₦200,000" valueColor="#34d399" />
+          <StatHighlight icon={<Calendar size={22} color="#818cf8" />} bg="rgba(99,102,241,0.1)" border="rgba(99,102,241,0.2)" label="Duration" value="30 Days Contest" />
+          <StatHighlight icon={<Coins size={22} color="#34d399" />} bg="rgba(16,185,129,0.1)" border="rgba(16,185,129,0.2)" label="Cash Prize Pool" value="₦100,000" valueColor="#34d399" />
           <StatHighlight icon={<Users size={22} color="#f472b6" />} bg="rgba(236,72,153,0.1)" border="rgba(236,72,153,0.2)" label="Top Reward Share" value="Proportional Payout" />
         </div>
 
@@ -603,10 +603,10 @@ export default function ContestLandingPage() {
                 </h2>
 
                 <div style={{ position: "relative", paddingLeft: "1.5rem", borderLeft: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", gap: "2rem", marginLeft: "0.5rem" }}>
-                  <TimelineItem num="1" color="#6366f1" title="Day 1 to 30: Active Campaign" desc="Contributors compete and points accumulate continuously. Performance metrics update daily on the dashboard." />
-                  <TimelineItem num="2" color="#ec4899" title="Day 30: Frozen Standings" desc="At midnight of Day 30, the competition closes and all scores are frozen. No new uploads or actions count toward the final scoreboard." />
-                  <TimelineItem num="3" color="#f59e0b" title="Day 31 to 35: Quality Review & Audit" desc="Our academic editorial board audits activity logs to verify referrals, flag spam downloads, and finalize quality evaluations." />
-                  <TimelineItem num="4" color="#10b981" title="Day 35: Wallet Payouts" desc="Finalized rewards are directly paid out and deposited into contributor wallets. Withdrawals can be requested immediately." />
+                  <TimelineItem num="1" color="#6366f1" title="Day 1 to 15: Active Campaign" desc="Contributors compete and points accumulate continuously. Performance metrics update daily on the dashboard." />
+                  <TimelineItem num="2" color="#ec4899" title="Day 15 to 16: Frozen Standings" desc="At midnight of Day 15, the competition closes and all scores are frozen. No new uploads or actions count toward the final scoreboard." />
+                  <TimelineItem num="3" color="#f59e0b" title="Day 16 to 21: Quality Review & Audit" desc="Our academic editorial board audits activity logs to verify referrals, flag spam downloads, and finalize quality evaluations." />
+                  <TimelineItem num="4" color="#10b981" title="Day 21 to 30: Wallet Payouts" desc="Finalized rewards are directly paid out and deposited into contributor wallets. Withdrawals can be requested immediately." />
                 </div>
               </div>
 

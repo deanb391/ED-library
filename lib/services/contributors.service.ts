@@ -113,6 +113,7 @@ export async function editContributorService(
   contributorId: string,
   updates: Partial<ContributorDraft>,
   type?: string,
+  editingUserId?: string,
 ): Promise<Contributor> {
   const now = new Date().toISOString();
 
@@ -120,14 +121,39 @@ export async function editContributorService(
     $updatedAt: now,
   };
 
-  // Only allow client modification of these safe fields
-  const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
-  for (const field of safeFields) {
-    if (updates[field as keyof ContributorDraft] !== undefined) {
-      payload[field] = updates[field as keyof ContributorDraft];
+  let isAdmin = false;
+  if (editingUserId) {
+    try {
+      const userDoc = await databases.getDocument(
+        DATABASE_ID,
+        "user",
+        editingUserId
+      );
+      if (userDoc.isAdmin) {
+        isAdmin = true;
+      }
+    } catch (e) {
+      console.error("Failed to fetch editing user", e);
     }
   }
 
+  if (isAdmin) {
+    // If admin, allow all fields from updates
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        payload[key] = value;
+      }
+    }
+  } else {
+    // Only allow client modification of these safe fields
+    const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
+    for (const field of safeFields) {
+      if (updates[field as keyof ContributorDraft] !== undefined) {
+        payload[field] = updates[field as keyof ContributorDraft];
+      }
+    }
+  }
+  console.log("payload: ", payload)
   const doc = await databases.updateDocument(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,
@@ -145,6 +171,7 @@ export async function editContributorService(
       console.error("Failed to init contest performance doc", e);
     }
   }
+  console.log(doc)
 
   if (type) {
     let status = "";

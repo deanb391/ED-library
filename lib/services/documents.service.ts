@@ -56,7 +56,7 @@ export async function createDocumentService(data: Omit<CourseDocument, "$id" | "
           if (perfRes.documents.length > 0) {
             const perf = perfRes.documents[0];
             
-            const startDate = new Date("2026-06-26T00:00:00Z");
+            const startDate = new Date("2026-06-29T12:00:00Z");
             if (new Date() >= startDate) {
               const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
               const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
