@@ -152,7 +152,7 @@ export default function RectangularAd({
         ))}
       </div>
 
-      <span className="absolute bottom-2 right-2 text-[10px] text-neutral-500 bg-white/70 px-2 py-0.5 rounded">
+      <span className="absolute bottom-2 right-2 text-[10px] text-neutral-500 bg-white dark:bg-gray-900/70 px-2 py-0.5 rounded">
         Sponsored
       </span>
     </div>

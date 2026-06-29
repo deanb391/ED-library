@@ -98,7 +98,7 @@ export default function DashboardPage() {
   }, [user?.$id]);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col text-gray-900">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col text-gray-900 dark:text-white">
 
       {/* Main */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-4">
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition"
+              className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-gray-800 transition"
             >
               <ArrowLeft size={20} />
             </button>
@@ -124,11 +124,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
 
           {/* Daily Reach */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 md:col-span-2">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 md:col-span-2">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-lg font-semibold">Daily Reach & Visits</h2>
-                <p className="text-sm text-gray-500">Past 7 days</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Past 7 days</p>
               </div>
 
               <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full text-xs font-semibold">
@@ -143,9 +143,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Followers Growth */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 flex flex-col">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 flex flex-col">
             <div className="mb-3">
-              <h3 className="text-xs font-bold text-gray-500 uppercase">
+              <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">
                 Followers Growth
               </h3>
               <div className="flex items-baseline gap-2 mt-1">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Top Course (still static unless you wire it properly) */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
             <div className="relative h-36 w-full">
               <img
                 src={deskImg.src}
@@ -176,30 +176,30 @@ export default function DashboardPage() {
                   Top Rated
                 </span>
 
-                <span className="bg-white text-gray-900 text-xs font-semibold px-2.5 py-1 rounded flex items-center gap-1 shadow-sm" style={{paddingRight: 10, paddingLeft: 10}}>
+                <span className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs font-semibold px-2.5 py-1 rounded flex items-center gap-1 shadow-sm" style={{paddingRight: 10, paddingLeft: 10}}>
                   4.8 <Star size={12} />
                 </span>
               </div>
             </div>
 
             <div className="p-5">
-              <h2 className="text-base font-semibold text-gray-900 mb-1 leading-snug">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1 leading-snug">
                 Advanced Macroeconomics
               </h2>
 
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                 High engagement and strong ratings across multiple modules.
               </p>
             </div>
           </div>
 
           {/* Earnings */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 md:col-span-2 xl:col-span-1">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 md:col-span-2 xl:col-span-1">
   
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-lg font-semibold">Earnings</h2>
-                <p className="text-sm text-gray-500">Recent activity</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Recent activity</p>
               </div>
 
               <Link className="text-sm font-medium text-blue-600 hover:underline" href="/contributor/dashboard/subscriptions-and-earnings">
@@ -208,7 +208,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="text-right mb-6">
-              <p className="text-xs text-gray-500 uppercase">Total</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Total</p>
               <p className="text-3xl font-bold tracking-tight">
                 ₦{totalEarnings.toLocaleString()}
               </p>
@@ -222,10 +222,10 @@ export default function DashboardPage() {
                       <UserPlus size={16} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {tx.description || "New earning"}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(tx.$createdAt).toLocaleDateString()}
                       </p>
                     </div>

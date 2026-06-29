@@ -3,7 +3,7 @@ import ResetPasswordClient from "./ResetPasswordClient";
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="p-6 bg-white">Loading...</div>}>
+    <Suspense fallback={<div className="p-6 bg-white dark:bg-gray-900">Loading...</div>}>
       <ResetPasswordClient />
     </Suspense>
   );

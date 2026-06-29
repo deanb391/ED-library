@@ -108,7 +108,7 @@ export default function Message({
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-400 transition"
           >
             <X size={16} />
           </button>

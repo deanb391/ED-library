@@ -137,9 +137,9 @@ export default function SubscribeToCreatorPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function SubscribeToCreatorPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F8F9FB",
+        backgroundColor: "transparent",
         display: "flex",
         flexDirection: "column",
         paddingBottom: "8rem", // Gives space so the last item isn't hidden by the fixed bottom bar

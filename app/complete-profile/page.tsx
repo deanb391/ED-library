@@ -78,8 +78,8 @@ export default function CompleteProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900">
-      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
 
         {/* Icon */}
         <div className="flex justify-center mb-6">
@@ -91,7 +91,7 @@ export default function CompleteProfilePage() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
-          <p className="text-sm text-gray-500 px-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
             Just a few more details to get started.
           </p>
         </div>
@@ -110,14 +110,14 @@ export default function CompleteProfilePage() {
 
           {/* Level */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
               Level
             </label>
             <select
               required
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
               <option value="" disabled>
                 Select level
@@ -140,10 +140,10 @@ export default function CompleteProfilePage() {
           />
 
           {/* Sign Up As Contributor Switch */}
-          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100">
+          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100 dark:border-gray-800">
             <div>
-              <p className="text-sm font-bold text-gray-800">Sign Up As Contributor</p>
-              <p className="text-xs text-gray-500">Enable to apply as a contributor after completing profile.</p>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-300">Sign Up As Contributor</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Enable to apply as a contributor after completing profile.</p>
             </div>
             <button
               type="button"
@@ -153,7 +153,7 @@ export default function CompleteProfilePage() {
               }`}
             >
               <div
-                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
+                className={`w-4 h-4 bg-white dark:bg-gray-900 rounded-full shadow-sm transform transition-transform ${
                   isContributorSignUp ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -202,7 +202,7 @@ function Input({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-bold text-gray-700 ml-1">
+      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
         {label}
       </label>
       <div className="relative group">
@@ -212,7 +212,7 @@ function Input({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${
+          className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${
             mono ? "font-mono tracking-widest" : ""
           }`}
         />

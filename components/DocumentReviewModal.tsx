@@ -36,23 +36,23 @@ export default function DocumentReviewModal({ isOpen, onClose, onSubmit }: Docum
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 text-lg">Request Human Review</h3>
-          <button onClick={onClose} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+          <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Request Human Review</h3>
+          <button onClick={onClose} className="p-2 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 rounded-full transition-colors text-gray-500 dark:text-gray-400">
             <X size={20} />
           </button>
         </div>
         
         <div className="p-6">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             If you believe your document was incorrectly rejected by our automated system, please tell us more about the file so a human moderator can review it.
           </p>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tell us more about the file</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tell us more about the file</label>
             <textarea
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
               rows={4}
               placeholder="e.g. This is a study guide I created based on the lecture notes, it does not contain copyrighted material."
               value={complaint}

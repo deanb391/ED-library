@@ -79,7 +79,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 left-3 z-20 p-2 rounded-full hover:bg-white transition"
+          className="absolute top-3 left-3 z-20 p-2 rounded-full hover:bg-white dark:bg-gray-900 transition"
         >
           <X size={22} color="red" />
         </button>
@@ -88,7 +88,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {ad.fileType === "video" && (
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 z-20 p-5 rounded-full  hover:bg-white transition"
+            className="absolute top-3 right-3 z-20 p-5 rounded-full  hover:bg-white dark:bg-gray-900 transition"
           >
             {isMuted ? <VolumeX size={22} color="blue"/> : <Volume size={22} color="blue"/>}
           </button>
@@ -97,7 +97,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {/* Loading indicator */}
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center z-10" style={{height: 130, alignItems: 'center', flex: 1, }}> 
-            <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+            <div className="h-10 w-10 border-4 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
           </div>
         )}
 

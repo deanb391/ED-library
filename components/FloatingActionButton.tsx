@@ -21,7 +21,7 @@ export default function FloatingActionButton({ className = "" }: FloatingActionB
       }`}>
         <Link
           href="/contributor/dashboard/create-course"
-          className="flex items-center gap-3 bg-white text-gray-700 px-4 py-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 transition-colors group"
+          className="flex items-center gap-3 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900 transition-colors group"
         >
           <span className="text-sm font-semibold">Create Course</span>
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -31,7 +31,7 @@ export default function FloatingActionButton({ className = "" }: FloatingActionB
 
         <Link
           href="/contributor/dashboard/upload"
-          className="flex items-center gap-3 bg-white text-gray-700 px-4 py-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 transition-colors group"
+          className="flex items-center gap-3 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-full shadow-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900 transition-colors group"
         >
           <span className="text-sm font-semibold">Upload Resource</span>
           <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">

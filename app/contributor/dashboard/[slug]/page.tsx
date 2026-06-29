@@ -53,7 +53,7 @@ function CourseSection({
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
           {title}
         </h2>
 
@@ -70,14 +70,14 @@ function CourseSection({
           <Link
             key={course.id}
             href={`/courses/${course.id}`}
-            className="group bg-white rounded-2xl border border-gray-200
-                       hover:border-gray-300 overflow-hidden
+            className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
+                       hover:border-gray-300 dark:border-gray-700 overflow-hidden
                        flex flex-col transition
                        active:scale-[0.98]
                        hover:shadow-sm"
           >
             {/* Thumbnail */}
-            <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+            <div className="relative h-32 sm:h-36 bg-gray-100 dark:bg-gray-800 overflow-hidden">
               <Image
                 src={course.thumbnailUrl}
                 alt={course.title}
@@ -89,22 +89,22 @@ function CourseSection({
 
             {/* Content */}
             <div className="p-4 flex flex-col gap-2 grow">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500" style={{ fontSize: 12 }}>
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400" style={{ fontSize: 12 }}>
                 <span>{course.code}</span>
-                <span className="text-gray-300">•</span>
+                <span className="text-gray-300 dark:text-gray-600">•</span>
                 <span>{course.session}</span>
               </div>
 
-              <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug" style={{ fontSize: 10 }}>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug" style={{ fontSize: 10 }}>
                 {course.title}
               </h3>
 
-              <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                 {course.description}
               </p>
 
-              <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600">
-                <span className="px-2 py-0.5 rounded-full bg-gray-100">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400">
+                <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
                   {course.department}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
@@ -361,9 +361,9 @@ export default function DashboardUnderReviewPage() {
 
   if (userLoading || contributorLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
@@ -386,15 +386,15 @@ export default function DashboardUnderReviewPage() {
 
   if (dashboardLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading dashboard data...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading dashboard data...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans text-gray-900">
+    <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans text-gray-900 dark:text-white">
 
 
       {/* --- Page Layout (Sidebar + Main) --- */}
@@ -402,7 +402,7 @@ export default function DashboardUnderReviewPage() {
 
 
         {/* --- Main Content Area --- */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-white">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-white dark:bg-gray-900">
           <div style={{ marginBottom: 20, fontSize: 20, fontWeight: "bold" }}>
             My Dashboard
           </div>
@@ -418,12 +418,12 @@ export default function DashboardUnderReviewPage() {
                 }}
               >
                 {/* Decorative backgrounds */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white dark:bg-gray-900/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-xl translate-y-12 -translate-x-12 pointer-events-none" />
 
                 <div className="flex items-start gap-4 relative z-10">
                   <div
-                    className="mt-1 w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
+                    className="mt-1 w-12 h-12 bg-white dark:bg-gray-900/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
                     style={{
                       animation: "dashboardFireBounce 1.5s ease-in-out infinite"
                     }}
@@ -431,7 +431,7 @@ export default function DashboardUnderReviewPage() {
                     🏆
                   </div>
                   <div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-gray-900/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
                       🔥 15-Day Contributor Challenge
                     </div>
                     <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
@@ -519,8 +519,8 @@ export default function DashboardUnderReviewPage() {
                       <Info size={16} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900 mb-1">You don't have a Wallet</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">You don't have a Wallet</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">
                         Create a wallet to manage your earnings, track payments, and get paid for your contributions.
                       </p>
                     </div>
@@ -541,13 +541,13 @@ export default function DashboardUnderReviewPage() {
                       <Info size={16} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold text-gray-900 mb-1">Your application is currently Under Review</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Your application is currently Under Review</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">
                         Full access to features will be granted once our academic board approves your credentials.
                       </p>
                     </div>
                   </div>
-                  <button className="bg-white hover:bg-black text-black text-sm font-bold py-3 px-6 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-md" style={{ backgroundColor: "white" }}>
+                  <button className="bg-white dark:bg-gray-900 hover:bg-black text-black text-sm font-bold py-3 px-6 rounded-xl transition-all whitespace-nowrap shrink-0 shadow-md" style={{ backgroundColor: "white" }}>
                     Application Status: Pending
                   </button>
                 </div>
@@ -923,21 +923,21 @@ function ActionCard({
         "rounded-2xl border p-6 flex flex-col transition-all duration-500",
         enabled
           ? "shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer text-white"
-          : "bg-[#F8F9FB] border-gray-100 opacity-70 pointer-events-none"
+          : "bg-transparent border-gray-100 dark:border-gray-800 opacity-70 pointer-events-none"
       )}
     >
       <div className={clsx(
         "w-10 h-10 rounded-full flex items-center justify-center mb-4",
-        enabled ? "bg-white/20 text-white" : "bg-gray-200/50 text-gray-400"
+        enabled ? "bg-white dark:bg-gray-900/20 text-white" : "bg-gray-200 dark:bg-gray-800/50 text-gray-400"
       )}>
         {icon}
       </div>
-      <h4 className={clsx("text-sm font-bold mb-2", enabled ? "text-white" : "text-gray-600")}>
+      <h4 className={clsx("text-sm font-bold mb-2", enabled ? "text-white" : "text-gray-600 dark:text-gray-400")}>
         {title}
       </h4>
       <p className={clsx("text-xs leading-relaxed", enabled ? "text-white/90" : "text-gray-400")}>{desc}</p>
       <div className="mt-4 text-[11px] uppercase tracking-[0.12em] font-semibold">
-        {!enabled && <span className="text-gray-500">Your Account Is Under Review</span>}
+        {!enabled && <span className="text-gray-500 dark:text-gray-400">Your Account Is Under Review</span>}
         {enabled && <span className="text-white/80">Click to explore</span>}
       </div>
     </div>

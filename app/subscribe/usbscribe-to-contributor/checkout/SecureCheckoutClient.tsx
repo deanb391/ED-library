@@ -220,15 +220,15 @@ export default function SecureCheckoutPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] flex justify-center px-4 py-8">
+    <div className="min-h-screen bg-transparent flex justify-center px-4 py-8">
       <div className="w-full max-w-lg space-y-6">
 
         {/* Header */}
@@ -241,18 +241,18 @@ export default function SecureCheckoutPage() {
           </div>
 
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
               Checkout
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               ED-Library {type === "subscription" ? "Subscription" : "Course Payment"}
             </p>
           </div>
         </div>
 
         {/* Courses */}
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 text-sm font-medium text-gray-500">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400">
             Selected Courses
           </div>
 
@@ -261,20 +261,20 @@ export default function SecureCheckoutPage() {
               <div
                 key={course.id}
                 className={`flex items-center justify-between px-4 py-4 ${index !== courses.length - 1
-                  ? "border-b border-gray-100"
+                  ? "border-b border-gray-100 dark:border-gray-800"
                   : ""
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <BookOpen size={16} className="text-gray-600" />
+                  <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <BookOpen size={16} className="text-gray-600 dark:text-gray-400" />
                   </div>
 
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {course.title}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {type === "subscription" ? "Monthly access" : "FullTime Access"}
                     </p>
                   </div>
@@ -286,7 +286,7 @@ export default function SecureCheckoutPage() {
                       {type === "subscription" ? "Active" : "Owned"}
                     </span>
                   ) : (
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
                       {course.price === 0 ? "Free" : `₦${course?.price?.toLocaleString()}`}
                     </span>
                   )}
@@ -297,13 +297,13 @@ export default function SecureCheckoutPage() {
         </div>
 
         {/* Total */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
-          <div className="flex justify-between text-sm text-gray-500">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 space-y-3">
+          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
             <span>Total</span>
             <span>₦{total?.toLocaleString()}</span>
           </div>
 
-          <div className="flex justify-between text-base font-semibold text-gray-900">
+          <div className="flex justify-between text-base font-semibold text-gray-900 dark:text-white">
             <span>Amount to pay</span>
             <span style={{ color: BRAND_BLUE }}>
               ₦{total.toLocaleString()}
@@ -627,22 +627,22 @@ export default function SecureCheckoutPage() {
                 padding: 20,
               }}
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Payment Information
               </h2>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 You will be redirected to complete your payment.
                 If you are paying via bank transfer, the account name may appear as:
               </p>
 
-              <div className="bg-gray-100 rounded-lg p-3 mb-4">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   Blessed Okori (ED-Library)
                 </p>
               </div>
 
-              <p className="text-xs text-gray-500 mb-5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
                 This is the official payment account for ED-Library.
                 Please proceed only if the details match.
               </p>
@@ -769,7 +769,7 @@ export default function SecureCheckoutPage() {
         })()}
 
         {/* Cancel */}
-        <button className="w-full py-3 text-sm font-medium text-gray-500 hover:text-gray-700 transition">
+        <button className="w-full py-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition">
           Cancel
         </button>
       </div>

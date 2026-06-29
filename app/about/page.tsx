@@ -2,37 +2,37 @@
 
 export default function AboutSection() {
   return (
-    <section className="min-h-screen bg-[#F8F9FB] px-4 py-14">
+    <section className="min-h-screen bg-transparent px-4 py-14">
       <div className="mx-auto max-w-3xl">
         {/* Header */}
         <header className="mb-5 space-y-4" >
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900" style={{paddingTop: 15}}>
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white" style={{paddingTop: 15}}>
             About
           </h1>
-          <div className="h-1 w-12 rounded-full bg-gray-900" />
-          <p className="max-w-2xl text-gray-600 leading-relaxed">
+          <div className="h-1 w-12 rounded-full bg-gray-900 dark:bg-white" />
+          <p className="max-w-2xl text-gray-600 dark:text-gray-400 leading-relaxed">
             A focused platform for accessing and sharing academic resources,
             without noise, friction, or pointless extras.
           </p>
         </header>
 
         {/* Main content */}
-        <div className="relative mb-16 rounded-2xl bg-white p-8 shadow-sm space-y-6">
-          <p className="text-gray-800 leading-relaxed" style={{color: "blue"}}>
+        <div className="relative mb-16 rounded-2xl bg-white dark:bg-gray-900 p-8 shadow-sm space-y-6">
+          <p className="text-gray-800 dark:text-gray-300 leading-relaxed" style={{color: "blue"}}>
             This platform exists for one reason:
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-900 dark:text-white">
               {" "}to make academic content easier to find and easier to use.
             </span>
             No cluttered dashboards. No distractions pretending to be features.
           </p>
 
-          <p className="text-gray-700 leading-relaxed">
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
             Students can browse courses, materials, and departments quickly
             and predictably. Contributors can publish resources knowing they
             reach the right audience instead of disappearing into a feed.
           </p>
 
-          <p className="text-gray-700 leading-relaxed">
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
             Every design and technical decision is measured against one
             question: does this improve learning?
             If the answer is no, it doesn’t ship.
@@ -41,7 +41,7 @@ export default function AboutSection() {
 
         {/* Principles */}
         <section>
-          <h2 className="mb-2 text-lg font-medium text-gray-900" style={{marginTop: 20}}>
+          <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-white" style={{marginTop: 20}}>
             Principles
           </h2>
 
@@ -77,11 +77,11 @@ function ValueCard({
   description: string;
 }) {
   return (
-    <div className="group rounded-xl bg-white p-6 shadow-sm transition hover:shadow-md m-10" style={{margin: 4}}>
-      <h3 className="text-sm font-semibold text-gray-900">
+    <div className="group rounded-xl bg-white dark:bg-gray-900 p-6 shadow-sm transition hover:shadow-md m-10" style={{margin: 4}}>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
         {title}
       </h3>
-      <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
         {description}
       </p>
     </div>

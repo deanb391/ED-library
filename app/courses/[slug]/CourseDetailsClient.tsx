@@ -100,7 +100,7 @@ function SwipeableDocumentItem({
       </div>
 
       <div
-        className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-transform duration-200 ease-out z-10 relative group-hover:translate-x-20"
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 transition-transform duration-200 ease-out z-10 relative group-hover:translate-x-20"
         style={{ transform: offset > 0 ? `translateX(${offset}px)` : undefined }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -111,14 +111,14 @@ function SwipeableDocumentItem({
             <FileText size={28} />
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 text-lg">{doc.fileName}</h3>
-            {doc.description && <p className="text-sm text-gray-600 mt-1">{doc.description}</p>}
+            <h3 className="font-bold text-gray-900 dark:text-white text-lg">{doc.fileName}</h3>
+            {doc.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{doc.description}</p>}
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{(doc.fileSize / 1024 / 1024).toFixed(2)} MB</span>
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{doc.fileType}</span>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">{(doc.fileSize / 1024 / 1024).toFixed(2)} MB</span>
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{doc.fileType}</span>
               {isOwner && (
                 <>
-                  <span className="text-xs text-gray-300">•</span>
+                  <span className="text-xs text-gray-300 dark:text-gray-600">•</span>
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${doc.status === 'approved' ? 'bg-green-100 text-green-700' :
                     doc.status === 'rejected' ? 'bg-red-100 text-red-700' :
                       'bg-yellow-100 text-yellow-700'
@@ -173,8 +173,8 @@ interface Post {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="border rounded-lg p-3" style={{ borderWidth: 0.1 }}>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="text-sm font-semibold text-gray-900 mt-1">{value}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{value}</p>
     </div>
   );
 }
@@ -201,7 +201,7 @@ function ReviewItem({ review }: { review: Review }) {
   return (
     <div className="flex gap-3 mb-5">
       {/* Avatar */}
-      <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" >
+      <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0" >
         <img
           src={user?.image || user?.avatar}
           alt={user?.username}
@@ -212,15 +212,15 @@ function ReviewItem({ review }: { review: Review }) {
       {/* Content */}
       <div className="flex-1">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-900">{user.username}</p>
-          <span className="text-xs text-gray-500">{createdAt}</span>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">{user.username}</p>
+          <span className="text-xs text-gray-500 dark:text-gray-400">{createdAt}</span>
         </div>
 
         {/* Rating */}
         <div className="text-sm text-yellow-500 mt-1" style={{ color: "gold" }}>{stars}</div>
 
         {/* Comment */}
-        <p className="text-sm text-gray-600 mt-1">{review.review}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{review.review}</p>
       </div>
     </div>
   );
@@ -850,15 +850,15 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   if (lloading || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-gray-900 font-sans">
+    <div className="min-h-screen bg-[#FDFDFD] text-gray-900 dark:text-white font-sans">
 
 
 
@@ -869,21 +869,21 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
               {course?.title}
             </h1>
-            <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
               <User size={16} />
               <span>{course?.lecturer}</span>
               <span className="mx-1">•</span>
               <span>{course?.code}</span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 ml-0 mt-3">
-              <span className="px-2 py-0.5 rounded-full bg-gray-100">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400 ml-0 mt-3">
+              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
                 {course?.department}
               </span>
-              <span className="px-2 py-0.5 rounded-full bg-gray-100">
+              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
                 {course?.university || "University unavailable"}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
@@ -904,7 +904,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                     <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700" style={{ backgroundColor: "#fb2c36", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
                       Paid ({priceMeta?.type})
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-gray-100" style={{ backgroundColor: "#f3f4f6", paddingTop: 5, paddingBottom: 5, }}>
+                    <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800" style={{ backgroundColor: "#f3f4f6", paddingTop: 5, paddingBottom: 5, }}>
                       {priceMeta?.currency} {(priceMeta.type === "one-time" ? (Number(course?.pageCount) * priceMeta?.amount) : priceMeta.amount)}
                     </span>
 
@@ -930,7 +930,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           <div className="flex items-center gap-3">
             <button
               onClick={handleShare}
-              className="p-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition-colors border border-gray-200 flex items-center justify-center">
+              className="p-2 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg transition-colors border border-gray-200 dark:border-gray-800 flex items-center justify-center">
               <Share2 size={18} />
             </button>
             {isOwner && (
@@ -956,7 +956,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             <div className="flex items-center gap-3 mb-3">
 
               {/* Avatar */}
-              <button className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden" onClick={() => router.push(`/contributor/account/${contributor?.$id}`)}>
+              <button className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden" onClick={() => router.push(`/contributor/account/${contributor?.$id}`)}>
                 <img
                   src={contributor?.profileImage}
                   alt={contributor?.username}
@@ -967,15 +967,15 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               {/* Username + Follow */}
               <div className="flex items-center gap-2 text-sm">
 
-                <Link className="font-semibold text-gray-900" href={`/contributor/account/${contributor?.$id}`}>
+                <Link className="font-semibold text-gray-900 dark:text-white" href={`/contributor/account/${contributor?.$id}`}>
                   {contributor?.username || "unknown"}
                 </Link>
 
-                <span className="text-gray-300">•</span>
+                <span className="text-gray-300 dark:text-gray-600">•</span>
 
                 <button
                   className={`font-semibold flex items-center gap-2 ${following
-                    ? "text-gray-500"
+                    ? "text-gray-500 dark:text-gray-400"
                     : "text-blue-600 hover:underline"
                     }`}
                   onClick={handleFollow}
@@ -1064,12 +1064,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   </section> */}
 
               {/* 2. COURSE META */}
-              <section className="bg-white rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
+              <section className="bg-white dark:bg-gray-900 rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
 
                 {/* EDIT BUTTON */}
                 <button 
                   onClick={() => setShowEditCourse(true)}
-                  className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 transition text-white"
+                  className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 dark:bg-gray-800 transition text-white"
                 >
                   Edit
                 </button>
@@ -1077,7 +1077,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6">
 
                   {/* Thumbnail */}
-                  <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 shrink-0" style={{ width: 200 }}>
+                  <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0" style={{ width: 200 }}>
                     <img
                       src={course?.thumbnailUrl}
                       alt={course?.title}
@@ -1090,15 +1090,15 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
                     {/* Top */}
                     <div>
-                      <h1 className="text-lg md:text-xl font-semibold text-gray-900 leading-snug pr-16">
+                      <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white leading-snug pr-16">
                         {course?.title}
                       </h1>
 
-                      <p className="text-xs md:text-sm text-gray-500 mt-1">
+                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {course?.code} • {course?.department} • Level {course?.level.toString()}
                       </p>
 
-                      <p className="text-sm text-gray-600 mt-3 line-clamp-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
                         {course?.description}
                       </p>
                     </div>
@@ -1107,29 +1107,29 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                     <div className="mt-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
 
                       {/* Meta tags */}
-                      <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                         {course?.lecturer && (
-                          <span className="bg-gray-100 px-2 py-1 rounded-md">
+                          <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
                             {course.lecturer}
                           </span>
                         )}
                         {course?.university && (
-                          <span className="bg-gray-100 px-2 py-1 rounded-md">
+                          <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
                             {course.university}
                           </span>
                         )}
-                        <span className="bg-gray-100 px-2 py-1 rounded-md">
+                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
                           {course?.session}
                         </span>
-                        <span className="bg-gray-100 px-2 py-1 rounded-md">
+                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
                           {course?.isOnGoing ? "Ongoing" : "Past"}
                         </span>
                       </div>
 
                       {/* Pricing */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Pricing:</span>
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Pricing:</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
                           {JSON.parse(course?.price || "")?.isFree || `${JSON.parse(course?.price || "")?.currency} ${JSON.parse(course?.price || "")?.amount}`} {JSON.parse(course?.price || "")?.type === "one-time" ? "per page" : "per month"}
                         </span>
                         <span className="text-xs text-gray-400">
@@ -1144,9 +1144,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               </section>
 
               {/* 3. ANALYTICS */}
-              <section className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md" style={{}}>
+              <section className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm hover:shadow-md" style={{}}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Analytics
                   </h2>
 
@@ -1167,9 +1167,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
               </section>
 
               {/* 4. REVIEWS */}
-              <section className="bg-white rounded-xl " style={{ marginTop: 40 }}>
+              <section className="bg-white dark:bg-gray-900 rounded-xl " style={{ marginTop: 40 }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Reviews
                   </h2>
                   <a href="#" className="text-sm text-blue-600 hover:underline">
@@ -1179,7 +1179,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
                 <div className="space-y-4">
                   {reviews.length === 0 && !loadingReviews ? (
-                    <p className="text-sm text-gray-500">No reviews yet.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</p>
                   ) : (
                     reviews.map((review) => (
                       <ReviewItem key={review.$id} review={review} />
@@ -1189,7 +1189,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
                 {loadingReviews && (
                   <div className="flex justify-center py-4">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
                   </div>
                 )}
 
@@ -1210,7 +1210,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
         {activeTab === "lecture" && (
           <>
-            <div className="flex items-center gap-2 mt-3 border-b border-gray-200 mb-8 pb-3 overflow-x-auto">
+            <div className="flex items-center gap-2 mt-3 border-b border-gray-200 dark:border-gray-800 mb-8 pb-3 overflow-x-auto">
               <button
                 onClick={() => {
                   if (!hasAccess) return;
@@ -1219,7 +1219,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 }}
                 className={`p-2 rounded-lg border transition ${viewMode === "timeline"
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
                   }`}
                 title="Timeline view"
               >
@@ -1233,7 +1233,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 }}
                 className={`p-2 rounded-lg border transition ${viewMode === "pdf"
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
                   }`}
                 title="PDF view"
               >
@@ -1293,7 +1293,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                         setShowActions(true);
                         setPostId(post.id);
                       }}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600"
+                      className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600"
                     >
                       <Pencil size={14} />
                       Edit
@@ -1328,7 +1328,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
                 {loadingPdf && (
                   <div className="flex justify-center py-6">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
                   </div>
                 )}
               </>
@@ -1360,7 +1360,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
             {loadingPosts && (
               <div className="flex justify-center py-6">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
               </div>
             )}
 
@@ -1441,9 +1441,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         {activeTab === "review" && !isOwner && (
           <div>
             {/* 4. REVIEWS */}
-            <section className="bg-white rounded-xl " style={{ marginTop: 40 }}>
+            <section className="bg-white dark:bg-gray-900 rounded-xl " style={{ marginTop: 40 }}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Reviews
                 </h2>
                 <button onClick={() => setReviewModalOpen(true)} className="text-sm text-blue-600 hover:underline">
@@ -1453,7 +1453,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
               <div className="space-y-4">
                 {reviews.length === 0 && !loadingReviews ? (
-                  <p className="text-sm text-gray-500">No reviews yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</p>
                 ) : (
                   reviews.map((review) => (
                     <ReviewItem key={review.$id} review={review} />
@@ -1463,7 +1463,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
               {loadingReviews && (
                 <div className="flex justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
                 </div>
               )}
 
@@ -1492,14 +1492,14 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
         {activeTab === "documents" && (
           <div className="max-w-6xl mx-auto px-0 py-6">
-            <div className="bg-white rounded-xl p-6" style={{ marginTop: 20 }}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Course Documents</h2>
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-6" style={{ marginTop: 20 }}>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Course Documents</h2>
               {loadingDocs ? (
                 <div className="flex justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
                 </div>
               ) : documents.length === 0 ? (
-                <p className="text-sm text-gray-500">No documents uploaded yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet.</p>
               ) : (
                 <div className="relative">
                   <div className={`space-y-6 ${!hasAccess ? "blur-md pointer-events-none opacity-50 select-none" : ""}`}>
@@ -1522,10 +1522,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                   </div>
                   {!hasAccess && (
                     <div className="absolute inset-0 flex flex-col items-start justify-start pt-10 pointer-events-auto px-4 z-20">
-                      <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl max-w-sm text-center border border-gray-100 mx-auto w-full">
+                      <div className="bg-white dark:bg-gray-900/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl max-w-sm text-center border border-gray-100 dark:border-gray-800 mx-auto w-full">
                         <Lock className="w-12 h-12 text-blue-600 mx-auto mb-3 opacity-80" />
-                        <h3 className="font-bold text-gray-900 mb-2">Premium Documents</h3>
-                        <p className="text-sm text-gray-600 mb-5">Subscribe or pay for this course to unlock full access to all structured notes and documents.</p>
+                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Premium Documents</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">Subscribe or pay for this course to unlock full access to all structured notes and documents.</p>
                         <button
                           onClick={() => {
                             if (!user) {

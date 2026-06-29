@@ -68,10 +68,10 @@ export default function AccessWall({ type }: AccessWallProps) {
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12">
-      <div className="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-xl p-8 text-center transform transition-all hover:scale-[1.01]">
+      <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-8 text-center transform transition-all hover:scale-[1.01]">
 
         {/* Countdown Progress Bar */}
-        <div className="w-full h-1 bg-gray-100 rounded-full mb-8 overflow-hidden">
+        <div className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-full mb-8 overflow-hidden">
           <div
             className="h-full bg-blue-600 transition-all duration-1000 ease-linear"
             style={{ width: `${(countdown / 5) * 100}%` }}
@@ -79,11 +79,11 @@ export default function AccessWall({ type }: AccessWallProps) {
         </div>
 
         <div className="flex justify-center mb-6 animate-bounce-subtle">
-          <div className="p-4 bg-gray-50 rounded-full">{icon}</div>
+          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-full">{icon}</div>
         </div>
 
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-3">{title}</h1>
-        <p className="text-gray-600 mb-8 leading-relaxed">{description}</p>
+        <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">{title}</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">{description}</p>
 
         <div className="flex flex-col gap-3">
           <Link href={primaryAction.href}>

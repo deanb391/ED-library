@@ -12,6 +12,7 @@ import { PHProvider } from "@/app/providers";
 import AppProgressBar from "@/components/ProgressBar";
 import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
 import ReferralTracker from "@/components/ReferralTracker";
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Google AdSense */}
         <Script
@@ -35,34 +36,29 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
-
-        {/* Adsterra
-          <Script
-            src="https://pl28536403.effectivegatecpm.com/5d/f2/b5/5df2b541a3eac4751ebd6c025764badb.js"
-            strategy="afterInteractive"
-          />
-*/}
       </head>
 
       <body
-        className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}
+        className={`${inter.className} bg-gray-50 dark:bg-gray-900 dark:bg-gray-950 min-h-screen flex flex-col transition-colors duration-200`}
       >
-        <AppProgressBar />
-        <PHProvider>
-          <UserProvider>
-            <Header />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AppProgressBar />
+          <PHProvider>
+            <UserProvider>
+              <Header />
 
-            <main className="flex-grow w-full">
-              <GoogleAnalytics />
-              <TrackPageView />
-              <ReferralTracker />
-              {children}
-            </main>
+              <main className="grow w-full">
+                <GoogleAnalytics />
+                <TrackPageView />
+                <ReferralTracker />
+                {children}
+              </main>
 
-            <Footer />
-            <ContributorChatFAB />
-          </UserProvider>
-        </PHProvider>
+              <Footer />
+              <ContributorChatFAB />
+            </UserProvider>
+          </PHProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

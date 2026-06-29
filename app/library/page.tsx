@@ -99,8 +99,8 @@ export default function LibraryPage() {
 
   if (userLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
       </div>
     );
   }
@@ -111,8 +111,8 @@ export default function LibraryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function LibraryPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F8F9FB",
+        backgroundColor: "transparent",
         padding: "1.5rem 1rem",
         boxSizing: "border-box",
         fontFamily:
@@ -239,14 +239,14 @@ export default function LibraryPage() {
               return (
                 <div
                   key={course.id}
-                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col transition hover:shadow-md"
+                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col transition hover:shadow-md"
                 >
                   <Link
                     href={`/courses/${course.id}`}
                     className="flex gap-4 p-4"
                   >
                     {/* Thumbnail */}
-                    <div className="relative h-20 w-24 shrink-0 bg-gray-100 rounded-xl overflow-hidden">
+                    <div className="relative h-20 w-24 shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
                       <Image
                         src={course.thumbnailUrl}
                         alt={course.title}
@@ -258,16 +258,16 @@ export default function LibraryPage() {
 
                     {/* Content */}
                     <div className="flex flex-col gap-1 justify-center">
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                         <span>{course.code}</span>
-                        <span className="text-gray-300">•</span>
+                        <span className="text-gray-300 dark:text-gray-600">•</span>
                         <span>{course.session}</span>
                       </div>
-                      <h3 className="text-sm font-semibold text-gray-900 leading-snug">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">
                         {course.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600">
-                        <span className="px-2 py-0.5 rounded-full bg-gray-100">
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400">
+                        <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
                           {course.department}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
@@ -283,7 +283,7 @@ export default function LibraryPage() {
                       className="flex items-center justify-between px-4 pb-4 gap-3 flex-wrap"
                       style={{ borderTop: "1px solid #f3f4f6", paddingTop: "0.75rem" }}
                     >
-                      <div className="flex flex-col gap-1 text-xs text-gray-500">
+                      <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex items-center gap-1">
                           <Calendar size={12} />
                           <span>

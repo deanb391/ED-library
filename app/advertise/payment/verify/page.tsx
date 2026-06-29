@@ -49,7 +49,7 @@ export default function AdvertisePaymentVerifyPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative">
         {status === "verifying" && (
           <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 animate-pulse" />
         )}

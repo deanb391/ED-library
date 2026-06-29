@@ -62,12 +62,12 @@ export default function ReferralsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col text-gray-900">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col text-gray-900 dark:text-white">
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
         <div className="pb-6 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-full hover:bg-gray-200 transition"
+            className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:bg-gray-800 transition"
           >
             <ArrowLeft size={20} />
           </button>
@@ -77,18 +77,18 @@ export default function ReferralsPage() {
         </div>
 
         {loading ? (
-          <p className="text-gray-500">Loading your referral data...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading your referral data...</p>
         ) : (
           <div className="space-y-6">
             {/* Referral Link Card */}
-            <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-200 shadow-sm">
-              <h2 className="text-lg font-bold mb-2 text-gray-800">Your Unique Referral Link</h2>
-              <p className="text-sm text-gray-500 mb-6">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-800 shadow-sm">
+              <h2 className="text-lg font-bold mb-2 text-gray-800 dark:text-gray-300">Your Unique Referral Link</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Share this link with students. When they create an account, they'll be counted towards your contest referrals.
               </p>
 
               <div className="flex items-center gap-3">
-                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-mono text-sm text-gray-600 truncate">
+                <div className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 font-mono text-sm text-gray-600 dark:text-gray-400 truncate">
                   {referralUrl}
                 </div>
                 <button
@@ -103,23 +103,23 @@ export default function ReferralsPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 flex items-center gap-5 shadow-sm">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 flex items-center gap-5 shadow-sm">
                 <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
                   <MousePointerClick size={24} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Total Link Clicks</p>
-                  <p className="text-3xl font-black text-gray-900">{totalClicks}</p>
+                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Total Link Clicks</p>
+                  <p className="text-3xl font-black text-gray-900 dark:text-white">{totalClicks}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-gray-200 flex items-center gap-5 shadow-sm">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 flex items-center gap-5 shadow-sm">
                 <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
                   <Users size={24} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Successful Sign-ups</p>
-                  <p className="text-3xl font-black text-gray-900">{totalSignups}</p>
+                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Successful Sign-ups</p>
+                  <p className="text-3xl font-black text-gray-900 dark:text-white">{totalSignups}</p>
                 </div>
               </div>
             </div>

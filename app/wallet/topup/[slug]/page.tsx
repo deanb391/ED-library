@@ -30,10 +30,10 @@ export default function VerifyTopUpPage() {
   }, [paymentId, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB]">
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
       <div className="text-center space-y-4">
-        <div className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto" />
-        <p className="text-sm text-gray-500">Verifying payment...</p>
+        <div className="animate-spin w-10 h-10 border-4 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full mx-auto" />
+        <p className="text-sm text-gray-500 dark:text-gray-400">Verifying payment...</p>
       </div>
     </div>
   );

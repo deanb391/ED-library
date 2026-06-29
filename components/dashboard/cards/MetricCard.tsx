@@ -14,10 +14,10 @@ interface Props {
 export default function MetricCard({ label, value, trend, prefix = "", suffix = "", loading = false, icon }: Props) {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
-        <div className="h-3 bg-gray-200 rounded w-1/2 mb-3" />
-        <div className="h-8 bg-gray-200 rounded w-3/4 mb-2" />
-        <div className="h-3 bg-gray-200 rounded w-1/3" />
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 animate-pulse">
+        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-3" />
+        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2" />
+        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
       </div>
     );
   }
@@ -27,12 +27,12 @@ export default function MetricCard({ label, value, trend, prefix = "", suffix = 
   const trendBg = trend === undefined ? "" : trendPositive ? "bg-emerald-50" : "bg-red-50";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition-all">
       <div className="flex items-start justify-between mb-3">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
-        {icon && <div className="text-gray-300">{icon}</div>}
+        {icon && <div className="text-gray-300 dark:text-gray-600">{icon}</div>}
       </div>
-      <p className="text-2xl font-bold text-gray-900 mb-2">
+      <p className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
         {prefix}{typeof value === "number" ? value.toLocaleString() : value}{suffix}
       </p>
       {trend !== undefined && (

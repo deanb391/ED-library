@@ -232,7 +232,7 @@ export default function NoteViewerModal({
       >
 
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 md:hidden">
-          <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 text-xs font-medium rounded-full border border-white/10 shadow-lg">
+          <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 dark:text-gray-600 text-xs font-medium rounded-full border border-white/10 shadow-lg">
             Page {currentIndex + 1} of {files.length}
           </span>
         </div>
@@ -250,7 +250,7 @@ export default function NoteViewerModal({
               <ChevronLeft size={32} />
             </button>
 
-            <span className="text-sm text-gray-300 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
+            <span className="text-sm text-gray-300 dark:text-gray-600 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
               Page {currentIndex + 1} of {files.length}
             </span>
           </div>

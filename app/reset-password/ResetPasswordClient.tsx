@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#F4F6F8] p-6">
       <form
         onSubmit={handleReset}
-        className="w-full max-w-[420px] bg-white p-8 rounded-2xl shadow-lg"
+        className="w-full max-w-[420px] bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg"
       >
         <h1 className="text-xl font-bold mb-6 text-center" style={{color: "#000"}}>
           Reset Password
@@ -62,14 +62,14 @@ export default function ResetPasswordPage() {
     value={password}
     onChange={(e) => setPassword(e.target.value)}
     placeholder="New password"
-    className="w-full px-4 py-3 pr-11 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono tracking-widest"
+    className="w-full px-4 py-3 pr-11 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 font-mono tracking-widest"
     style={{ color: "#000" }}
   />
 
   <button
     type="button"
     onClick={() => setShowPassword((prev) => !prev)}
-    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-3"
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400 p-3"
   >
     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
   </button>

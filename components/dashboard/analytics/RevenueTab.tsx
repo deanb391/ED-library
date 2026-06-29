@@ -33,8 +33,8 @@ export default function RevenueTab() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Revenue & Payments</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Wallet topups, subscriptions, withdrawals, and platform earnings</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Revenue & Payments</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Wallet topups, subscriptions, withdrawals, and platform earnings</p>
         </div>
         <TimeframeToggle value={timeframe} onChange={setTimeframe} />
       </div>
@@ -53,8 +53,8 @@ export default function RevenueTab() {
       </div>
 
       {/* Revenue In vs Out comparison */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Revenue In vs Payouts</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Revenue In vs Payouts</h3>
         <TimeSeriesChart
           data={data?.revenueSeries ?? []}
           type="area"
@@ -68,8 +68,8 @@ export default function RevenueTab() {
 
       {/* Wallet Topups */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-sm font-bold text-gray-700 mb-5">Wallet Topup Amounts</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Wallet Topup Amounts</h3>
           <TimeSeriesChart
             data={data?.walletTopupSeries ?? []}
             type="bar"
@@ -79,8 +79,8 @@ export default function RevenueTab() {
           />
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-sm font-bold text-gray-700 mb-5">Subscription Revenue</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Subscription Revenue</h3>
           <TimeSeriesChart
             data={data?.subscriptionSeries ?? []}
             type="area"
@@ -92,8 +92,8 @@ export default function RevenueTab() {
       </div>
 
       {/* Withdrawals */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Withdrawal Volume</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Withdrawal Volume</h3>
         <TimeSeriesChart
           data={data?.withdrawalSeries ?? []}
           type="line"

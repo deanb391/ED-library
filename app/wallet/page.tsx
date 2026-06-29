@@ -20,8 +20,8 @@ export default function WalletPage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB]">
-        <div className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
+        <div className="animate-spin w-10 h-10 border-4 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full" />
       </div>
     );
   }
@@ -64,8 +64,8 @@ export default function WalletPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB]">
-        <div className="animate-spin w-10 h-10 border-4 border-gray-300 border-t-blue-600 rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
+        <div className="animate-spin w-10 h-10 border-4 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full" />
       </div>
     );
   }
@@ -74,7 +74,7 @@ export default function WalletPage() {
     <div
   style={{
     minHeight: "100vh",
-    backgroundColor: "#F8F9FB",
+    backgroundColor: "transparent",
     padding: "1.5rem 1rem",
     boxSizing: "border-box",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -150,7 +150,7 @@ export default function WalletPage() {
       </button>
     </div>
 
-    <div className="bg-white rounded-3xl p-6" style={{ margin: 10, marginTop: 20}}> 
+    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6" style={{ margin: 10, marginTop: 20}}> 
             <h3 className="text-lg font-bold mb-6" style={{color: "#6b7280"}}>
               Recent Transactions
             </h3>
@@ -158,7 +158,7 @@ export default function WalletPage() {
             <div className="space-y-6">
               {
   walletHistory.length === 0 ? (
-    <div className="text-center py-10 text-gray-500 text-sm">
+    <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
       No transactions yet
     </div>
   ) : (

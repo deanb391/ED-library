@@ -36,7 +36,7 @@ export default function TopContributorAnnouncementModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
         style={{
           transform: animateIn ? "scale(1)" : "scale(0.85)",
           opacity: animateIn ? 1 : 0,
@@ -46,7 +46,7 @@ export default function TopContributorAnnouncementModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full text-gray-500 transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
         >
           <X size={18} />
         </button>
@@ -117,7 +117,7 @@ export default function TopContributorAnnouncementModal({
             </div>
           </div>
 
-          <h3 className="text-lg font-bold text-gray-900 mb-1">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
             {award.contributorName}
           </h3>
 
@@ -167,7 +167,7 @@ export default function TopContributorAnnouncementModal({
 
           <button
             onClick={onClose}
-            className="w-full py-3 text-sm font-semibold text-gray-400 hover:text-gray-600 transition"
+            className="w-full py-3 text-sm font-semibold text-gray-400 hover:text-gray-600 dark:text-gray-400 transition"
           >
             Dismiss
           </button>

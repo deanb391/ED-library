@@ -121,7 +121,7 @@ export default function EditPostModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-5">
-      <div className="bg-white rounded-xl w-full max-w-md p-5">
+      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-md p-5">
 
         <h3 className="font-semibold mb-3">Edit Post</h3>
 
@@ -132,7 +132,7 @@ export default function EditPostModal({
             {images.map((img, index) => (
               <div key={img.id} className="w-24 shrink-0" style={{width: 100, height: 200}}>
 
-                <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100 border">
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border">
 
                   <img
                     src={img.url}
@@ -168,7 +168,7 @@ export default function EditPostModal({
             {/* ADD BUTTON */}
             <button
               onClick={() => openPicker("add")}
-              className="w-24 h-24 shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500 hover:border-blue-500 hover:text-blue-600"
+              className="w-24 h-24 shrink-0 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600"
               style={{width: 100, height: 100}}
             >
               <Plus size={20} />
@@ -196,7 +196,7 @@ export default function EditPostModal({
 
         {/* ACTIONS */}
         <div className="flex justify-end gap-3 mt-4">
-          <button onClick={onClose} className="text-sm text-gray-500">
+          <button onClick={onClose} className="text-sm text-gray-500 dark:text-gray-400">
             Cancel
           </button>
 

@@ -146,8 +146,8 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900">
-      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
 
         {/* Icon */}
         <div className="flex justify-center mb-6">
@@ -159,7 +159,7 @@ export default function SignUpPage() {
         {/* Title */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Create Account</h1>
-          <p className="text-sm text-gray-500 px-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
             Create your account to access course materials.
           </p>
         </div>
@@ -189,14 +189,14 @@ export default function SignUpPage() {
           {/* Level */}
           {/* Level */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
               Level
             </label>
             <select
               required
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
               <option value="" disabled>
                 Select level
@@ -221,7 +221,7 @@ export default function SignUpPage() {
 
           {/* Password */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
               Password
             </label>
             <div className="relative group">
@@ -231,12 +231,12 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-400"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -246,7 +246,7 @@ export default function SignUpPage() {
 
           {/* Confirm Password */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
               Confirm Password
             </label>
             <div className="relative group">
@@ -256,12 +256,12 @@ export default function SignUpPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((v) => !v)}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-400"
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -269,10 +269,10 @@ export default function SignUpPage() {
           </div>
 
           {/* Sign Up As Contributor Switch */}
-          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100">
+          <div className="flex items-center justify-between py-2 border-t border-b border-gray-100 dark:border-gray-800">
             <div>
-              <p className="text-sm font-bold text-gray-800">Sign Up As Contributor</p>
-              <p className="text-xs text-gray-500">Enable to apply as a contributor after signing up.</p>
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-300">Sign Up As Contributor</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Enable to apply as a contributor after signing up.</p>
             </div>
             <button
               type="button"
@@ -282,7 +282,7 @@ export default function SignUpPage() {
               }`}
             >
               <div
-                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
+                className={`w-4 h-4 bg-white dark:bg-gray-900 rounded-full shadow-sm transform transition-transform ${
                   isContributorSignUp ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -309,9 +309,9 @@ export default function SignUpPage() {
 
         {/* Divider */}
         <div className="my-8 flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
           <span className="text-xs text-gray-400 font-medium">OR</span>
-          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
         </div>
 
         {/* Google Sign In */}
@@ -325,7 +325,7 @@ export default function SignUpPage() {
             }
           }}
           type="button"
-          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98] mb-4"
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900 transition-all active:scale-[0.98] mb-4"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -340,7 +340,7 @@ export default function SignUpPage() {
         <button
           onClick={() => { router.push("/signin") }}
           type="button"
-          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900 transition-all active:scale-[0.98]"
         >
           Sign In
         </button>
@@ -370,7 +370,7 @@ function Input({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-bold text-gray-700 ml-1">
+      <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
         {label}
       </label>
       <div className="relative group">
@@ -380,7 +380,7 @@ function Input({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${mono ? "font-mono tracking-widest" : ""
+          className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${mono ? "font-mono tracking-widest" : ""
             }`}
         />
       </div>
