@@ -24,7 +24,7 @@ function mapCourse(doc: any) {
     session: doc.session,
     department: doc.department,
     level: doc.level,
-    price: doc.price, 
+    price: doc.price,
     user: doc.user,
     analytics: typeof doc.analytics === "string" ? JSON.parse(doc.analytics) : doc.analytics,
     pageCount: doc?.pageCount || 0,
@@ -48,27 +48,27 @@ export async function createCourseService(data: any) {
       const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
         Query.equal("user", courseAuthorUserId)
       ]);
-      
+
       if (contRes.documents.length > 0) {
         const contributor = contRes.documents[0];
-        
+
         if (contributor.joinedContest) {
           const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
             Query.equal("contributors", contributor.$id)
           ]);
-          
+
           if (perfRes.documents.length > 0) {
             const perf = perfRes.documents[0];
-            
-            const startDate = new Date("2026-06-26T00:00:00Z");
+
+            const startDate = new Date("2026-06-29T12:00:00Z");
             if (new Date() >= startDate) {
               const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
               const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
               const dayKey = `day ${dayNumber}`;
-              
+
               const coursesPoints = JSON.parse(perf.coursesPoints || "{}");
               coursesPoints[dayKey] = (coursesPoints[dayKey] || 0) + 1;
-              
+
               await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
                 coursesPoints: JSON.stringify(coursesPoints)
               });
@@ -108,7 +108,7 @@ export async function fetchCoursesByAdminService(userId: string) {
 }
 
 export async function fetchCourseByIdService(courseId: string) {
-  
+
   const doc = await databases.getDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
@@ -533,35 +533,35 @@ export async function recordCourseVisitService(courseId: string, userId: string)
       const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
         Query.equal("user", courseAuthorUserId)
       ]);
-      
+
       if (contRes.documents.length > 0) {
         const contributor = contRes.documents[0];
-        
+
         if (contributor.joinedContest) {
           // Fetch ContestPerformance
           const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
-            Query.equal("contributor", contributor.$id)
+            Query.equal("contributors", contributor.$id)
           ]);
-          
+
           if (perfRes.documents.length > 0) {
             const perf = perfRes.documents[0];
-            
-            const startDate = new Date("2026-06-26T00:00:00Z");
+
+            const startDate = new Date("2026-06-29T12:00:00Z");
             if (new Date() >= startDate) {
               const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
               const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
               const dayKey = `day ${dayNumber}`;
-              
+
               const usersReachedIds = JSON.parse(perf.usersReachedIds || "{}");
               const uniqueUsersReached = JSON.parse(perf.uniqueUsersReached || "{}");
               const returningUsers = JSON.parse(perf.returningUsers || "{}");
-              
+
               const todaysIds: string[] = usersReachedIds[dayKey] || [];
-              
+
               if (!todaysIds.includes(userId)) {
                 todaysIds.push(userId);
                 usersReachedIds[dayKey] = todaysIds;
-                
+
                 // Check if user is returning (appeared in any previous day)
                 let isReturning = false;
                 for (const [key, ids] of Object.entries(usersReachedIds)) {
@@ -570,13 +570,13 @@ export async function recordCourseVisitService(courseId: string, userId: string)
                     break;
                   }
                 }
-                
+
                 if (isReturning) {
                   returningUsers[dayKey] = (returningUsers[dayKey] || 0) + 1;
                 }
-                
+
                 uniqueUsersReached[dayKey] = todaysIds.length;
-                
+
                 await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
                   usersReachedIds: JSON.stringify(usersReachedIds),
                   uniqueUsersReached: JSON.stringify(uniqueUsersReached),

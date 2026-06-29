@@ -18,7 +18,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ED-Library",
-  description: "Academic notes and study guides",
+  description: "Share. Discover. Learn",
 };
 
 export default function RootLayout({

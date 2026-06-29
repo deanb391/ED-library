@@ -2,17 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { fetchContributors } from "@/lib/api/contributors";
+import { fetchContributors, editContributor } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
 import ContributorReviewModal from "@/components/ContributorReviewModal";
 import NoteViewerModal from "@/components/NoteViewerModal";
 import SimpleImageViewer from "@/components/SimpleImageViewer";
+import { useUser } from "@/context/UserContext";
 
 type Status = "pending" | "live" | "rejected";
 type StatusFilter = "all" | Status;
 const BRAND_BLUE = "#1C64F2";
 
 export default function ContributorsReviewPage() {
+  const { user } = useUser();
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
@@ -92,17 +94,23 @@ const [viewerIndex, setViewerIndex] = useState(0);
   }, [contributors, filter]);
 
   // ⚙️ STATUS UPDATE (optimistic)
-  const updateStatus = (id: string, status: Status) => {
+  const updateStatus = async (id: string, status: Status) => {
     setContributors((prev) =>
       prev.filter((c) => {
         if (c.$id === id) {
+          c.status = status;
           return filter === "all" || status === filter;
         }
         return true;
       })
     );
 
-    // 🔥 call your API here (you said it's done)
+    try {
+      await editContributor(id, { status } as any, undefined, user?.$id);
+    } catch (err) {
+      console.error("Failed to update status", err);
+      alert("Failed to update status");
+    }
   };
 
   return (

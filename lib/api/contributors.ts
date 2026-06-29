@@ -30,11 +30,12 @@ export async function editContributor(
   contributorId: string,
   updates: Partial<ContributorDraft>,
   type?: string,
+  editingUserId?: string,
 ): Promise<any> {
   const res = await fetch("/api/contributors/edit", {
     method: "POST",
     headers: jsonHeaders,
-    body: JSON.stringify({ contributorId, updates, type }),
+    body: JSON.stringify({ contributorId, updates, type, editingUserId }),
   });
 
   if (!res.ok) {

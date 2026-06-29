@@ -24,7 +24,7 @@ export default function ContestLeaderboardPage() {
       const stored = localStorage.getItem("contributor_contest_start_date");
       if (stored) return new Date(stored);
     }
-    return new Date("2026-06-29T00:00:00");
+    return new Date("2026-06-29T12:00:00");
   });
 
   const [timeLeft, setTimeLeft] = useState({
@@ -67,7 +67,7 @@ export default function ContestLeaderboardPage() {
       if (storedDate) {
         setStartDate(new Date(storedDate));
       } else {
-        setStartDate(new Date("2026-06-29T00:00:00"));
+        setStartDate(new Date("2026-06-29T12:00:00"));
       }
     };
     window.addEventListener("storage", syncTime);

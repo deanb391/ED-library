@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Contributor } from "@/lib/services/contributors.service";
 import { editContributor } from "@/lib/api/contributors"; // 👈 your function
 import { useRouter } from "@/components/useRouter";
+import { useUser } from "@/context/UserContext";
 
 type Status = "pending" | "live" | "rejected";
 
@@ -22,6 +23,7 @@ export default function ContributorReviewModal({
 }: Props) {
   const [loadingAction, setLoadingAction] = useState<"approve" | "reject" | null>(null);
   const router = useRouter();
+  const { user } = useUser();
 
   const getBadgeStyles = (status: string) => {
     if (status === "live") return { bg: "#dcfce7", text: "#166534" };
@@ -41,7 +43,7 @@ export default function ContributorReviewModal({
     try {
       await editContributor(contributor.$id, {
         status: "live",
-      }, "approval");
+      }, "approval", user?.$id);
 
       onUpdateStatus(contributor.$id, "live");
     } catch (err) {
@@ -50,6 +52,8 @@ export default function ContributorReviewModal({
       setLoadingAction(null);
     }
   };
+
+  console.log(contributor)
 
   // 🔥 REJECT
   const reject = async () => {
@@ -60,7 +64,7 @@ export default function ContributorReviewModal({
     try {
       await editContributor(contributor.$id, {
         status: "rejected",
-      }, "reject");
+      }, "rejection", user?.$id);
 
       onUpdateStatus(contributor.$id, "rejected");
     } catch (err) {
@@ -107,7 +111,7 @@ export default function ContributorReviewModal({
         </div>
 
         {/* PROFILE */}
-        <div 
+        <div
           onClick={() => {
             onClose();
             router.push(`/contributor/account/${contributor.$id}`);
