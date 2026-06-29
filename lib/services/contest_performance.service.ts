@@ -18,6 +18,10 @@ export type ContestPerformance = {
   contentScore: number;
   engagementActivity: string;
   dailyCourseRatings: string;
+  coursesPoints?: string;
+  uploadQuality?: string;
+  referralClicks?: string;
+  uploadsCreated?: string;
 };
 
 export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {
