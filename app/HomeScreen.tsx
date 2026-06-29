@@ -417,7 +417,7 @@ function CourseSearch({
 
   return (
     <div className="text-center w-full max-w-4xl mx-auto mb-12">
-      <h1 className="text-4xl font-semibold mb-3" className="text-gray-900 dark:text-white" style={{ marginBottom: 30 }}>
+      <h1 className="text-4xl font-semibold mb-3 text-gray-900 dark:text-white" style={{ marginBottom: 30 }}>
         What are you learning today?
       </h1>
 
