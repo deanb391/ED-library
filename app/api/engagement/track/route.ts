@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate Engagement Score (Max 40 points)
-    // 1 point per 10 minutes of active users
+    // 1 point per 5 minutes of active users
     // This is aggregated across all days? Or daily? The score is daily points or total points?
     // Based on the user's instructions: "Let is be 1 point per 10 minutes of active users"
     // Wait, the score `engagementScore` is cumulative or daily? In contest performance, we have `engagementScore`
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1 point per 10 minutes
-    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 10);
+    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 5);
     const cappedEngagementScore = Math.min(calculatedEngagementScore, 40);
 
     // Update in DB
