@@ -488,29 +488,40 @@ export default function ContestLandingPage() {
               <div style={{ padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "1.25rem" }}>
                 <h3 style={{ fontSize: "0.75rem", fontWeight: "800", color: "#e2e8f0", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 1.5rem 0" }}>How Rewards Work</h3>
 
-                <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1.5rem" }}>
-                  <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>PROPORTIONAL FORMULA</div>
-                  <div style={{ fontFamily: "monospace", fontSize: "0.875rem", fontWeight: "800", color: "#fcd34d", marginBottom: "0.5rem", lineHeight: "1.4" }}>
-                    Your Cash = (Your Total Points ÷ Combined Points of All) × Prize Pool
-                  </div>
+                <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1rem" }}>
+                  <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>1. EARNINGS ELIGIBILITY</div>
                   <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
-                    This rewards every point generated. If you contribute 15% of the total points, you claim exactly 15% of the cash prize pool!
+                    A contributor must earn a minimum of <strong>120 points</strong> during the 15-day challenge period to qualify for earnings. Points below 120 will only reflect on the leaderboard.
                   </p>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Example (John brings 2,000 pts, Sarah brings 1,000 pts with ₦100,000 pool)</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                    <div style={{ padding: "1rem", backgroundColor: "rgba(0,0,0,0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>John (66.6% share)</div>
-                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦66,666</div>
-                    </div>
-                    <div style={{ padding: "1rem", backgroundColor: "rgba(0,0,0,0.4)", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.25rem", fontWeight: "600" }}>Sarah (33.3% share)</div>
-                      <div style={{ fontSize: "1rem", fontWeight: "800", color: "#4ade80" }}>₦33,333</div>
-                    </div>
+                <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1rem" }}>
+                  <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>2. REWARD POOL UNLOCK SYSTEM</div>
+                  <div style={{ fontFamily: "monospace", fontSize: "0.75rem", fontWeight: "800", color: "#fcd34d", marginBottom: "0.5rem", lineHeight: "1.4" }}>
+                    Unlocked Pool = (Total Points by All ÷ Max Possible Points) × ₦100,000
                   </div>
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
+                    The ₦100,000 reward pool unlocks proportionally based on the collective performance of all contributors. Max Possible Points = Total Contributors × 1500.
+                  </p>
                 </div>
+
+                <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1rem" }}>
+                  <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>3. FINAL REWARD CALCULATION</div>
+                  <div style={{ fontFamily: "monospace", fontSize: "0.75rem", fontWeight: "800", color: "#fcd34d", marginBottom: "0.5rem", lineHeight: "1.4" }}>
+                    Your Reward = (Your Points ÷ Total Qualified Points) × Unlocked Pool
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
+                    Only qualified contributors (≥120 pts) participate. Your final reward is your proportional share of the unlocked pool.
+                  </p>
+                </div>
+
+                <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "1rem" }}>
+                  <div style={{ fontSize: "0.65rem", color: "#f59e0b", fontWeight: "800", marginBottom: "0.25rem" }}>TOP 3 BONUS</div>
+                  <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
+                    The top 3 contributors on the leaderboard will share an additional <strong>₦30,000</strong> prize pool separately from the main reward pool!
+                  </p>
+                </div>
+
               </div>
             </div>
           )}

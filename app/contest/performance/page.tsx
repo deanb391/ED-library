@@ -10,9 +10,8 @@ import { ContestPerformance } from "@/lib/services/contest_performance.service";
 export default function ContributorPerformancePage() {
   const { user, contributor, loading: userLoading, contributorLoading } = useUser();
 
-  // Interactive Projected Reward Calculator State
-  const [estimatedShare, setEstimatedShare] = useState(10); // Percentage share (10%)
-  const [estimatedPool, setEstimatedPool] = useState(150000); // Pool amount (₦150,000)
+  // Global stats state
+  const [globalStats, setGlobalStats] = useState<any>(null);
 
   // Real performance data state
   const [performance, setPerformance] = useState<ContestPerformance | null>(null);
@@ -48,10 +47,17 @@ export default function ContributorPerformancePage() {
     if (contributor && contributor.joinedContest) {
       const fetchPerf = async () => {
         try {
-          const res = await fetch(`/api/contest/performance?contributorId=${contributor.$id}`);
-          if (res.ok) {
-            const data = await res.json();
+          const [perfRes, statsRes] = await Promise.all([
+            fetch(`/api/contest/performance?contributorId=${contributor.$id}`),
+            fetch('/api/contest/stats')
+          ]);
+          if (perfRes.ok) {
+            const data = await perfRes.json();
             setPerformance(data.performance);
+          }
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            setGlobalStats(stats);
           }
         } catch (err) {
           console.error("Failed to fetch performance:", err);
@@ -101,8 +107,21 @@ export default function ContributorPerformancePage() {
     );
   }
 
-  // Calculate projected earnings
-  const projectedEarnings = (estimatedShare / 100) * estimatedPool;
+  // Calculate projected earnings based on real rules
+  const totalPoints = performance?.totalPoints || 0;
+  const isQualified = totalPoints >= 120;
+  
+  let projectedEarnings = 0;
+  let estimatedShare = 0;
+  let unlockedPool = 0;
+
+  if (globalStats) {
+    unlockedPool = globalStats.unlockedPool;
+    if (isQualified && globalStats.qualifiedPoints > 0) {
+      estimatedShare = (totalPoints / globalStats.qualifiedPoints) * 100;
+      projectedEarnings = (totalPoints / globalStats.qualifiedPoints) * unlockedPool;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-100 font-sans pb-20 relative overflow-hidden">
@@ -167,9 +186,61 @@ export default function ContributorPerformancePage() {
           </div>
 
           <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
-            <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Points Share</div>
-            <div className="text-2xl font-black text-slate-300">0.00%</div>
-            <div className="text-[10px] text-slate-500 mt-2">Your contribution to overall scores.</div>
+            <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Qualified Points Share</div>
+            <div className="text-2xl font-black text-slate-300">
+              {globalStats ? estimatedShare.toFixed(2) : "0.00"}%
+            </div>
+            <div className="text-[10px] text-slate-500 mt-2">Your share among qualified contributors.</div>
+          </div>
+        </div>
+
+        {/* --- REWARD ELIGIBILITY & PROJECTIONS --- */}
+        <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800 rounded-3xl p-6 mb-8">
+          <h3 className="font-extrabold text-white text-base mb-2 flex items-center gap-2">
+            <Coins className="text-emerald-400" size={18} /> Reward Projections
+          </h3>
+          <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+            Track your eligibility and projected earnings from the unlocked reward pool. Minimum 120 points required to qualify.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Eligibility Status */}
+            <div className="p-4 bg-slate-950/45 border border-slate-850 rounded-2xl">
+              <div className="text-xs font-bold uppercase text-slate-500 mb-1">Status</div>
+              <div className={`text-lg font-black ${isQualified ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {isQualified ? "QUALIFIED" : "NOT QUALIFIED"}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                {isQualified 
+                  ? "You are eligible for the reward pool!" 
+                  : `Earn ${120 - totalPoints} more points to qualify.`}
+              </div>
+            </div>
+
+            {/* Unlocked Pool */}
+            <div className="p-4 bg-slate-950/45 border border-slate-850 rounded-2xl">
+              <div className="text-xs font-bold uppercase text-slate-500 mb-1">Unlocked Pool</div>
+              <div className="text-lg font-black text-slate-200">
+                ₦{globalStats ? unlockedPool.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "0"}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                of max ₦100,000.
+              </div>
+            </div>
+
+            {/* Projected Earnings */}
+            <div className="p-4 bg-slate-950/45 border border-emerald-500/30 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-[30px] pointer-events-none" />
+              <div className="text-xs font-bold uppercase text-emerald-500/80 mb-1">Projected Earnings</div>
+              <div className="text-2xl font-black text-emerald-400">
+                ₦{projectedEarnings.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-[10px] text-emerald-500/60 mt-1 uppercase tracking-wider">
+                Top 3 bonus not included
+              </div>
+            </div>
+
           </div>
 
         </div>
