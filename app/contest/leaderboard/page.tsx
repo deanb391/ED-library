@@ -209,7 +209,7 @@ export default function ContestLeaderboardPage() {
                           {contestantItem.institution || "Other"}
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-black text-slate-305">
-                          0 pts
+                          {contestantItem.totalPoints || 0} pts
                         </td>
                       </tr>
                     );

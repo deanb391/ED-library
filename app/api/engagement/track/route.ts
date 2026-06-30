@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getContestPerformanceByContributorService, updateContestPerformanceService } from "@/lib/services/contest_performance.service";
-
+import { getContributorByUserIdService } from "@/lib/services/contributors.service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const performance = await getContestPerformanceByContributorService(contributorId);
+    // contributorId passed from client is actually the user ID of the course creator
+    const contributor = await getContributorByUserIdService(contributorId);
+    if (!contributor) {
+      return NextResponse.json({ error: "Course creator is not a contributor" }, { status: 404 });
+    }
+
+    const performance = await getContestPerformanceByContributorService(contributor.$id);
     if (!performance) {
       return NextResponse.json({ error: "Contest performance not found" }, { status: 404 });
     }
@@ -59,6 +65,16 @@ export async function POST(req: NextRequest) {
       engagementActivity: JSON.stringify(engagementActivity),
       engagementScore: cappedEngagementScore,
     });
+
+    // Trigger cron calculation in the background
+    try {
+      const origin = req.nextUrl.origin;
+      fetch(`${origin}/api/cron/contest-calculate`, { 
+        method: 'POST' 
+      }).catch(e => console.error("Cron trigger failed:", e));
+    } catch (e) {
+      console.error("Failed to trigger cron:", e);
+    }
 
     return NextResponse.json({ success: true, engagementScore: cappedEngagementScore });
   } catch (error) {

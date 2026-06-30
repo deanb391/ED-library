@@ -109,7 +109,7 @@ export default function ContributorPerformancePage() {
 
   // Calculate projected earnings based on real rules
   const totalPoints = performance?.totalPoints || 0;
-  const isQualified = totalPoints >= 120;
+  const isQualified = totalPoints >= 100;
   
   let projectedEarnings = 0;
   let estimatedShare = 0;
@@ -200,7 +200,7 @@ export default function ContributorPerformancePage() {
             <Coins className="text-emerald-400" size={18} /> Reward Projections
           </h3>
           <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-            Track your eligibility and projected earnings from the unlocked reward pool. Minimum 120 points required to qualify.
+            Track your eligibility and projected earnings from the unlocked reward pool. Minimum 100 points required to qualify.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -214,7 +214,7 @@ export default function ContributorPerformancePage() {
               <div className="text-xs text-slate-400 mt-1">
                 {isQualified 
                   ? "You are eligible for the reward pool!" 
-                  : `Earn ${120 - totalPoints} more points to qualify.`}
+                  : `Earn ${100 - totalPoints} more points to qualify.`}
               </div>
             </div>
 
