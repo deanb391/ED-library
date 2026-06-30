@@ -342,12 +342,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             courseId: course.id,
             contributorId: course.user,
             userId: user.$id,
-            activeTimeMs: 120000
+            activeTimeMs: 90000
           })
         }).catch(console.error);
         isActiveRef.current = false;
       }
-    }, 120000);
+    }, 90000);
 
     const activityListener = () => { isActiveRef.current = true; };
     window.addEventListener("scroll", activityListener, { passive: true });

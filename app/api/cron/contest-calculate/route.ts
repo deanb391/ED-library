@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       // -- E (Engagement) --
       const engagementActivity = JSON.parse(perf.engagementActivity || "{}");
       const activeMins = engagementActivity[dayKey]?.activeMinutes || 0;
-      // 1 point per 10 minutes, max 40 points
-      const engagementScore = Math.min(40, Math.floor(activeMins / 10));
+      // 1 point per 2 minutes, max 40 points
+      const engagementScore = Math.min(40, Math.floor(activeMins / 2));
 
       // -- C (Content Quality) --
       // Fetch all courses owned by this contributor
