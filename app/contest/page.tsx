@@ -491,7 +491,7 @@ export default function ContestLandingPage() {
                 <div style={{ padding: "1rem", backgroundColor: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "1rem", marginBottom: "1rem" }}>
                   <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: "800", marginBottom: "0.25rem" }}>1. EARNINGS ELIGIBILITY</div>
                   <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
-                    A contributor must earn a minimum of <strong>120 points</strong> during the 15-day challenge period to qualify for earnings. Points below 120 will only reflect on the leaderboard.
+                    A contributor must earn a minimum of <strong>100 points</strong> during the 15-day challenge period to qualify for earnings. Points below 100 will only reflect on the leaderboard.
                   </p>
                 </div>
 
@@ -511,7 +511,7 @@ export default function ContestLandingPage() {
                     Your Reward = (Your Points ÷ Total Qualified Points) × Unlocked Pool
                   </div>
                   <p style={{ fontSize: "0.75rem", color: "#94a3b8", margin: 0, lineHeight: "1.5" }}>
-                    Only qualified contributors (≥120 pts) participate. Your final reward is your proportional share of the unlocked pool.
+                    Only qualified contributors (≥100 pts) participate. Your final reward is your proportional share of the unlocked pool.
                   </p>
                 </div>
 

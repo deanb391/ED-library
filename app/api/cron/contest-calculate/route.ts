@@ -29,6 +29,16 @@ export async function POST(request: Request) {
 
     // 1. Calculate and assign points for each contributor
     for (const perf of performances) {
+      console.log("Processing performance", perf);
+      const contributorId = typeof perf.contributors === 'object' && perf.contributors !== null
+        ? (Array.isArray(perf.contributors) ? perf.contributors[0]?.$id || perf.contributors[0] : (perf.contributors as any).$id)
+        : perf.contributors;
+
+      if (!contributorId) {
+        console.log("No valid contributorId found for performance", perf.$id);
+        continue;
+      }
+
       // -- A (Acquisition) --
       const newUsersCount = JSON.parse(perf.newUsers || "{}")[dayKey] || 0;
       const acquisitionScore = Math.min(50, newUsersCount * 5);
@@ -45,17 +55,17 @@ export async function POST(request: Request) {
       let totalRatingSum = 0;
       let ratedCoursesCount = 0;
       try {
-        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", perf.contributors);
+        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", contributorId);
         const coursesRes = await databases.listDocuments(DATABASE_ID, "courses", [
           Query.equal("user", contDoc.user)
         ]);
-        
+
         for (const course of coursesRes.documents) {
           // Fetch reviews for this course
           const reviewsRes = await databases.listDocuments(DATABASE_ID, "course_review_and_rating", [
             Query.equal("courses", course.$id)
           ]);
-          
+
           if (reviewsRes.documents.length > 0) {
             const sum = reviewsRes.documents.reduce((acc, curr) => acc + (curr.rating || 0), 0);
             const avg = sum / reviewsRes.documents.length;
@@ -93,7 +103,7 @@ export async function POST(request: Request) {
       // 3. Optional: Trigger email sending logic here
       // We need to fetch the User document using contributor id to get email
       try {
-        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", perf.contributors);
+        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", contributorId);
         const userDoc = await databases.getDocument(DATABASE_ID, "user", contDoc.user);
         if (userDoc.email) {
           sendContestDailySummaryEmail(userDoc.email, { points: todaysPoints, total: totalPoints });

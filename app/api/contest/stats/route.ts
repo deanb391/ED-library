@@ -14,7 +14,8 @@ export async function GET() {
       performances.forEach((perf) => {
         const points = perf.totalPoints || 0;
         totalPoints += points;
-        if (points >= 120) {
+        // Check qualification (minimum 100 points)
+        if (points >= 100) {
           qualifiedPoints += points;
         }
       });
