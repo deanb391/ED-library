@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
       totalActiveMinutes += engagementActivity[key].activeMinutes;
     }
 
-    // 1 point per 10 minutes
-    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 5);
+    // 1 point per 2 minutes
+    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 2);
     const cappedEngagementScore = Math.min(calculatedEngagementScore, 40);
 
     // Update in DB
@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
     // Trigger cron calculation in the background
     try {
       const origin = req.nextUrl.origin;
-      fetch(`${origin}/api/cron/contest-calculate`, { 
-        method: 'POST' 
+      fetch(`${origin}/api/cron/contest-calculate`, {
+        method: 'POST'
       }).catch(e => console.error("Cron trigger failed:", e));
     } catch (e) {
       console.error("Failed to trigger cron:", e);
