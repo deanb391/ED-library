@@ -68,14 +68,14 @@ export async function POST(req: NextRequest) {
       engagementScore: cappedEngagementScore,
     });
 
-    // Trigger cron calculation in the background
+    // Trigger cron calculation synchronously to prevent Next.js from aborting it
     try {
       const origin = req.nextUrl.origin;
-      fetch(`${origin}/api/cron/contest-calculate`, {
+      await fetch(`${origin}/api/cron/contest-calculate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ performanceId: performance.$id })
-      }).catch(e => console.error("Cron trigger failed:", e));
+      });
     } catch (e) {
       console.error("Failed to trigger cron:", e);
     }
