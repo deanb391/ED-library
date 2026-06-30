@@ -11,6 +11,7 @@ interface ContributorInfo {
   institution: string;
   profileImage?: string;
   joinedContestAt?: string;
+  totalPoints?: number;
 }
 
 export default function ContestLeaderboardPage() {
