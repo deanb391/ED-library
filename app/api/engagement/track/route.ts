@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Get current date key, e.g., "day 1" based on contest start
-    const startDate = new Date("2026-06-29T12:00:00Z");
-    const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
+    const startDate = new Date("2026-06-29T00:00:00Z");
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const diffTime = Math.max(0, today.getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayKey = `day ${dayNumber}`;
 
@@ -70,7 +72,9 @@ export async function POST(req: NextRequest) {
     try {
       const origin = req.nextUrl.origin;
       fetch(`${origin}/api/cron/contest-calculate`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ performanceId: performance.$id })
       }).catch(e => console.error("Cron trigger failed:", e));
     } catch (e) {
       console.error("Failed to trigger cron:", e);

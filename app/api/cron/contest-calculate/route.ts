@@ -16,14 +16,36 @@ export async function POST(request: Request) {
       // return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const performances = await fetchAllContestPerformancesService();
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (e) {
+      // Ignore if no body provided
+    }
+    const { performanceId } = body as any;
+
+    let performances: any[] = [];
+    if (performanceId) {
+      try {
+        const doc = await databases.getDocument(DATABASE_ID, "contest_performance", performanceId);
+        performances = [doc];
+      } catch (err) {
+        console.error("Failed to fetch specific performance", err);
+        return NextResponse.json({ error: "Performance not found" }, { status: 404 });
+      }
+    } else {
+      performances = await fetchAllContestPerformancesService();
+    }
+
     if (!performances || performances.length === 0) {
       return NextResponse.json({ message: "No active contestants" });
     }
 
     // Determine current dayKey
-    const startDate = new Date("2026-06-29T12:00:00Z");
-    const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
+    const startDate = new Date("2026-06-29T00:00:00Z");
+    const now = new Date();
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const diffTime = Math.max(0, today.getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayKey = `day ${dayNumber}`;
 
