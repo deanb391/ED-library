@@ -101,17 +101,7 @@ export async function POST(request: Request) {
       });
 
       // 3. Optional: Trigger email sending logic here
-      // We need to fetch the User document using contributor id to get email
-      try {
-        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", contributorId);
-        const userDoc = await databases.getDocument(DATABASE_ID, "user", contDoc.user);
-        if (userDoc.email) {
-          sendContestDailySummaryEmail(userDoc.email, { points: todaysPoints, total: totalPoints });
-          console.log(`Email sent to ${userDoc.email} for ${todaysPoints} points.`);
-        }
-      } catch (err) {
-        console.error("Failed to fetch user email for contest summary:", err);
-      }
+      // Email sending has been temporarily disabled to prevent spamming during frequent recalculations.
     }
 
     return NextResponse.json({ success: true, processed: performances.length, day: dayKey });
