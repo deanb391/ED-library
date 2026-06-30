@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getContestPerformanceByContributorService, updateContestPerformanceService } from "@/lib/services/contest_performance.service";
 import { getContributorByUserIdService } from "@/lib/services/contributors.service";
+import { runContestCalculate } from "@/lib/services/contest_calculator.service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,14 +69,9 @@ export async function POST(req: NextRequest) {
       engagementScore: cappedEngagementScore,
     });
 
-    // Trigger cron calculation synchronously to prevent Next.js from aborting it
+    // Trigger cron calculation synchronously via direct function call
     try {
-      const origin = req.nextUrl.origin;
-      await fetch(`${origin}/api/cron/contest-calculate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ performanceId: performance.$id })
-      });
+      await runContestCalculate(performance.$id!);
     } catch (e) {
       console.error("Failed to trigger cron:", e);
     }
