@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const leaderboard = contributors.map(contributor => {
       const perf = performances.find(p => {
         const pContId = typeof p.contributors === 'object' && p.contributors !== null
-          ? (Array.isArray(p.contributors) ? p.contributors[0]?.$id || p.contributors[0] : (p.contributors as any).$id)
+          ? (Array.isArray(p.contributors) ? (p.contributors as any)[0]?.$id || (p.contributors as any)[0] : (p.contributors as any).$id)
           : p.contributors;
         return pContId === contributor.$id;
       });

@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     for (const perf of performances) {
       console.log("Processing performance", perf);
       const contributorId = typeof perf.contributors === 'object' && perf.contributors !== null
-        ? (Array.isArray(perf.contributors) ? perf.contributors[0]?.$id || perf.contributors[0] : (perf.contributors as any).$id)
+        ? (Array.isArray(perf.contributors) ? (perf.contributors as any)[0]?.$id || (perf.contributors as any)[0] : (perf.contributors as any).$id)
         : perf.contributors;
 
       if (!contributorId) {
