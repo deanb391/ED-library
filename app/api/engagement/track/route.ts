@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
       totalActiveMinutes += engagementActivity[key].activeMinutes;
     }
 
-    // 1 point per 2 minutes
-    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 2);
+    // 1 point per 3 minutes
+    const calculatedEngagementScore = Math.floor(totalActiveMinutes / 3);
     const cappedEngagementScore = Math.min(calculatedEngagementScore, 40);
 
     // Update in DB
