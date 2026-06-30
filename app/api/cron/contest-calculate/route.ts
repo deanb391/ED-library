@@ -62,14 +62,28 @@ export async function POST(request: Request) {
       }
 
       // -- A (Acquisition) --
-      const newUsersCount = JSON.parse(perf.newUsers || "{}")[dayKey] || 0;
-      const acquisitionScore = Math.min(50, newUsersCount * 5);
+      const newUsersData = JSON.parse(perf.newUsers || "{}");
+      let totalNewUsers = 0;
+      let previousNewUsers = 0;
+      for (const k in newUsersData) {
+        totalNewUsers += newUsersData[k];
+        if (k !== dayKey) previousNewUsers += newUsersData[k];
+      }
+      const todaysAcquisitionScore = Math.min(50, totalNewUsers * 5) - Math.min(50, previousNewUsers * 5);
+      const acquisitionScore = Math.min(50, totalNewUsers * 5);
 
       // -- E (Engagement) --
       const engagementActivity = JSON.parse(perf.engagementActivity || "{}");
-      const activeMins = engagementActivity[dayKey]?.activeMinutes || 0;
+      let totalActiveMins = 0;
+      let previousActiveMins = 0;
+      for (const k in engagementActivity) {
+        totalActiveMins += engagementActivity[k].activeMinutes || 0;
+        if (k !== dayKey) previousActiveMins += engagementActivity[k].activeMinutes || 0;
+      }
       // 1 point per 3 minutes, max 40 points
-      const engagementScore = Math.min(40, Math.floor(activeMins / 3));
+      const engagementScore = Math.min(40, Math.floor(totalActiveMins / 3));
+      const previousEngagementScore = Math.min(40, Math.floor(previousActiveMins / 3));
+      const todaysEngagementScore = engagementScore - previousEngagementScore;
 
       // -- C (Content Quality) --
       // Fetch all courses owned by this contributor
@@ -105,13 +119,13 @@ export async function POST(request: Request) {
         contentScore = Math.min(10, overallAverage * 2);
       }
 
-      const todaysPoints = acquisitionScore + engagementScore + contentScore;
+      // Calculate today's points, letting contentScore act as a daily compounding boost
+      const todaysPoints = todaysAcquisitionScore + todaysEngagementScore + contentScore;
 
-      // Update daily points
+      // Update daily points and recalculate total
       const dailyPoints = JSON.parse(perf.dailyPoints || "{}");
       dailyPoints[dayKey] = todaysPoints;
-
-      // Recalculate total points
+      
       const totalPoints = Object.values(dailyPoints).reduce((acc: number, curr: any) => acc + curr, 0) as number;
 
       await updateContestPerformanceService(perf.$id!, {
