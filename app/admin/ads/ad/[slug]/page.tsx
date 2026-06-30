@@ -66,9 +66,9 @@ export default function AdDetailsPage() {
   }, [slug]);
 
   if (loading) {
-    return (<div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    return (<div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-      <p className="text-gray-700 text-sm">Loading, please wait...</p>
+      <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
     </div>)
   }
 
@@ -78,14 +78,14 @@ export default function AdDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] px-4 py-10">
-      <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-gray-200 shadow-sm">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="p-8 sm:p-10">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900" style={{ textTransform: 'capitalize' }}>
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white" style={{ textTransform: 'capitalize' }}>
                 {ad.name}
               </h1>
-              <p className="text-sm text-gray-500 mt-1 mb-10">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-10">
                 Ad details and performance
               </p>
               <p
@@ -331,15 +331,15 @@ function EditAdModal({
 
   return (
     <div className=" inset-0 absolute mt-10 top-0  px-4">
-      <div className="w-full max-w-lg bg-white rounded-2xl p-6 relative mx-auto max-h-vh] overflow-y-auto mt-10">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl p-6 relative mx-auto max-h-vh] overflow-y-auto mt-10">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-400"
         >
           <X />
         </button>
 
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
           Edit ad
         </h2>
 
@@ -348,7 +348,7 @@ function EditAdModal({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
               style={{ color: "black", textTransform: 'capitalize' }}
             />
@@ -368,7 +368,7 @@ function EditAdModal({
                   setEndTime(calculateEndTime(selected.days));
                 }
               }}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700
                focus:ring-2 focus:ring-blue-500 transition text-blue-600"
               style={{ color: "black" }}
             >
@@ -384,7 +384,7 @@ function EditAdModal({
             <input
               value={link}
               onChange={(e) => setLink(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
               style={{ color: "black" }}
             />
@@ -395,7 +395,7 @@ function EditAdModal({
               type="datetime-local"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700
                          focus:ring-2 focus:ring-blue-500 transition text-blue-600"
               style={{ color: "black" }}
             />
@@ -565,8 +565,8 @@ function Stat({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-gray-50 rounded-xl p-4 border">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</p>
       <p className={`text-lg font-semibold ${valueClass}`}>
         {value}
       </p>
@@ -583,7 +583,7 @@ function Section({
 }) {
   return (
     <div className="mt-8">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">
+      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
         {title}
       </h3>
       {children}
@@ -606,7 +606,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {label}
       </label>
       {children}

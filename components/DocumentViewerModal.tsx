@@ -52,31 +52,31 @@ export default function DocumentViewerModal({ isOpen, onClose, fileUrl, fileType
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 md:p-8" onContextMenu={(e) => e.preventDefault()}>
-      <div className="bg-white w-full max-w-5xl h-full max-h-[90vh] rounded-xl flex flex-col overflow-hidden relative">
+      <div className="bg-white dark:bg-gray-900 w-full max-w-5xl h-full max-h-[90vh] rounded-xl flex flex-col overflow-hidden relative">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
-          <h3 className="font-semibold text-gray-800 truncate pr-4">{fileName}</h3>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+          <h3 className="font-semibold text-gray-800 dark:text-gray-300 truncate pr-4">{fileName}</h3>
           <div className="flex items-center gap-4">
             {fileType === 'pdf' && (
               <div className="flex items-center gap-2">
-                <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="p-1 hover:bg-gray-100 rounded">
+                <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="p-1 hover:bg-gray-100 dark:bg-gray-800 rounded">
                   <ZoomOut size={18} />
                 </button>
                 <span className="text-sm font-medium w-12 text-center">{Math.round(scale * 100)}%</span>
-                <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="p-1 hover:bg-gray-100 rounded">
+                <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="p-1 hover:bg-gray-100 dark:bg-gray-800 rounded">
                   <ZoomIn size={18} />
                 </button>
               </div>
             )}
-            <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+            <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 rounded-full transition-colors">
               <X size={20} />
             </button>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto bg-gray-100 p-4 select-none">
+        <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 select-none">
           {fileType === 'pdf' ? (
             <div className="flex justify-center">
               <div className="shadow-lg">
@@ -91,13 +91,13 @@ export default function DocumentViewerModal({ isOpen, onClose, fileUrl, fileType
                     scale={scale} 
                     renderTextLayer={false}
                     renderAnnotationLayer={false}
-                    className="bg-white"
+                    className="bg-white dark:bg-gray-900"
                   />
                 </Document>
               </div>
             </div>
           ) : (
-            <div className="bg-white p-8 shadow-lg max-w-3xl w-full mx-auto rounded-lg min-h-full">
+            <div className="bg-white dark:bg-gray-900 p-8 shadow-lg max-w-3xl w-full mx-auto rounded-lg min-h-full">
               {loadingDocx ? (
                 <div className="flex justify-center p-8"><div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" /></div>
               ) : (
@@ -109,21 +109,21 @@ export default function DocumentViewerModal({ isOpen, onClose, fileUrl, fileType
 
         {/* Footer Controls (PDF only) */}
         {fileType === 'pdf' && numPages > 0 && (
-          <div className="flex items-center justify-center gap-6 p-4 border-t border-gray-200 shrink-0 bg-white">
+          <div className="flex items-center justify-center gap-6 p-4 border-t border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-gray-900">
             <button 
               onClick={() => setPageNumber(p => Math.max(1, p - 1))}
               disabled={pageNumber <= 1}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full hover:bg-gray-100 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={24} />
             </button>
-            <span className="font-medium text-sm text-gray-700">
+            <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
               Page {pageNumber} of {numPages}
             </span>
             <button 
               onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
               disabled={pageNumber >= numPages}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full hover:bg-gray-100 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRight size={24} />
             </button>

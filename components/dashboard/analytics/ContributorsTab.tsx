@@ -31,8 +31,8 @@ export default function ContributorsTab() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Contributors</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Applications, courses, and uploads over time</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Contributors</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Applications, courses, and uploads over time</p>
         </div>
         <TimeframeToggle value={timeframe} onChange={setTimeframe} />
       </div>
@@ -45,8 +45,8 @@ export default function ContributorsTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-sm font-bold text-gray-700 mb-5">Applications Over Time</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Applications Over Time</h3>
           <TimeSeriesChart
             data={data?.applicationSeries ?? []}
             type="area"
@@ -55,8 +55,8 @@ export default function ContributorsTab() {
           />
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-sm font-bold text-gray-700 mb-5">Courses Created Over Time</h3>
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Courses Created Over Time</h3>
           <TimeSeriesChart
             data={data?.courseCreatedSeries ?? []}
             type="bar"
@@ -66,8 +66,8 @@ export default function ContributorsTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Uploads Per Day</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Uploads Per Day</h3>
         <TimeSeriesChart
           data={data?.uploadSeries ?? []}
           type="line"

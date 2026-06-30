@@ -510,7 +510,7 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 p-5 shadow-sm flex items-center gap-4">
       <div className={`p-2.5 rounded-xl ${bg} ${color}`}>
         <Icon size={20} />
       </div>
@@ -613,7 +613,7 @@ function EditVendorAdModal({
 
   return (
     <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto relative">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-600" />
 
         <div className="p-6 sm:p-8">

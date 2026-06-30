@@ -117,7 +117,7 @@ const [viewerIndex, setViewerIndex] = useState(0);
     <div
   style={{
     minHeight: "100vh",
-    backgroundColor: "#F8F9FB",
+    backgroundColor: "transparent",
     padding: "2rem 1.5rem",
     boxSizing: "border-box",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'

@@ -106,13 +106,13 @@ function AnalyticsChart({
   setRange: (r: "7d" | "30d" | "1y") => void;
 }) {
   return (
-    <div className="bg-white rounded-3xl p-6 border border-gray-100 w-full">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Earnings Growth
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {range === "7d"
               ? "Last 7 Days"
               : range === "30d"
@@ -126,7 +126,7 @@ function AnalyticsChart({
           onChange={(e) =>
             setRange(e.target.value as "7d" | "30d" | "1y")
           }
-          className="bg-white border border-gray-200 text-gray-600 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none"
+          className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none"
         >
           <option value="7d">Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
@@ -200,15 +200,15 @@ export default function EarningsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
+    <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
   </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] flex flex-col text-gray-900 pb-20">
+    <div className="min-h-screen bg-transparent flex flex-col text-gray-900 dark:text-white pb-20">
       <main className="flex-1 w-full">
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
@@ -222,15 +222,15 @@ export default function EarningsPage() {
               <h2 className="text-2xl font-bold">
                 Earnings & Subscriptions
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Manage your revenue and track transactions.
               </p>
             </div>
           </div>
 
           {/* Balance */}
-          <div className="bg-white rounded-3xl p-6 ">
-            <div className="flex items-center gap-2 text-gray-500 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 ">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-4">
               <Landmark size={20} />
               <span className="text-sm">Available balance</span>
             </div>
@@ -257,7 +257,7 @@ export default function EarningsPage() {
           />
 
           {/* Transactions */}
-          <div className="bg-white rounded-3xl p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6">
             <h3 className="text-lg font-bold mb-6">
               Recent Transactions
             </h3>

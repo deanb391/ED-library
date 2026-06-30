@@ -37,7 +37,7 @@ export default function StreakReminderModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
         style={{
           transform: animateIn ? "scale(1) translateY(0)" : "scale(0.95) translateY(10px)",
           opacity: animateIn ? 1 : 0,
@@ -50,7 +50,7 @@ export default function StreakReminderModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full text-gray-500 transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
         >
           <X size={18} />
         </button>
@@ -71,13 +71,13 @@ export default function StreakReminderModal({
             {hasStreak ? "🔥" : "🚀"}
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
             {hasStreak
               ? `Don't lose your ${currentStreak}-day streak!`
               : "Start your upload streak!"}
           </h2>
 
-          <p className="text-sm text-gray-500 leading-relaxed mb-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-1">
             {hasStreak
               ? "You haven't uploaded today yet. Upload a note to keep your streak alive!"
               : "Upload your first note today and begin building your streak. Consistency is key!"}
@@ -126,7 +126,7 @@ export default function StreakReminderModal({
 
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl font-semibold text-sm text-gray-400 hover:text-gray-600 transition"
+            className="w-full py-3 rounded-xl font-semibold text-sm text-gray-400 hover:text-gray-600 dark:text-gray-400 transition"
           >
             Maybe Later
           </button>

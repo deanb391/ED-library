@@ -15,7 +15,7 @@ export default function TopUpSuccessPage() {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8F9FB",
+    backgroundColor: "transparent",
     padding: "1rem",
     boxSizing: "border-box",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'

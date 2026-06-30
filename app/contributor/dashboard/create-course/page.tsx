@@ -50,9 +50,9 @@ export default function CreateCoursePage() {
 
   if (userLoading || contributorLoading || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
@@ -157,33 +157,33 @@ export default function CreateCoursePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
 
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-3xl bg-white rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
 
         {/* Top Accent */}
         <div className="h-1 w-full bg-blue-600" />
 
-        <div className="p-8 sm:p-10 bg-white">
+        <div className="p-8 sm:p-10 bg-white dark:bg-gray-900">
           {/* Header */}
-          <div className="flex flex-col items-center text-center mb-10 bg-white">
+          <div className="flex flex-col items-center text-center mb-10 bg-white dark:bg-gray-900">
             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
               <Plus size={24} strokeWidth={2.5} />
             </div>
 
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
               Create course
             </h1>
 
-            <p className="text-sm text-gray-500 mt-1 max-w-sm">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
               Add a new course to your library. Keep it clear and structured.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function CreateCoursePage() {
           >
             {/* Course Title */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Course title
               </label>
               <input
@@ -204,14 +204,14 @@ export default function CreateCoursePage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Engineering Mechanics"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Course Code */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Course code
               </label>
               <input
@@ -219,14 +219,14 @@ export default function CreateCoursePage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="MECH 311"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* University */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 University
               </label>
               <input
@@ -234,36 +234,36 @@ export default function CreateCoursePage() {
                 value={university}
                 onChange={(e) => setUniversity(e.target.value)}
                 placeholder="University of Lagos"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Lecturer */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Lecturer <span className="text-gray-400">(optional)</span>
               </label>
               <input
                 value={lecturer}
                 onChange={(e) => setLecturer(e.target.value)}
                 placeholder="Dr. A. Smith"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Session */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Session
               </label>
               <select
                 required
                 value={session}
                 onChange={(e) => setSession(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option value="" disabled>
                   Select session
@@ -278,15 +278,15 @@ export default function CreateCoursePage() {
 
             {/* Level */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Level
               </label>
               <select
                 required
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option value="" disabled>
                   Select level
@@ -301,7 +301,7 @@ export default function CreateCoursePage() {
 
             {/* Department */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Department
               </label>
               <input
@@ -309,14 +309,14 @@ export default function CreateCoursePage() {
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder="e.g. Computer Science"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Description */}
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Description
               </label>
               <textarea
@@ -325,14 +325,14 @@ export default function CreateCoursePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
                 placeholder="Brief description of the course content"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 resize-none
-                         focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 resize-none
+                         focus:outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Thumbnail */}
             <div className="md:col-span-2 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Course thumbnail
               </label>
               <input
@@ -342,7 +342,7 @@ export default function CreateCoursePage() {
                 onChange={(e) =>
                   setThumbnail(e.target.files ? e.target.files[0] : null)
                 }
-                className="block w-full text-sm text-gray-600
+                className="block w-full text-sm text-gray-600 dark:text-gray-400
                          file:mr-4 file:py-2.5 file:px-4
                          file:rounded-xl file:border-0
                          file:bg-blue-50 file:text-blue-600 file:font-medium
@@ -362,7 +362,7 @@ export default function CreateCoursePage() {
           </form>
 
           {/* Cancel */}
-          <div className="mt-6 text-center text-sm text-gray-500 hover:text-gray-700 transition"
+          <div className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition"
             onClick={() => {
               router.back()
             }}

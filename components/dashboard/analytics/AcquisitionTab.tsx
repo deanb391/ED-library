@@ -33,8 +33,8 @@ export default function AcquisitionTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">User Acquisition</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Signups, active users, and demographic breakdown</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">User Acquisition</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Signups, active users, and demographic breakdown</p>
         </div>
         <TimeframeToggle value={timeframe} onChange={setTimeframe} />
       </div>
@@ -62,8 +62,8 @@ export default function AcquisitionTab() {
       </div>
 
       {/* Signups Over Time */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">New Signups Over Time</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">New Signups Over Time</h3>
         <TimeSeriesChart
           data={data?.signupSeries ?? []}
           type="area"
@@ -73,8 +73,8 @@ export default function AcquisitionTab() {
       </div>
 
       {/* Active Users Over Time */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Daily Active Users</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Daily Active Users</h3>
         <TimeSeriesChart
           data={data?.activeUserSeries ?? []}
           type="bar"
@@ -84,8 +84,8 @@ export default function AcquisitionTab() {
       </div>
 
       {/* Weekly Active Users */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Weekly Active Users</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Weekly Active Users</h3>
         <TimeSeriesChart
           data={data?.weeklyActiveUserSeries ?? []}
           type="bar"
@@ -95,8 +95,8 @@ export default function AcquisitionTab() {
       </div>
 
       {/* Monthly Active Users */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Monthly Active Users</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Monthly Active Users</h3>
         <TimeSeriesChart
           data={data?.monthlyActiveUserSeries ?? []}
           type="bar"
@@ -106,8 +106,8 @@ export default function AcquisitionTab() {
       </div>
 
       {/* Department Breakdown */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-5">Signups by Department</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-5">Signups by Department</h3>
         <BreakdownPieChart data={data?.signupsByDept ?? []} loading={loading} />
       </div>
     </div>

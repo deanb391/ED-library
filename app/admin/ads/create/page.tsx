@@ -160,18 +160,18 @@ export default function CreateAdPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="animate-spin h-12 w-12 rounded-full border-t-4 border-blue-600 mb-4" />
-        <p className="text-sm text-gray-600">Loading, please wait…</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Loading, please wait…</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white text-center px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 text-center px-4">
         <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
-        <p className="text-gray-500 mb-4">
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
           You do not have permission to create ads.
         </p>
         <Link href="/">
@@ -185,7 +185,7 @@ export default function CreateAdPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-sm border border-gray-200 relative">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 relative">
         <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 rounded-t-3xl" />
 
         <div className="p-8 sm:p-10">
@@ -193,17 +193,17 @@ export default function CreateAdPage() {
             <Plus size={26} strokeWidth={2.5} />
           </div>
 
-          <h1 className="text-xl font-semibold text-center text-gray-900">
+          <h1 className="text-xl font-semibold text-center text-gray-900 dark:text-white">
             Create new ad
           </h1>
-          <p className="text-sm text-gray-500 text-center mt-1 mb-8">
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-8">
             Add a new advertisement to the platform
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Ad Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Ad name
               </label>
               <input
@@ -211,14 +211,14 @@ export default function CreateAdPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Homepage Banner – February"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 focus:outline-none
                            focus:ring-2 focus:ring-blue-500 transition text-blue-600"
                 style={{ color: 'black' }}
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Ad duration
               </label>
 
@@ -236,8 +236,8 @@ export default function CreateAdPage() {
                     setEndTime(calculateEndTime(selected.days));
                   }
                 }}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300
-               bg-white text-sm focus:outline-none
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700
+               bg-white dark:bg-gray-900 text-sm focus:outline-none
                focus:ring-2 focus:ring-blue-500 transition text-blue-600"
                 style={{ color: 'black' }}
               >
@@ -253,14 +253,14 @@ export default function CreateAdPage() {
               </select>
 
               {endTime && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Ends on {new Date(endTime).toLocaleString()}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Ad Link
               </label>
               <input
@@ -268,7 +268,7 @@ export default function CreateAdPage() {
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
                 placeholder="https://www.examplelink.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 focus:outline-none
                            focus:ring-2 focus:ring-blue-500 transition text-blue-600"
                 style={{ fontStyle: 'italic', color: "black" }}
               />
@@ -277,15 +277,15 @@ export default function CreateAdPage() {
 
             {/* Images */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 2.5 x 1 Images (max 3)
               </label>
 
               {/* Styled file picker */}
               <label
                 className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
-      border border-gray-300 text-sm font-medium cursor-pointer
-      hover:bg-gray-50 transition bg-blue-600
+      border border-gray-300 dark:border-gray-700 text-sm font-medium cursor-pointer
+      hover:bg-gray-50 dark:bg-gray-900 transition bg-blue-600
       ${smallImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Choose images
@@ -310,7 +310,7 @@ export default function CreateAdPage() {
                         key={index}
                         className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
-                       border border-gray-200 overflow-hidden bg-gray-50"
+                       border border-gray-200 dark:border-gray-800 overflow-hidden bg-gray-50 dark:bg-gray-900"
                       >
                         <img
                           src={previewUrl}
@@ -340,15 +340,15 @@ export default function CreateAdPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 1.5 x 1 Images (max 3)
               </label>
 
               {/* Styled file picker */}
               <label
                 className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
-      border border-gray-300 text-sm font-medium cursor-pointer
-      hover:bg-gray-50 transition bg-blue-600
+      border border-gray-300 dark:border-gray-700 text-sm font-medium cursor-pointer
+      hover:bg-gray-50 dark:bg-gray-900 transition bg-blue-600
       ${mediumImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Choose images
@@ -373,7 +373,7 @@ export default function CreateAdPage() {
                         key={index}
                         className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
-                       border border-gray-200 overflow-hidden bg-gray-50"
+                       border border-gray-200 dark:border-gray-800 overflow-hidden bg-gray-50 dark:bg-gray-900"
                       >
                         <img
                           src={previewUrl}
@@ -403,15 +403,15 @@ export default function CreateAdPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Banner Images (max 3)
               </label>
 
               {/* Styled file picker */}
               <label
                 className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
-      border border-gray-300 text-sm font-medium cursor-pointer
-      hover:bg-gray-50 transition bg-blue-600
+      border border-gray-300 dark:border-gray-700 text-sm font-medium cursor-pointer
+      hover:bg-gray-50 dark:bg-gray-900 transition bg-blue-600
       ${LargeImage.length >= 3 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Choose images
@@ -436,7 +436,7 @@ export default function CreateAdPage() {
                         key={index}
                         className="relative flex-shrink-0
                        w-0.5 h-0.5 rounded-lg
-                       border border-gray-200 overflow-hidden bg-gray-50"
+                       border border-gray-200 dark:border-gray-800 overflow-hidden bg-gray-50 dark:bg-gray-900"
                       >
                         <img
                           src={previewUrl}
@@ -468,15 +468,15 @@ export default function CreateAdPage() {
 
             {/* Videos */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Videos (max 2)
               </label>
 
               {/* Styled video picker */}
               <label
                 className={`inline-flex items-center gap-2 px-2 py-1 rounded-xl
-      border border-gray-300 text-sm font-medium cursor-pointer
-      bg-blue-600 hover:bg-gray-50 transition
+      border border-gray-300 dark:border-gray-700 text-sm font-medium cursor-pointer
+      bg-blue-600 hover:bg-gray-50 dark:bg-gray-900 transition
       ${videos.length >= 2 ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Choose videos
@@ -501,7 +501,7 @@ export default function CreateAdPage() {
                         key={index}
                         className="relative flex-shrink-0
                        w-60 h-80 rounded-lg
-                       border border-gray-200 overflow-hidden bg-black"
+                       border border-gray-200 dark:border-gray-800 overflow-hidden bg-black"
                       >
                         <video
                           src={previewUrl}
@@ -556,7 +556,7 @@ export default function CreateAdPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+            <Link href="/" className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300">
               Cancel
             </Link>
           </div>

@@ -27,10 +27,10 @@ export default function AnalyticsChart({ visitsPerDay }: AnalyticsChartProps) {
   return (
     <div className="w-full" style={{ height: 220, marginBottom: 20 }}>
         <div className="flex items-center justify-between mb-3" >
-    <h3 className="text-sm font-semibold text-gray-900">
+    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
       Visits per Day
     </h3>
-    <span className="text-xs text-gray-500">
+    <span className="text-xs text-gray-500 dark:text-gray-400">
       Last 7 days
     </span>
   </div>

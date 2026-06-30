@@ -41,7 +41,7 @@ function CourseSection({
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
           {title}
         </h2>
 
@@ -66,13 +66,13 @@ function CourseSection({
             <Link
               key={course.id}
               href={`/courses/${course.id}`}
-              className="group bg-white rounded-2xl border border-gray-200
-                         hover:border-gray-300 overflow-hidden
+              className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
+                         hover:border-gray-300 dark:border-gray-700 overflow-hidden
                          flex flex-col transition
                          active:scale-[0.98]
                          hover:shadow-sm"
             >
-              <div className="relative h-32 sm:h-36 bg-gray-100 overflow-hidden">
+              <div className="relative h-32 sm:h-36 bg-gray-100 dark:bg-gray-800 overflow-hidden">
                 <Image
                   src={course.thumbnailUrl}
                   alt={course.title}
@@ -128,30 +128,30 @@ function CourseSection({
 
               {/* Content */}
               <div className="p-4 flex flex-col gap-2 grow">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <span>{course.code}</span>
-                  <span className="text-gray-300">•</span>
+                  <span className="text-gray-300 dark:text-gray-600">•</span>
                   <span>{course.session}</span>
                 </div>
 
                 {course.university && (
                   <span
-                    className="truncate max-w-30 text-[10px] text-gray-500"
+                    className="truncate max-w-30 text-[10px] text-gray-500 dark:text-gray-400"
                   >
                     {course.university}
                   </span>
                 )}
 
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug">
                   {course.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                   {course.description}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600">
-                  <span className="px-2 py-0.5 rounded-full bg-gray-100">
+                <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400">
+                  <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
                     {course.department}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
@@ -310,15 +310,15 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Loading, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] text-gray-900 flex flex-col">
+    <div className="min-h-screen bg-transparent text-gray-900 dark:text-white flex flex-col">
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4">
 
@@ -382,7 +382,7 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
 
               <div className="flex gap-2 max-w-xs w-full">
                 <button
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 font-semibold"
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-semibold"
                   onClick={() =>
                     router.push(
                       `/subscribe/usbscribe-to-contributor/${slug}`
@@ -394,7 +394,7 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
                 </button>
                 <button
                   onClick={handleShare}
-                  className="p-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-50 transition"
+                  className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-50 dark:bg-gray-900 transition"
                 >
                   <Share2 size={20} />
                 </button>
@@ -402,30 +402,30 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
             </div>
 
             {/* Stats */}
-            <div className="w-full max-w-sm mt-6 bg-white border border-gray-100 rounded-xl overflow-hidden flex">
+            <div className="w-full max-w-sm mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden flex">
               <div className="flex-1 flex flex-col items-center py-4">
                 <span className="text-xl font-bold"> {courses.length}</span>
-                <span className="text-[11px] text-gray-500">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">
                   Courses
                 </span>
               </div>
 
-              <div className="w-px bg-gray-200" />
+              <div className="w-px bg-gray-200 dark:bg-gray-800" />
 
               <div className="flex-1 flex flex-col items-center py-4">
                 <span className="text-xl font-bold">
                   {contributor?.followers || 0}
                 </span>
-                <span className="text-[11px] text-gray-500">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">
                   Followers
                 </span>
               </div>
 
-              <div className="w-px bg-gray-200" />
+              <div className="w-px bg-gray-200 dark:bg-gray-800" />
 
               <div className="flex-1 flex flex-col items-center py-4">
                 <span className="text-xl font-bold">---</span>
-                <span className="text-[11px] text-gray-500">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">
                   Rating
                 </span>
               </div>
@@ -433,7 +433,7 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
 
             {/* Bio */}
             <div className="max-w-md mt-6">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {contributor?.bio ||
                   "Contributor on ED-Library platform."}
               </p>
@@ -441,7 +441,7 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
           </section>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200 mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-800 mb-6">
             <div className="flex gap-8">
               <button
                 className="pb-3 text-sm font-semibold border-b-2"
@@ -452,7 +452,7 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
               >
                 Courses
               </button>
-              <button className="pb-3 text-sm text-gray-500">
+              <button className="pb-3 text-sm text-gray-500 dark:text-gray-400">
                 About
               </button>
             </div>

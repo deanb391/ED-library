@@ -74,17 +74,17 @@ export default function VerifyPaymentPage() {
   }, [paymentId, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4 text-center">
       <div
         className="rounded-full h-12 w-12 border-t-4 border-solid mb-4 animate-spin"
         style={{ borderColor: BRAND_BLUE, borderTopColor: "transparent" }}
       />
 
-      <h2 className="text-lg font-semibold text-gray-900 mb-2">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
         Processing Payment
       </h2>
 
-      <p className="text-sm text-gray-500 max-w-sm">
+      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
         {message}
       </p>
     </div>

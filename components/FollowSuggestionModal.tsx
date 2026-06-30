@@ -33,12 +33,12 @@ export default function FollowSuggestionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 relative flex flex-col items-center text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 relative flex flex-col items-center text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:text-gray-400 transition"
         >
           <X size={18} />
         </button>
@@ -50,21 +50,21 @@ export default function FollowSuggestionModal({
 
         {/* Text Details */}
         <div className="space-y-2">
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
             Never Miss an Update!
           </h3>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Follow <span className="font-semibold text-gray-900">{contributorName}</span> to receive instant email notifications when they add more notes or launch new courses.
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            Follow <span className="font-semibold text-gray-900 dark:text-white">{contributorName}</span> to receive instant email notifications when they add more notes or launch new courses.
           </p>
         </div>
 
         {/* Checkbox Preference */}
-        <label className="flex items-center gap-3 text-sm text-gray-700 font-medium cursor-pointer select-none py-1">
+        <label className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 font-medium cursor-pointer select-none py-1">
           <input
             type="checkbox"
             checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500"
+            className="w-4 h-4 rounded text-blue-600 border-gray-300 dark:border-gray-700 focus:ring-blue-500"
           />
           Don't show this suggestion again for this course
         </label>
@@ -74,7 +74,7 @@ export default function FollowSuggestionModal({
           <button
             onClick={handleFollowClick}
             disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all active:scale-[0.98] shadow-md hover:shadow-lg disabled:bg-gray-200 dark:bg-gray-800 disabled:text-gray-500 dark:text-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -99,7 +99,7 @@ export default function FollowSuggestionModal({
           <button
             onClick={handleClose}
             disabled={loading}
-            className="w-full py-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-semibold transition active:scale-[0.98]"
+            className="w-full py-3 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition active:scale-[0.98]"
           >
             Maybe Later
           </button>

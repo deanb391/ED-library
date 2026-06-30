@@ -27,7 +27,7 @@ export default function ConfirmCourseDelete({
             <X size={20} />
           </button>
         </div>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-gray-300 dark:text-gray-600">
           Are you sure you want to delete <span className="font-semibold">{courseTitle}</span>? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-2 mt-4">

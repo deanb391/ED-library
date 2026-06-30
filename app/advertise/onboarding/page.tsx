@@ -161,7 +161,7 @@ export default function AdvertiseOnboardingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-xl bg-white rounded-3xl shadow-sm  border-slate-100 relative overflow-hidden">
+      <div className="w-full max-w-xl bg-white dark:bg-gray-900 rounded-3xl shadow-sm  border-slate-100 relative overflow-hidden">
         {/* Design accents */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 to-indigo-600" />
 
@@ -200,7 +200,7 @@ export default function AdvertiseOnboardingPage() {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                      <span className="bg-white/90 text-slate-900 text-xs px-3 py-1.5 rounded-xl font-medium shadow flex items-center gap-1.5 cursor-pointer">
+                      <span className="bg-white dark:bg-gray-900/90 text-slate-900 text-xs px-3 py-1.5 rounded-xl font-medium shadow flex items-center gap-1.5 cursor-pointer">
                         <Upload size={14} /> Change Image
                       </span>
                     </div>
@@ -213,7 +213,7 @@ export default function AdvertiseOnboardingPage() {
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center py-10 px-6 cursor-pointer text-slate-500">
-                    <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-400 mb-3">
+                    <div className="p-3 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-slate-200 text-slate-400 mb-3">
                       <Upload size={20} />
                     </div>
                     <span className="text-sm font-semibold text-slate-900">

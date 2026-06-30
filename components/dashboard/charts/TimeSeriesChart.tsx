@@ -32,7 +32,7 @@ function LoadingSkeleton({ height }: { height: number }) {
       {Array.from({ length: SKELETON_BARS }).map((_, i) => (
         <div
           key={i}
-          className="bg-gray-200 rounded-t flex-1"
+          className="bg-gray-200 dark:bg-gray-800 rounded-t flex-1"
           style={{ height: `${30 + Math.random() * 60}%` }}
         />
       ))}

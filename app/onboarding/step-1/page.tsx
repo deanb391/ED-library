@@ -56,7 +56,7 @@ function Step1({
 
   return (
     <div className="w-full flex items-center justify-center px-4 py-5">
-      <div className="w-full max-w-2xl bg-white rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm border border-gray-100">
+      <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm border border-gray-100 dark:border-gray-800">
         <div style={{ fontSize: 20, marginBottom: 15, color: "black" }}>
           Profile Information
         </div>
@@ -65,7 +65,7 @@ function Step1({
         <div className="flex justify-center">
           <div
             onClick={handlePickImage}
-            className=" rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-200 transition-all active:scale-[0.90]"
+            className=" rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-200 dark:bg-gray-800 transition-all active:scale-[0.90]"
             style={{
               width: 150,
               height: 150
@@ -99,7 +99,7 @@ function Step1({
                 style={{ width: "100%", height: "100%" }}
               />
             ) : (
-              <Camera size={22} className="text-gray-500" />
+              <Camera size={22} className="text-gray-500 dark:text-gray-400" />
             )}
           </div>
 
@@ -118,7 +118,7 @@ function Step1({
             placeholder="Display name (Required)"
             value={draft.username}
             onChange={(e) => updateDraft({ username: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
             style={{ color: "black" }}
           />
         </div>
@@ -128,13 +128,13 @@ function Step1({
             placeholder="Institution (Required)"
             value={draft.institution}
             onChange={(e) => updateDraft({ institution: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
             style={{ color: "black" }}
           />
           <select
             value={draft.country}
             onChange={(e) => updateDraft({ country: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
             style={{ color: "grey" }}
           >
             <option value="">Country (Required)</option>
@@ -146,7 +146,7 @@ function Step1({
           placeholder="Bio (Required)"
           value={draft.bio}
           onChange={(e) => updateDraft({ bio: e.target.value })}
-          className="w-full min-h-[120px] px-4 py-3 bg-gray-50 rounded-xl text-sm outline-none resize-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition"
+          className="w-full min-h-[120px] px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none resize-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
           style={{ color: "black" }}
         />
 
@@ -195,12 +195,12 @@ function Step1({
 
 //   return (
 //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-//       <div className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden">
+//       <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
 //         <div className="px-5 py-4 border-b font-semibold">
 //           Terms & Conditions
 //         </div>
 
-//         <div className="p-5 text-sm text-gray-600 space-y-3 max-h-[55vh] overflow-y-auto">
+//         <div className="p-5 text-sm text-gray-600 dark:text-gray-400 space-y-3 max-h-[55vh] overflow-y-auto">
 //           <p>You agree to upload only original or permitted content.</p>
 //           <p>You accept responsibility for what you publish.</p>
 //           <p>We may moderate or remove content without notice.</p>
@@ -222,7 +222,7 @@ function Step1({
 //             className={`w-full py-3 rounded-xl text-sm font-medium transition ${
 //               agreed && !loading
 //                 ? "bg-blue-600 text-white"
-//                 : "bg-gray-200 text-gray-500"
+//                 : "bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
 //             }`}
 //           >
 //             {loading ? "Submitting..." : "Submit"}
@@ -231,7 +231,7 @@ function Step1({
 
 //         <button
 //           onClick={onClose}
-//           className="absolute top-3 right-3 text-gray-500"
+//           className="absolute top-3 right-3 text-gray-500 dark:text-gray-400"
 //         >
 //           <X size={18} />
 //         </button>
@@ -431,7 +431,7 @@ function Step2({
         <div className="relative" ref={dropdownRef}>
           <div
             onClick={() => setIsOpen((p) => !p)}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl cursor-pointer flex flex-wrap gap-2 min-h-[48px] items-center"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl cursor-pointer flex flex-wrap gap-2 min-h-[48px] items-center"
           >
             {selected.length === 0 && (
               <span className="text-sm text-gray-400">
@@ -464,8 +464,8 @@ function Step2({
           </div>
 
           {isOpen && (
-            <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-sm">
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+            <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-800">
                 <Search size={16} className="text-gray-400" />
                 <input
                   value={query}
@@ -493,7 +493,7 @@ function Step2({
                       onClick={() => toggleSelect(o.id)}
                       className={`flex items-center gap-2 px-4 py-2 text-sm cursor-pointer ${active
                         ? "bg-blue-50 text-blue-600"
-                        : "hover:bg-gray-50"
+                        : "hover:bg-gray-50 dark:bg-gray-900"
                         }`}
                     >
                       {active && <Check size={14} />}
@@ -593,7 +593,7 @@ function Step3({
       <div className="w-full max-w-5xl space-y-6">
 
         {/* Info Section */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700">
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 text-sm text-gray-700 dark:text-gray-300">
           Upload 3 images. Each image should be a page from a different course. Keep it clean and readable.
         </div>
 
@@ -602,7 +602,7 @@ function Step3({
           {[0, 1, 2].map((index) => (
             <div
               key={index}
-              className="relative bg-white border border-gray-200 rounded-xl p-4 h-48 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition overflow-hidden"
+              className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 h-48 flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:bg-gray-900 transition overflow-hidden"
               onClick={() => handlePick(index)}
             >
               {uploadingImages[index] ? (
@@ -644,7 +644,7 @@ function Step3({
                   </button>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-500">
+                <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
                   <FileUp size={22} />
                   <span className="text-sm">Upload Page {index + 1}</span>
                 </div>
@@ -669,9 +669,9 @@ function Step3({
             type="checkbox"
             checked={agreeTerms}
             onChange={(e) => setAgreeTerms(e.target.checked)}
-            className="mt-1 h-4.5 w-4.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            className="mt-1 h-4.5 w-4.5 rounded border-gray-300 dark:border-gray-700 text-blue-600 focus:ring-blue-500 cursor-pointer"
           />
-          <label htmlFor="agree-terms" className="text-xs sm:text-sm text-gray-600 cursor-pointer">
+          <label htmlFor="agree-terms" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
             I agree to the{" "}
             <Link
               href="/onboarding/terms"
@@ -829,20 +829,20 @@ export default function OnboardingFlow() {
 
   if (submitting) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 text-sm">Submitting Your Application, please wait...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Submitting Your Application, please wait...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center px-4 py-10 overflow-hidden">
+    <div className="min-h-screen bg-transparent flex flex-col items-center px-4 py-10 overflow-hidden">
 
       {/* STEP HEADER */}
       <div className="w-full max-w-3xl mb-8"
         style={{ paddingLeft: 20, paddingRight: 20 }}>
-        <div className="text-xs font-bold text-gray-500 uppercase mb-2 ml-2">
+        <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 ml-2">
           Step {step + 1} of 3
         </div>
 

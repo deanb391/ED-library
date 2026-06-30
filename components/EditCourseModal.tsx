@@ -272,7 +272,7 @@ export default function EditCourseModal({
 
             {/* File */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Change thumbnail <span className="text-gray-400">(optional)</span>
               </label>
               <input
@@ -281,7 +281,7 @@ export default function EditCourseModal({
                 onChange={(e) =>
                   setThumbnail(e.target.files ? e.target.files[0] : null)
                 }
-                className="block w-full text-sm text-gray-600
+                className="block w-full text-sm text-gray-600 dark:text-gray-400
                            file:mr-4 file:py-2.5 file:px-4
                            file:rounded-xl file:border-0
                            file:bg-blue-50 file:text-blue-600"

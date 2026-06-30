@@ -69,8 +69,8 @@ const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
     load();
   }, [allScreenBannerAds]);
   return (
-    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 bg-[#F8F9FB]">
-      <h1 className="text-xl font-semibold text-gray-900 mb-6">
+    <div className="min-h-screen px-4 sm:px-6 lg:px-8 py-6 bg-transparent">
+      <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         All Courses
       </h1>
 

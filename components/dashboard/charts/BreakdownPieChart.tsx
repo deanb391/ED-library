@@ -17,7 +17,7 @@ interface Props {
 function LoadingSkeleton({ height }: { height: number }) {
   return (
     <div className="animate-pulse flex items-center justify-center" style={{ height }}>
-      <div className="rounded-full bg-gray-200" style={{ width: height * 0.6, height: height * 0.6 }} />
+      <div className="rounded-full bg-gray-200 dark:bg-gray-800" style={{ width: height * 0.6, height: height * 0.6 }} />
     </div>
   );
 }

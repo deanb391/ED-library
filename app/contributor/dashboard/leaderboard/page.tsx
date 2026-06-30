@@ -41,9 +41,9 @@ export default function LeaderboardPage() {
 
   if (userLoading || contributorLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4" />
-        <p className="text-gray-700 text-sm">Loading...</p>
+        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading...</p>
       </div>
     );
   }

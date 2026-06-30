@@ -39,24 +39,24 @@ export default function CoursePriceModalPast({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Set course price
           </h2>
-          <p className="text-sm text-gray-500 mb-5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
             Choose whether this course is free or set the price students will pay.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
 
             {/* Free Toggle */}
-            <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   Free course
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Students can access this course at no cost.
                 </p>
               </div>
@@ -65,7 +65,7 @@ export default function CoursePriceModalPast({
                 onClick={() => setIsFree((prev) => !prev)}
                 className={`px-4 py-2 rounded-full font-medium transition ${isFree
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-800"
                   }`}
               >
                 {isFree ? "Enabled" : "Off"}
@@ -80,19 +80,19 @@ export default function CoursePriceModalPast({
 
             {/* Price Control */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Price Per Page (NGN)
               </label>
 
               <div className="flex items-center justify-center">
                 <div className="relative w-full max-w-[200px]">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₦</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">₦</span>
                   <input
                     type="number"
                     disabled={isFree}
                     value={isFree ? 0 : price}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 text-gray-900 font-semibold bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:bg-gray-50 disabled:text-gray-400 transition-all"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white font-semibold bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:bg-gray-50 dark:bg-gray-900 disabled:text-gray-400 transition-all"
                     placeholder="0"
                     style={{ paddingLeft: 30 }}
                   />
@@ -106,7 +106,7 @@ export default function CoursePriceModalPast({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-sm text-gray-600 bg-gray-100 hover:bg-gray-200"
+                className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800"
               >
                 Cancel
               </button>

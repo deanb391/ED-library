@@ -121,43 +121,43 @@ export default function ContributorCelebrationModal({
         The outer fixed container handles scrolling, while this flex container handles positioning. 
       */}
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative animate-in fade-in zoom-in duration-300 flex flex-col mb-auto shrink-0">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md relative animate-in fade-in zoom-in duration-300 flex flex-col mb-auto shrink-0">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full text-gray-600 transition"
+            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
             aria-label="Close"
           >
             <X size={20} />
           </button>
 
           {/* Modal Header */}
-          <div className="p-6 text-center border-b border-gray-100" style={{ paddingBottom: 12 }}>
+          <div className="p-6 text-center border-b border-gray-100 dark:border-gray-800" style={{ paddingBottom: 12 }}>
             {/* <div className="flex justify-center mb-4">
               <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shadow-sm">
                 <CheckCircle size={20} />
               </div>
             </div> */}
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 ">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white ">
               Congratulations!
             </h2>
-            <p className="text-sm text-gray-500" style={{ fontSize: 10 }}>
+            <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: 10 }}>
               Share your achievement with your friends and family.
             </p>
           </div>
 
           {/* Contributor Card Preview Container */}
-          <div className="bg-gray-50 flex justify-center items-center" style={{ padding: '1px 10px' }}>
+          <div className="bg-gray-50 dark:bg-gray-900 flex justify-center items-center" style={{ padding: '1px 10px' }}>
             {/* 
             The node that gets converted to PNG.
             Using strict dimensions and shrink-0 ensures flexbox doesn't compress it.
           */}
-            <div className="relative rounded-xl shadow-lg border border-gray-200 overflow-hidden bg-white shrink-0"
+            <div className="relative rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shrink-0"
               style={{ height: 400, width: 300 }}
             >
               <div
                 ref={cardRef}
-                className="absolute inset-0 w-full h-full bg-white flex items-center justify-center overflow-hidden"
+                className="absolute inset-0 w-full h-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden"
 
               >
                 {/* Background Template */}
@@ -168,7 +168,7 @@ export default function ContributorCelebrationModal({
                   style={{ height: "100%" }}
                 />
 
-                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[45%] h-[45%] rounded-full overflow-hidden border-[6px] border-white shadow-md z-10 bg-gray-100 flex items-center justify-center"
+                <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[45%] h-[45%] rounded-full overflow-hidden border-[6px] border-white shadow-md z-10 bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
 
                   style={{ height: 130, width: 130, top: "39%" }}>
                   {profileImage ? (
@@ -188,7 +188,7 @@ export default function ContributorCelebrationModal({
                       onError={() => setImageLoaded(true)} // Prevents locking modal if image fetch fails
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-200 text-sm font-medium">
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-200 dark:bg-gray-800 text-sm font-medium">
                       No Image
                     </div>
                   )}
@@ -198,7 +198,7 @@ export default function ContributorCelebrationModal({
                 <div className="absolute top-[72%] left-0 w-full px-6 text-center z-10 flex flex-col items-center"
                   style={{ top: "84%" }}
                 >
-                  <h1 className="text-2xl md:text-2xl font-extrabold text-gray-900 truncate w-full" style={{ fontSize: 13 }}>
+                  <h1 className="text-2xl md:text-2xl font-extrabold text-gray-900 dark:text-white truncate w-full" style={{ fontSize: 13 }}>
                     {contributorName}
                   </h1>
                   <div className="mt-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border border-blue-100"
@@ -211,7 +211,7 @@ export default function ContributorCelebrationModal({
           </div>
 
           {/* Action Controls */}
-          <div className="p-6 border-t border-gray-100 flex flex-col gap-3">
+          <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
             <p className="text-xs text-gray-400 text-center px-4 mb-2">
               Note: If your image appears blank when sharing, just close the share menu and try clicking the button again.
             </p>
@@ -246,7 +246,7 @@ export default function ContributorCelebrationModal({
 
             {/* <button
             onClick={onClose}
-            className="w-full py-3.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition"
+            className="w-full py-3.5 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:text-gray-300 transition"
           >
             Maybe later
           </button> */}

@@ -95,31 +95,31 @@ export default function TopContributorAwardModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm overflow-y-auto" style={{ marginTop: "70px" }}>
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative flex flex-col mb-auto shrink-0"
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md relative flex flex-col mb-auto shrink-0"
           style={{ animation: "awardSlideIn 0.4s ease-out" }}
         >
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full text-gray-600 transition"
+            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
           >
             <X size={20} />
           </button>
 
           {/* Header */}
-          <div className="p-6 text-center border-b border-gray-100" style={{ paddingBottom: 12 }}>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+          <div className="p-6 text-center border-b border-gray-100 dark:border-gray-800" style={{ paddingBottom: 12 }}>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
               🏆 You're the Top Contributor!
             </h2>
-            <p className="text-sm text-gray-500" style={{ fontSize: 10 }}>
+            <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: 10 }}>
               Share this achievement with your network.
             </p>
           </div>
 
           {/* Award Card Preview */}
-          <div className="bg-gray-50 flex justify-center items-center" style={{ padding: "12px 10px" }}>
+          <div className="bg-gray-50 dark:bg-gray-900 flex justify-center items-center" style={{ padding: "12px 10px" }}>
             <div
-              className="relative rounded-xl shadow-lg border border-gray-200 overflow-hidden shrink-0"
+              className="relative rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden shrink-0"
               style={{ height: 400, width: 300 }}
             >
               <div
@@ -227,7 +227,7 @@ export default function TopContributorAwardModal({
           </div>
 
           {/* Actions */}
-          <div className="p-6 border-t border-gray-100 flex flex-col gap-3">
+          <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
             <p className="text-xs text-gray-400 text-center px-4 mb-2">
               Note: If your image appears blank when sharing, close the share menu and try again.
             </p>

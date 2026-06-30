@@ -69,7 +69,7 @@ export default function ContestScoringAdminPage() {
 
   if (userLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FB] px-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-transparent px-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
       </div>
     );
@@ -78,47 +78,47 @@ export default function ContestScoringAdminPage() {
   if (!user || !user.isAdmin) return <AccessWall type="admin" />;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-transparent p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* Navigation */}
         <div>
           <Link
             href="/admin"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition mb-6"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:text-white transition mb-6"
           >
             <ChevronLeft size={16} strokeWidth={2.5} />
             Back to Admin Dashboard
           </Link>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                 <Trophy className="text-amber-500" size={28} /> Contest Scoring
               </h1>
-              <p className="text-gray-600">Review content and score contributors manually for {dayKey}. Max 15 points.</p>
+              <p className="text-gray-600 dark:text-gray-400">Review content and score contributors manually for {dayKey}. Max 15 points.</p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-2 flex items-center gap-3">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Day</span>
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2 flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Day</span>
               <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{dayKey.toUpperCase()}</span>
             </div>
           </div>
         </div>
 
         {/* Scoring Table */}
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center gap-3">
             <Search size={18} className="text-gray-400" />
             <input
               type="text"
               placeholder="Search contributors..."
-              className="bg-transparent border-none outline-none text-sm text-gray-700 w-full"
+              className="bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 w-full"
             />
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+              <thead className="bg-gray-50 dark:bg-gray-900 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800">
                 <tr>
                   <th className="px-6 py-4">Contributor</th>
                   <th className="px-6 py-4">Institution</th>
@@ -189,8 +189,8 @@ function ScoringRow({
   };
 
   return (
-    <tr className="hover:bg-gray-50 transition">
-      <td className="px-6 py-4 font-medium text-gray-900">
+    <tr className="hover:bg-gray-50 dark:bg-gray-900 transition">
+      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs uppercase">
             {contributor.username?.substring(0, 2) || "CO"}
@@ -201,7 +201,7 @@ function ScoringRow({
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 text-gray-500">
+      <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
         {contributor.institution || "-"}
       </td>
       <td className="px-6 py-4 text-center">
@@ -212,7 +212,7 @@ function ScoringRow({
           value={score}
           onChange={(e) => setScore(e.target.value)}
           placeholder="0-15"
-          className="w-20 px-2 py-1.5 text-center border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-medium text-gray-900"
+          className="w-20 px-2 py-1.5 text-center border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-medium text-gray-900 dark:text-white"
         />
       </td>
       <td className="px-6 py-4 text-right">

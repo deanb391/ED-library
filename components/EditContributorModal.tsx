@@ -78,11 +78,11 @@ export default function EditContributorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-xl max-h-[90vh] flex flex-col">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b flex justify-between items-center bg-white shrink-0">
+        <div className="px-5 py-4 border-b flex justify-between items-center bg-white dark:bg-gray-900 shrink-0">
           <h2 className="font-semibold text-lg">Edit Profile</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300">
             <X size={20} />
           </button>
         </div>
@@ -100,10 +100,10 @@ export default function EditContributorModal({
             <div
               onClick={() => !uploadingProfile && fileRef.current?.click()}
               style={{ width: 100, height: 100 }}
-              className="relative w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-200 transition-colors group"
+              className="relative w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 flex items-center justify-center cursor-pointer overflow-hidden hover:bg-gray-200 dark:bg-gray-800 transition-colors group"
             >
               {uploadingProfile ? (
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 dark:border-gray-700 border-t-blue-600" />
               ) : draft.profileImage ? (
                 <>
                   <Image
@@ -117,7 +117,7 @@ export default function EditContributorModal({
                   </div>
                 </>
               ) : (
-                <Camera size={24} className="text-gray-500" />
+                <Camera size={24} className="text-gray-500 dark:text-gray-400" />
               )}
             </div>
             <input
@@ -128,62 +128,62 @@ export default function EditContributorModal({
               onChange={handleProfileImageChange}
               disabled={uploadingProfile}
             />
-            <span className="text-xs text-gray-500 mt-2">Tap to change</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-2">Tap to change</span>
           </div>
 
           <div className="space-y-4">
             <div style={{ marginBottom: 10, }}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
               <input
                 placeholder="Display name"
                 value={draft.username || ""}
                 onChange={(e) => setDraft((p) => ({ ...p, username: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 style={{ color: "black" }}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4" style={{ marginBottom: 10, }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution</label>
                 <input
                   placeholder="Institution"
                   value={draft.institution || ""}
                   onChange={(e) => setDraft((p) => ({ ...p, institution: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   style={{ color: "black" }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Country</label>
                 <input
                   placeholder="Country"
                   value={draft.country || ""}
                   onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   style={{ color: "black" }}
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: 10, }}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bio</label>
               <textarea
                 placeholder="Tell us about yourself"
                 value={draft.bio || ""}
                 onChange={(e) => setDraft((p) => ({ ...p, bio: e.target.value }))}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none resize-none min-h-[100px] focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none resize-none min-h-[100px] focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 style={{ color: "black" }}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categories (comma separated)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categories (comma separated)</label>
               <input
                 placeholder="e.g. computer science, math, physics"
                 value={categoriesInput}
                 onChange={(e) => setCategoriesInput(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 style={{ color: "black" }}
               />
             </div>
@@ -191,10 +191,10 @@ export default function EditContributorModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t bg-white shrink-0 flex gap-3 justify-end">
+        <div className="p-4 border-t bg-white dark:bg-gray-900 shrink-0 flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 transition"
           >
             Cancel
           </button>

@@ -29,19 +29,19 @@ export default function CourseTypeModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Course type
           </h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
             Tell us about the state of this course.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Ongoing */}
-            <div className="border border-gray-200 rounded-2xl p-4 flex items-start justify-between gap-3" style={{marginBottom: 20}}>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-start justify-between gap-3" style={{marginBottom: 20}}>
               <label className="flex items-start gap-3 cursor-pointer w-full">
                 <input
                   type="radio"
@@ -51,10 +51,10 @@ export default function CourseTypeModal({
                   className="mt-1"
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     On Going
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Course is currently being taught
                   </p>
                 </div>
@@ -67,7 +67,7 @@ export default function CourseTypeModal({
                     prev === "ongoing" ? null : "ongoing"
                   )
                 }
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-400"
               >
                 <Info size={18} />
               </button>
@@ -82,7 +82,7 @@ export default function CourseTypeModal({
             )}
 
             {/* Past */}
-            <div className="border border-gray-200 rounded-2xl p-4 flex items-start justify-between gap-3">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-start justify-between gap-3">
               <label className="flex items-start gap-3 cursor-pointer w-full">
                 <input
                   type="radio"
@@ -92,10 +92,10 @@ export default function CourseTypeModal({
                   className="mt-1"
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     Past Course
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Course has been completed
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default function CourseTypeModal({
                     prev === "past" ? null : "past"
                   )
                 }
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-400"
               >
                 <Info size={18} />
               </button>
@@ -127,7 +127,7 @@ export default function CourseTypeModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-sm text-gray-600 bg-gray-100 hover:bg-gray-200"
+                className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800"
               >
                 Cancel
               </button>

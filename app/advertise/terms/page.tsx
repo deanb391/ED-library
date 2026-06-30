@@ -7,7 +7,7 @@ import { ArrowLeft, BookOpen, ShieldAlert, BadgeCheck, Scale, AlertCircle } from
 export default function AdvertiserTermsPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-12 px-6">
-      <div className="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Header decoration */}
         <div className="h-2 bg-blue-600" />
         

@@ -50,7 +50,7 @@ export default function StreakCelebrationModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
         style={{
           transform: animateIn ? "scale(1)" : "scale(0.8)",
           opacity: animateIn ? 1 : 0,
@@ -64,7 +64,7 @@ export default function StreakCelebrationModal({
         <button
           style={{ marginTop: -40 }}
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full text-gray-500 transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
         >
           <X size={18} style={{ color: "black" }} />
         </button>
@@ -137,7 +137,7 @@ export default function StreakCelebrationModal({
 
         {/* Body */}
         <div className="px-6 pt-6 pb-2 text-center mt-6">
-          <p className="text-gray-700 font-semibold text-base mb-1">
+          <p className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-1">
             {getMessage()}
           </p>
           <p className="text-gray-400 text-xs">

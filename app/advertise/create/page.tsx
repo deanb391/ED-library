@@ -560,22 +560,22 @@ export default function CreateAdCampaignPage() {
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", boxSizing: "border-box" }}>
           <div style={{ backgroundColor: "#ffffff", borderRadius: "1rem", width: "100%", maxWidth: "400px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden", border: "1px solid #e2e8f0", padding: "20px" }}>
             
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Payment Information
             </h2>
 
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               You will be redirected to complete your payment.
               If you are paying via bank transfer, the account name may appear as:
             </p>
 
-            <div className="bg-gray-100 rounded-lg p-3 mb-4">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
                 Blessed Okori (ED-Library)
               </p>
             </div>
 
-            <p className="text-xs text-gray-500 mb-5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
               This is the official payment account for ED-Library.
               Please proceed only if the details match.
             </p>

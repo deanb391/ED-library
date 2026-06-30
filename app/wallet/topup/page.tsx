@@ -59,7 +59,7 @@ export default function TopUpPage() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F8F9FB",
+        backgroundColor: "transparent",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -163,22 +163,22 @@ export default function TopUpPage() {
                 padding: 20,
               }}
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Payment Information
               </h2>
 
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 You will be redirected to complete your payment.
                 If you are paying via bank transfer, the account name may appear as:
               </p>
 
-              <div className="bg-gray-100 rounded-lg p-3 mb-4">
-                <p className="text-sm font-medium text-gray-900">
+              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
                   Blessed Okori (ED-Library)
                 </p>
               </div>
 
-              <p className="text-xs text-gray-500 mb-5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
                 This is the official payment account for ED-Library.
                 Please proceed only if the details match.
               </p>
