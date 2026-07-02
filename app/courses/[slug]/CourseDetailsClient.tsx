@@ -911,7 +911,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-gray-900 dark:text-white font-sans">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
 
 
 
@@ -947,31 +947,30 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
             {accessTag && (
               <div className="flex gap-2 mt-3 text-xs font-medium">
                 {accessTag === "free" && (
-                  <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700" style={{ backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
                     Free
                   </span>
                 )}
 
                 {accessTag === "paid" && (
                   <>
-                    <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700" style={{ backgroundColor: "#fb2c36", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+                    <span className="px-3 py-1 rounded-full bg-red-500 text-white text-xs font-medium">
                       Paid ({priceMeta?.type})
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800" style={{ backgroundColor: "#f3f4f6", paddingTop: 5, paddingBottom: 5, }}>
+                    <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium">
                       {priceMeta?.currency} {(priceMeta.type === "one-time" ? (Number(course?.pageCount) * priceMeta?.amount) : priceMeta.amount)}
                     </span>
-
                   </>
                 )}
 
                 {accessTag === "owned" && (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700" style={{ backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
                     Owned
                   </span>
                 )}
 
                 {accessTag === "subscribed" && (
-                  <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700" style={{ backgroundColor: "green", paddingTop: 5, paddingBottom: 5, color: 'white' }}>
+                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
                     Subscribed
                   </span>
                 )}
