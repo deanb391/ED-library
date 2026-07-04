@@ -1161,7 +1161,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 <button
                   onClick={() => setActiveTab('review')}
                   className="pb-2   font-semibold text-sm" style={{ borderBottomWidth: activeTab === "review" ? 4 : 0, borderBottomColor: activeTab === "review" ? "#155dfc" : "", color: activeTab === "review" ? "#155dfc" : "#6a7282" }}>
-                  Reviews
+                  Reviews ({totalReviews})
                 </button>
               )
             }
