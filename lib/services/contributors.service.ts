@@ -335,6 +335,23 @@ export async function fetchTopContributorsCoursesService(limit = 50, offset = 0)
   return res.documents.map(mapContributor);
 }
 
+export async function fetchNewContributorsCoursesService(limit = 50, offset = 0) {
+  const res = await databases.listDocuments(
+    DATABASE_ID,
+    CONTRIBUTORS_COLLECTION,
+    [
+      Query.equal("status", "live"),
+      Query.orderDesc("$createdAt"),
+      Query.limit(limit),
+      Query.offset(offset),
+    ]
+  );
+
+  console.log("New Contributors: ", res.documents.map(mapContributor))
+
+  return res.documents.map(mapContributor);
+}
+
 export async function fetchContestContributorsService(): Promise<Contributor[]> {
   const res = await databases.listDocuments(
     DATABASE_ID,

@@ -128,6 +128,25 @@ export async function getTopContributors(limit = 10, offset = 0): Promise<Contri
   return data;
 }
 
+export async function getNewContributors(limit = 10, offset = 0): Promise<Contributor[] | []> {
+
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const res = await fetch(`/api/contributors/new-contributor?${query}`, {
+    method: "GET",
+    headers: jsonHeaders,
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch contributor status");
+  }
+
+  const data = await res.json();
+  return data;
+}
+
 export async function hasContributorAccount(userId: string): Promise<boolean> {
   try {
     const contributor = await getMyContributor(userId);
