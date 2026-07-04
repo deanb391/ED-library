@@ -1,5 +1,6 @@
 import { ID, Query } from "appwrite";
 import { databases, getUserById } from "@/lib/appwrite/server";
+import { safeRedisOp } from "@/lib/redis";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const REVIEW_COLLECTION = "course_review_and_rating";
@@ -49,6 +50,13 @@ export async function createReviewService(
     payload
   );
 
+  if (draft.courses && typeof draft.courses === "string") {
+    const courseId = draft.courses;
+    await safeRedisOp(async (client) => {
+      await client.del(`reviews:${courseId}:first_page:5`);
+    }, null);
+  }
+
   return mapReview(doc);
 }
 
@@ -61,6 +69,17 @@ export async function fetchReviewsService(
   nextCursor?: string;
   hasMore: boolean;
 }> {
+  const cacheKey = `reviews:${courseId}:first_page:${limit}`;
+
+  if (!cursor) {
+    const cached = await safeRedisOp(async (client) => {
+      const data = await client.get(cacheKey);
+      return data ? JSON.parse(data) : null;
+    }, null);
+
+    if (cached) return cached;
+  }
+
   const queries: any[] = [
     Query.equal("courses", courseId),
     Query.orderDesc("$createdAt"),
@@ -103,11 +122,19 @@ export async function fetchReviewsService(
     }
   });
 
-  return {
+  const result = {
     reviews,
     nextCursor,
     hasMore: Boolean(nextCursor),
   };
+
+  if (!cursor) {
+    await safeRedisOp(async (client) => {
+      await client.setex(cacheKey, 3600, JSON.stringify(result));
+    }, null);
+  }
+
+  return result;
 }
 
 export async function calculateCourseAverageRatingService(courseId: string): Promise<{

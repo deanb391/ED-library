@@ -3,7 +3,7 @@ import BannerAd from "@/components/BannerAd";
 import DepartmentRow from "@/components/DepartmentRow";
 import RectangularAd from "@/components/RectangularAd";
 import { useUser } from "@/context/UserContext";
-import { fetchMediumAds, fetchSmallAds } from "@/lib/ads";
+import { fetchMediumAds, fetchSmallAds } from "@/lib/api/ads";
 import { useEffect, useState } from "react";
 
 const DEPARTMENTS = [

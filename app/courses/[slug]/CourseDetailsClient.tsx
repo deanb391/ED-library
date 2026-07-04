@@ -33,7 +33,7 @@ import PdfImageList from "@/components/PdfImageList"
 import FloatingActionButton from '@/components/FloatingActionButton';
 import NativeBanner from '@/components/ads/NativeBanner';
 import RectangularAd from '@/components/RectangularAd';
-import { fetchSmallAds } from '@/lib/ads';
+import { fetchSmallAds } from '@/lib/api/ads';
 import BannerAd from '@/components/BannerAd';
 import NoUserModal from '@/components/NoUserModal';
 import FollowSuggestionModal from '@/components/FollowSuggestionModal';

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Volume, VolumeX, X } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { recordAdView, recordAdClick } from "@/lib/ads";
+import { recordAdView, recordAdClick } from "@/lib/api/ads";
 
 export type AdItem = {
   id: string;

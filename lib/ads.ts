@@ -1,6 +1,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "./appwrite";
 import { uploadToServer } from "./upload";
+import { safeRedisOp } from "./redis";
 
 export type Ad = {
   id: string;
@@ -328,6 +329,14 @@ export async function recordAdClick(adId: string) {
 }
 
 export async function fetchActiveAds(): Promise<Ad[]> {
+  const cacheKey = `ads:active:10`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     ADS_COLLECTION,
@@ -338,7 +347,13 @@ export async function fetchActiveAds(): Promise<Ad[]> {
     ]
   );
 
-  return res.documents.map(mapAd);
+  const mapped = res.documents.map(mapAd);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 

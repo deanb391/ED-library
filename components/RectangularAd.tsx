@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useUser } from "@/context/UserContext";
-import { recordAdView, recordAdClick } from "@/lib/ads";
+import { recordAdView, recordAdClick } from "@/lib/api/ads";
 
 type AdFileType = "image" | "video";
 

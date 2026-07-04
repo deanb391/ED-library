@@ -23,8 +23,7 @@ import {
   getContributorByUserId,
 } from "@/lib/api/contributors";
 import { Contributor } from "@/lib/services/contributors.service";
-import { fetchSmallAds } from "@/lib/ads";
-import { fetchMediumAds } from "@/lib/api/ads";
+import { fetchSmallAds, fetchMediumAds } from "@/lib/api/ads";
 import RectangularAd from "@/components/RectangularAd";
 import { useRouter } from "@/components/useRouter";
 import FloatingActionButton from "@/components/FloatingActionButton";

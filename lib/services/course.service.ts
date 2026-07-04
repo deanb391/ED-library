@@ -3,6 +3,7 @@
 import { ID, Query } from "appwrite";
 import { databases, storage } from "@/lib/appwrite/server";
 import { trackEvent } from "@/lib/analytics/trackEvent";
+import { safeRedisOp } from "@/lib/redis";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COURSE_COLLECTION = "courses";
@@ -108,6 +109,13 @@ export async function fetchCoursesByAdminService(userId: string) {
 }
 
 export async function fetchCourseByIdService(courseId: string) {
+  const cacheKey = `course:${courseId}:details`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
 
   const doc = await databases.getDocument(
     DATABASE_ID,
@@ -115,17 +123,28 @@ export async function fetchCourseByIdService(courseId: string) {
     courseId
   );
 
+  const mapped = mapCourse(doc);
 
-  return mapCourse(doc);
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 3600, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function updateCourseService(courseId: string, data: any) {
-  return databases.updateDocument(
+  const res = await databases.updateDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
     courseId,
     data
   );
+
+  await safeRedisOp(async (client) => {
+    await client.del(`course:${courseId}:details`);
+  }, null);
+
+  return res;
 }
 
 export async function deleteCourseService(courseId: string) {
@@ -596,6 +615,14 @@ export async function recordCourseVisitService(courseId: string, userId: string)
 
 
 export async function fetchNewCoursesService(limit = 10, offset = 0) {
+  const cacheKey = `courses:new:${limit}:${offset}`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     COURSE_COLLECTION,
@@ -607,10 +634,24 @@ export async function fetchNewCoursesService(limit = 10, offset = 0) {
     ]
   );
 
-  return res.documents.map(mapCourse);
+  const mapped = res.documents.map(mapCourse);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function fetchPopularCoursesService(limit = 10, offset = 0) {
+  const cacheKey = `courses:popular:${limit}:${offset}`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     COURSE_COLLECTION,
@@ -622,10 +663,24 @@ export async function fetchPopularCoursesService(limit = 10, offset = 0) {
     ]
   );
 
-  return res.documents.map(mapCourse);
+  const mapped = res.documents.map(mapCourse);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function fetchFreeCoursesService(limit = 10, offset = 0) {
+  const cacheKey = `courses:free:${limit}:${offset}`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     COURSE_COLLECTION,
@@ -638,7 +693,13 @@ export async function fetchFreeCoursesService(limit = 10, offset = 0) {
     ]
   );
 
-  return res.documents.map(mapCourse);
+  const mapped = res.documents.map(mapCourse);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function fetchRelatedCoursesService({
