@@ -89,6 +89,13 @@ export async function recordAdView(adId: string, userId?: string) {
   });
 }
 
+export async function recordAdClick(adId: string) {
+  await fetch("/api/ads/click", {
+    method: "POST",
+    body: JSON.stringify({ adId }),
+  });
+}
+
 export async function fetchMediumAds(): Promise<{
   oneAds: AdItem[];
   twoAds: AdItem[];
@@ -141,6 +148,61 @@ export async function fetchMediumAds(): Promise<{
     oneAds: pick(shuffled),
     twoAds: pick(shuffle(shuffled)),
     threeAds: pick(shuffle(shuffled)),
+  };
+}
+
+export async function fetchSmallAds(): Promise<{
+  searchAds: AdItem[];
+  topAds: AdItem[];
+  middleAds: AdItem[];
+}> {
+  const activeAds = await fetchActiveAds();
+
+  // Step 1: flatten all rectangular creatives
+  const formatted: AdItem[] = [];
+
+  for (const ad of activeAds) {
+    // Rectangular images
+    for (const imageUrl of ad.smallImages) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: imageUrl,
+        fileType: "image",
+        link: ad.link,
+      });
+    }
+
+    // Videos can also be used in rectangular slots
+    for (const videoUrl of ad.videos) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: videoUrl,
+        fileType: "video",
+        link: ad.link,
+      });
+    }
+  }
+
+  // Nothing to work with? Return emptiness honestly.
+  if (formatted.length === 0) {
+    return {
+      searchAds: [],
+      topAds: [],
+      middleAds: [],
+    };
+  }
+
+  // Step 2: shuffle once
+  const shuffled = shuffle(formatted);
+
+  // Step 3: slice safely
+  const pick = (items: AdItem[]) =>
+    items.slice(0, Math.min(6, items.length));
+
+  return {
+    searchAds: pick(shuffled),
+    topAds: pick(shuffle(shuffled)),
+    middleAds: pick(shuffle(shuffled)),
   };
 }
 

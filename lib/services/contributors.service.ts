@@ -5,6 +5,7 @@ import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewF
 import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";
+import { safeRedisOp } from "@/lib/redis";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -322,6 +323,14 @@ export async function toggleFollowContributorService(
 }
 
 export async function fetchTopContributorsCoursesService(limit = 50, offset = 0) {
+  const cacheKey = `contributors:top:${limit}:${offset}`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,
@@ -332,10 +341,24 @@ export async function fetchTopContributorsCoursesService(limit = 50, offset = 0)
     ]
   );
 
-  return res.documents.map(mapContributor);
+  const mapped = res.documents.map(mapContributor);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function fetchNewContributorsCoursesService(limit = 50, offset = 0) {
+  const cacheKey = `contributors:new:${limit}:${offset}`;
+  const cached = await safeRedisOp(async (client) => {
+    const data = await client.get(cacheKey);
+    return data ? JSON.parse(data) : null;
+  }, null);
+
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,
@@ -349,7 +372,13 @@ export async function fetchNewContributorsCoursesService(limit = 50, offset = 0)
 
   console.log("New Contributors: ", res.documents.map(mapContributor))
 
-  return res.documents.map(mapContributor);
+  const mapped = res.documents.map(mapContributor);
+
+  await safeRedisOp(async (client) => {
+    await client.setex(cacheKey, 300, JSON.stringify(mapped));
+  }, null);
+
+  return mapped;
 }
 
 export async function fetchContestContributorsService(): Promise<Contributor[]> {
