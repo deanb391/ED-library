@@ -7,7 +7,6 @@ import Link from "next/link";
 import {
   Course,
   fetchCoursesForUser,
-  fetchFreeCourses,
   fetchNewCourses,
   fetchPopularCourses,
   fetchRelatedCourse,
@@ -18,6 +17,7 @@ import { useUser } from "@/context/UserContext";
 import { fetchLibraryCourse } from "@/lib/api/library";
 import {
   getTopContributors,
+  getNewContributors,
   searchContributors,
   toggleFollowContributor,
   getContributorByUserId,
@@ -70,12 +70,12 @@ function ContributorSection({
         prev.map((c) =>
           c.$id === contributorId
             ? {
-                ...c,
-                isFollowing: !c.isFollowing,
-                followers: c.isFollowing
-                  ? (c.followers || 0) - 1
-                  : (c.followers || 0) + 1,
-              }
+              ...c,
+              isFollowing: !c.isFollowing,
+              followers: c.isFollowing
+                ? (c.followers || 0) - 1
+                : (c.followers || 0) + 1,
+            }
             : c,
         ),
       );
@@ -88,12 +88,12 @@ function ContributorSection({
           prev.map((c) =>
             c.$id === contributorId
               ? {
-                  ...c,
-                  isFollowing: !c.isFollowing,
-                  followers: c.isFollowing
-                    ? (c.followers || 0) - 1
-                    : (c.followers || 0) + 1,
-                }
+                ...c,
+                isFollowing: !c.isFollowing,
+                followers: c.isFollowing
+                  ? (c.followers || 0) - 1
+                  : (c.followers || 0) + 1,
+              }
               : c,
           ),
         );
@@ -367,10 +367,17 @@ function CourseSection({
 
               <div className="p-3 flex flex-col gap-2 grow justify-between">
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400">
-                    <span>{course.code}</span>
-                    <span>•</span>
-                    <span>{course.session}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400">
+                      <span>{course.code}</span>
+                      <span>•</span>
+                      <span>{course.session}</span>
+                    </div>
+                    {course.department && (
+                      <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 line-clamp-1 truncate">
+                        {course.department}
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
@@ -481,7 +488,7 @@ export default function EDLibraryHome() {
 
   const [popular, setPopular] = useState<Course[]>([]);
   const [newCourses, setNewCourses] = useState<Course[]>([]);
-  const [free, setFree] = useState<Course[]>([]);
+  const [newContributors, setNewContributors] = useState<HomeContributor[]>([]);
 
   const [forYou, setForYou] = useState<Course[]>([]);
   const [library, setLibrary] = useState<Course[]>([]);
@@ -500,7 +507,6 @@ export default function EDLibraryHome() {
   const [offsets, setOffsets] = useState({
     popular: 0,
     new: 0,
-    free: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -514,7 +520,6 @@ export default function EDLibraryHome() {
   const [loadingMore, setLoadingMore] = useState({
     popular: false,
     new: false,
-    free: false,
   });
 
   useEffect(() => {
@@ -536,16 +541,15 @@ export default function EDLibraryHome() {
       setLargeTopAds(twoAds);
       setLargeMiddleAds(threeAds);
 
-      const [p, n, f, t] = await Promise.all([
+      const [p, n, nc, t] = await Promise.all([
         fetchPopularCourses(10, 0),
         fetchNewCourses(10, 0),
-        fetchFreeCourses(10, 0),
+        getNewContributors(),
         getTopContributors(),
       ]);
 
       setPopular(p);
       setNewCourses(n);
-      setFree(f);
 
       if (user) {
         const [fy, lib, rel] = await Promise.all([
@@ -574,14 +578,31 @@ export default function EDLibraryHome() {
         };
       });
 
+      const mappedNew = nc.map((c: Contributor) => {
+        let ids: string[] = [];
+
+        try {
+          ids = JSON.parse(c.followersIds || "[]");
+          if (!Array.isArray(ids)) ids = [];
+        } catch {
+          ids = [];
+        }
+
+        return {
+          ...c,
+          isFollowing: user?.$id ? ids.includes(user.$id) : false,
+        };
+      });
+
       setContributors(mapped);
+      setNewContributors(mappedNew);
       setLoading(false);
     }
 
     load();
   }, [userLoading, user]);
 
-  const loadMore = async (type: "popular" | "new" | "free") => {
+  const loadMore = async (type: "popular" | "new") => {
     if (loadingMore[type]) return;
 
     setLoadingMore((l) => ({ ...l, [type]: true }));
@@ -591,13 +612,11 @@ export default function EDLibraryHome() {
 
     if (type === "popular") data = await fetchPopularCourses(10, nextOffset);
     if (type === "new") data = await fetchNewCourses(10, nextOffset);
-    if (type === "free") data = await fetchFreeCourses(10, nextOffset);
 
     if (!data.length) return;
 
     if (type === "popular") setPopular((p) => [...p, ...data]);
     if (type === "new") setNewCourses((p) => [...p, ...data]);
-    if (type === "free") setFree((p) => [...p, ...data]);
 
     setOffsets((o) => ({ ...o, [type]: nextOffset }));
 
@@ -729,11 +748,11 @@ export default function EDLibraryHome() {
               onLoadMore={() => loadMore("popular")}
               isLoading={loadingMore.popular}
             />
-            <CourseSection
-              title="New"
-              courses={newCourses}
-              onLoadMore={() => loadMore("new")}
-              isLoading={loadingMore.new}
+
+            <ContributorSection
+              title="Top Contributors"
+              contributors={contributors}
+              setContributors={setContributors}
             />
 
             <RectangularAd
@@ -743,15 +762,16 @@ export default function EDLibraryHome() {
             />
 
             <CourseSection
-              title="Free"
-              courses={free}
-              onLoadMore={() => loadMore("free")}
-              isLoading={loadingMore.free}
+              title="New"
+              courses={newCourses}
+              onLoadMore={() => loadMore("new")}
+              isLoading={loadingMore.new}
             />
+
             <ContributorSection
-              title="Top Contributors"
-              contributors={contributors}
-              setContributors={setContributors}
+              title="New Contributors"
+              contributors={newContributors}
+              setContributors={setNewContributors}
             />
 
             <RectangularAd
@@ -781,10 +801,10 @@ export default function EDLibraryHome() {
               height={130}
             />
 
-            <CourseSection
-              title="Free"
-              courses={free}
-              onLoadMore={() => loadMore("free")}
+            <ContributorSection
+              title="New Contributors"
+              contributors={newContributors}
+              setContributors={setNewContributors}
             />
             <ContributorSection
               title="Top Contributors"

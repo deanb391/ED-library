@@ -282,6 +282,72 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [topAds, setTopAds] = useState<AdItem[]>([])
   type ViewMode = "timeline" | "pdf";
   const [viewMode, setViewMode] = useState<ViewMode>("pdf");
+  
+  type SortOrder = "asc" | "desc";
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  const handleSortChange = async (newOrder: SortOrder) => {
+    if (newOrder === sortOrder) return;
+    setSortOrder(newOrder);
+    setPosts([]);
+    setCursor(null);
+    setHasMore(true);
+    const fetchFunc = newOrder === "asc" ? fetchPostsAsc : fetchPosts;
+    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
+    setPosts(firstPosts);
+    setCursor(lastId);
+    setHasMore(firstPosts.length === 5);
+  };
+
+  
+  const [showTimelineText, setShowTimelineText] = useState(false);
+  const [showPdfText, setShowPdfText] = useState(false);
+  const [bounceTimeline, setBounceTimeline] = useState(false);
+  const [bouncePdf, setBouncePdf] = useState(false);
+
+  useEffect(() => {
+    setShowTimelineText(false);
+    setShowPdfText(false);
+    setBounceTimeline(false);
+    setBouncePdf(false);
+
+    let expandTimeout: NodeJS.Timeout;
+    let collapseTimeout: NodeJS.Timeout;
+    let bounceInterval: NodeJS.Timeout;
+    let bounceTimeout: NodeJS.Timeout;
+
+    if (viewMode === 'timeline') {
+      expandTimeout = setTimeout(() => {
+        setShowPdfText(true);
+        collapseTimeout = setTimeout(() => {
+          setShowPdfText(false);
+          bounceInterval = setInterval(() => {
+            setBouncePdf(true);
+            bounceTimeout = setTimeout(() => setBouncePdf(false), 1000);
+          }, 3000);
+        }, 6000);
+      }, 1000);
+    } else if (viewMode === 'pdf') {
+      expandTimeout = setTimeout(() => {
+        setShowTimelineText(true);
+        collapseTimeout = setTimeout(() => {
+          setShowTimelineText(false);
+          bounceInterval = setInterval(() => {
+            setBounceTimeline(true);
+            bounceTimeout = setTimeout(() => setBounceTimeline(false), 1000);
+          }, 3000);
+        }, 6000);
+      }, 1000);
+    }
+
+    return () => {
+      clearTimeout(expandTimeout);
+      clearTimeout(collapseTimeout);
+      clearTimeout(bounceTimeout);
+      clearInterval(bounceInterval);
+    };
+  }, [viewMode]);
+
   const [bannerAdOpen, setBannerAdOpen] = useState(false);
   const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
   const [showNoUserModal, setShowNoUserModal] = useState(false);
@@ -381,7 +447,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
 
   const fetchTimeLine = async () => {
-    const { posts: firstPosts, lastId } = await fetchPosts(courseId);
+    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
+    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
     setPosts(firstPosts);
     setCursor(lastId);
     setHasMore(firstPosts.length === 5);
@@ -750,8 +817,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     if (!hasMore || loadingPosts) return;
 
     setLoadingPosts(true);
+    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
 
-    const { posts: newPosts, lastId } = await fetchPosts(
+    const { posts: newPosts, lastId } = await fetchFunc(
       courseId,
       5,
       cursor || undefined
@@ -1263,35 +1331,65 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
         {activeTab === "lecture" && (
           <>
-            <div className="flex items-center gap-2 mt-3 border-b border-gray-200 dark:border-gray-800 mb-8 pb-3 overflow-x-auto">
-              <button
-                onClick={() => {
-                  if (!hasAccess) return;
-                  setViewMode("timeline");
-                  posts.length === 0 && fetchTimeLine()
-                }}
-                className={`p-2 rounded-lg border transition ${viewMode === "timeline"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
-                  }`}
-                title="Timeline view"
-              >
-                <Hexagon size={18} />
-              </button>
+            <div className="flex items-center justify-between mt-3 border-b border-gray-200 dark:border-gray-800 mb-8 pb-3 overflow-x-auto gap-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (!hasAccess) return;
+                    setViewMode("timeline");
+                    posts.length === 0 && fetchTimeLine()
+                  }}
+                  className={`p-2 rounded-lg border flex items-center justify-center transition-all duration-500 overflow-hidden ${viewMode === "timeline"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
+                    } ${bounceTimeline ? 'animate-bounce' : ''}`}
+                  title="Timeline view"
+                >
+                  <Hexagon size={18} className="shrink-0" />
+                  <span
+                    className={`transition-all duration-500 whitespace-nowrap overflow-hidden text-sm font-medium flex items-center ${
+                      showTimelineText ? "max-w-[150px] opacity-100 ml-2 mr-1" : "max-w-0 opacity-0 ml-0 mr-0"
+                    }`}
+                  >
+                    Timeline view
+                  </span>
+                </button>
 
-              <button
-                onClick={() => {
-                  setViewMode("pdf");
-                  pdfImages.length === 0 && fetchPDf()
-                }}
-                className={`p-2 rounded-lg border transition ${viewMode === "pdf"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
-                  }`}
-                title="PDF view"
-              >
-                <FileText size={18} />
-              </button>
+                <button
+                  onClick={() => {
+                    setViewMode("pdf");
+                    pdfImages.length === 0 && fetchPDf()
+                  }}
+                  className={`p-2 rounded-lg border flex items-center justify-center transition-all duration-500 overflow-hidden ${viewMode === "pdf"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
+                    } ${bouncePdf ? 'animate-bounce' : ''}`}
+                  title="PDF view"
+                >
+                  <FileText size={18} className="shrink-0" />
+                  <span
+                    className={`transition-all duration-500 whitespace-nowrap overflow-hidden text-sm font-medium flex items-center ${
+                      showPdfText ? "max-w-[150px] opacity-100 ml-2 mr-1" : "max-w-0 opacity-0 ml-0 mr-0"
+                    }`}
+                  >
+                    PDF view
+                  </span>
+                </button>
+              </div>
+
+              {viewMode === "timeline" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Sort by date:</span>
+                  <select 
+                    value={sortOrder}
+                    onChange={(e) => handleSortChange(e.target.value as SortOrder)}
+                    className="text-xs font-medium border border-gray-200 dark:border-gray-800 rounded-md p-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-blue-500 transition"
+                  >
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                </div>
+              )}
             </div>
 
 
