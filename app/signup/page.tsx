@@ -147,7 +147,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
-      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+      <div className="w-full max-w-110 bg-white dark:bg-gray-900 rounded-2xl shadow-lg shadow-gray-100/18 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
 
         {/* Icon */}
         <div className="flex justify-center mb-6">
