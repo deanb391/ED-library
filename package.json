@@ -34,6 +34,7 @@
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
     "sharp": "^0.34.5",
+    "styled-components": "^6.4.3",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -42,6 +43,7 @@
     "@types/nprogress": "^0.2.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/styled-components": "^5.1.36",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",

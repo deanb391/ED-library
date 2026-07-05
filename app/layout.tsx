@@ -12,6 +12,7 @@ import { PHProvider } from "@/app/providers";
 import AppProgressBar from "@/components/ProgressBar";
 import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
 import ReferralTracker from "@/components/ReferralTracker";
+import WhatsappChannel from "@/components/WhatsappChannel";
 import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -55,6 +56,9 @@ export default function RootLayout({
               </main>
 
               <Footer />
+              <div className="fixed bottom-4 right-4 z-[100]">
+                <WhatsappChannel />
+              </div>
               <ContributorChatFAB />
             </UserProvider>
           </PHProvider>
