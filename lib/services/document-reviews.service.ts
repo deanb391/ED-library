@@ -1,5 +1,5 @@
 import { Client, Databases, ID, Query } from "node-appwrite";
-
+import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "")
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "")
@@ -33,6 +33,7 @@ export async function createDocumentReviewRequestService(data: { documents: stri
       status: "pending",
     }
   );
+  await invalidateLfuCache("admin:document_reviews", "all");
   return req;
 }
 
@@ -40,6 +41,9 @@ const USER_COLLECTION = "user";
 const COURSE_COLLECTION = "courses";
 
 export async function fetchDocumentReviewRequestsService() {
+  const cached = await getLfuCache<any>("admin:document_reviews", "all");
+  if (cached) return cached;
+
   const response = await databases.listDocuments(
     DATABASE_ID,
     DOCUMENT_REVIEWS_COLLECTION,
@@ -82,6 +86,8 @@ export async function fetchDocumentReviewRequestsService() {
       userDetails
     };
   }));
+
+  await setLfuCache("admin:document_reviews", "all", populated, 20);
 
   return populated;
 }
@@ -138,6 +144,8 @@ export async function resolveDocumentReviewRequestService(requestId: string, sta
       );
     }
   }
+
+  await invalidateLfuCache("admin:document_reviews", "all");
 
   return reviewReq;
 }

@@ -110,13 +110,13 @@ export async function runContestCalculate(performanceId?: string) {
       // Update daily points and recalculate total
       const dailyPoints = JSON.parse(perf.dailyPoints || "{}");
       dailyPoints[dayKey] = todaysPoints;
-      
+
       const totalPoints = Object.values(dailyPoints).reduce((acc: number, curr: any) => acc + curr, 0) as number;
 
       await updateContestPerformanceService(perf.$id!, {
         dailyPoints: JSON.stringify(dailyPoints),
         totalPoints: totalPoints,
-        acquisitionScore: acquisitionScore, 
+        acquisitionScore: acquisitionScore,
         engagementScore: engagementScore,
         contentScore: contentScore,
       });

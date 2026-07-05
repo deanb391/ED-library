@@ -2,6 +2,7 @@
 // READ-side analytics service. Fetches and shapes data for the dashboard.
 import { Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { getLfuCache, setLfuCache } from "@/lib/lfu-cache";
 import {
   getDateRange,
   fillDateSeries,
@@ -134,6 +135,10 @@ async function fetchMonthlyUsersSeries(
 // ─── Acquisition ──────────────────────────────────────────────────────────────
 
 export async function getAcquisitionSummary(timeframe: Timeframe): Promise<AcquisitionSummary> {
+  const cacheKey = `acquisition:${timeframe}`;
+  const cached = await getLfuCache<AcquisitionSummary>("analytics:summaries", cacheKey);
+  if (cached) return cached;
+
   const { startDate, endDate } = getDateRange(timeframe);
 
   // Previous period for trend calculation
@@ -188,7 +193,7 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
   }
   const signupsByDept: PieDataPoint[] = Array.from(deptMap.entries()).map(([name, value]) => ({ name, value }));
 
-  return {
+  const result = {
     totalUsers,
     signupsThisPeriod,
     activeUsersThisPeriod,
@@ -198,11 +203,19 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     monthlyActiveUserSeries: monthlyActiveUserSeries, // No aggregation since it's pre-computed monthly
     signupsByDept,
   };
+
+  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+
+  return result;
 }
 
 // ─── Contributors ─────────────────────────────────────────────────────────────
 
 export async function getContributorSummary(timeframe: Timeframe): Promise<ContributorSummary> {
+  const cacheKey = `contributors:${timeframe}`;
+  const cached = await getLfuCache<ContributorSummary>("analytics:summaries", cacheKey);
+  if (cached) return cached;
+
   const { startDate, endDate } = getDateRange(timeframe);
 
   const [applicationSeries, courseCreatedSeries, uploadSeries, totalContributorsData, totalCoursesData, totalUploadsData] = await Promise.all([
@@ -214,7 +227,7 @@ export async function getContributorSummary(timeframe: Timeframe): Promise<Contr
     fetchMetricSeries("TOTAL_UPLOADS", "2000-01-01", endDate),
   ]);
 
-  return {
+  const result = {
     totalContributors: totalContributorsData.reduce((a, b) => a + b.value, 0),
     applicationsThisPeriod: applicationSeries.reduce((a, b) => a + b.value, 0),
     coursesCreatedThisPeriod: courseCreatedSeries.reduce((a, b) => a + b.value, 0),
@@ -223,11 +236,19 @@ export async function getContributorSummary(timeframe: Timeframe): Promise<Contr
     courseCreatedSeries: aggregateSeries(fillDateSeries(courseCreatedSeries, startDate, endDate), timeframe),
     uploadSeries: aggregateSeries(fillDateSeries(uploadSeries, startDate, endDate), timeframe),
   };
+
+  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+
+  return result;
 }
 
 // ─── Revenue ──────────────────────────────────────────────────────────────────
 
 export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSummary> {
+  const cacheKey = `revenue:${timeframe}`;
+  const cached = await getLfuCache<RevenueSummary>("analytics:summaries", cacheKey);
+  if (cached) return cached;
+
   const { startDate, endDate } = getDateRange(timeframe);
 
   const [
@@ -252,7 +273,7 @@ export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSu
     fetchMetricSeries("DAILY_WITHDRAWAL_AMOUNT", startDate, endDate),
   ]);
 
-  return {
+  const result = {
     totalIn: revenueInSeries.reduce((a, b) => a + b.value, 0),
     totalOut: revenueOutSeries.reduce((a, b) => a + b.value, 0),
     platformCut: platformCutSeries.reduce((a, b) => a + b.value, 0),
@@ -265,12 +286,23 @@ export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSu
     withdrawalSeries: aggregateSeries(fillDateSeries(withdrawalSeries, startDate, endDate), timeframe),
     subscriptionSeries: aggregateSeries(fillDateSeries(subscriptionSeries, startDate, endDate), timeframe),
   };
+
+  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+
+  return result;
 }
 
 // ─── Generic series endpoint ──────────────────────────────────────────────────
 
 export async function getMetricSeries(metric: AnalyticsMetricName, timeframe: Timeframe) {
+  const cacheKey = `series:${metric}:${timeframe}`;
+  const cached = await getLfuCache<any>("analytics:series", cacheKey);
+  if (cached) return cached;
+
   const { startDate, endDate } = getDateRange(timeframe);
   const raw = await fetchMetricSeries(metric, startDate, endDate);
-  return aggregateSeries(fillDateSeries(raw, startDate, endDate), timeframe);
+  const result = aggregateSeries(fillDateSeries(raw, startDate, endDate), timeframe);
+  
+  await setLfuCache("analytics:series", cacheKey, result, 100);
+  return result;
 }
