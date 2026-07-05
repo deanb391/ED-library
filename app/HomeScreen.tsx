@@ -122,7 +122,7 @@ function ContributorSection({
           <Link
             href={`/contributor/account/${contributor.$id}`}
             key={contributor.$id}
-            className="min-w-[220px] max-w-[220px] bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
+            className="min-w-55 max-w-55 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
                        shrink-0 p-4 flex flex-col items-center text-center
                        hover:shadow-md transition"
             style={{

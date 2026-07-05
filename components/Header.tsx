@@ -8,8 +8,6 @@ import {
   Menu,
   X,
   User,
-  Plus,
-  Upload,
   Megaphone,
   Phone,
   Home,
@@ -21,16 +19,100 @@ import { useUser } from "@/context/UserContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import clsx from "clsx";
 
-/**
- * Small media query hook
- */
+function HeaderSkeleton() {
+  return (
+    <div className="h-9 w-20 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse" />
+  );
+}
 
+type MenuItemsProps = {
+  onSelect: () => void;
+  showContributorMenu: boolean;
+  hasContributorAccount: boolean;
+  contributorDashboardHref: string;
+  hasLibrary: boolean;
+  user: {
+    isAdmin?: boolean;
+    $id?: string;
+    avatar?: string;
+    username?: string;
+  } | null | undefined;
+  userIsAdmin: boolean;
+};
+
+function MenuItems({
+  onSelect,
+  showContributorMenu,
+  hasContributorAccount,
+  contributorDashboardHref,
+  hasLibrary,
+  user,
+  userIsAdmin,
+}: MenuItemsProps) {
+  return (
+    <div className="py-2 text-sm w-full">
+      <MenuItem icon={Home} label="Home" href="/" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+      <MenuItem icon={User} label="Account" href="/account" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+      {showContributorMenu && (
+        hasContributorAccount ? (
+          <>
+            <MenuItem
+              icon={Megaphone}
+              label="Dashboard"
+              href={contributorDashboardHref}
+              onSelect={onSelect}
+            />
+            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+          </>
+        ) : (
+          <>
+            <MenuItem
+              icon={Megaphone}
+              label="Become A Contributor"
+              href="/become-a-contributor"
+              onSelect={onSelect}
+            />
+            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+          </>
+        )
+      )}
+
+      {userIsAdmin && (
+        <>
+          <MenuItem icon={User} label="Admin" href="/admin" onSelect={onSelect} />
+        </>
+      )}
+
+      {hasLibrary && (
+        <>
+          <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+          <MenuItem icon={BookMarked} label="Library" href="/library" onSelect={onSelect} />
+        </>
+      )}
+
+      {user && (
+        <>
+          <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+          <MenuItem icon={Wallet} label="Wallet" href="/wallet" onSelect={onSelect} />
+        </>
+      )}
+
+      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+      <MenuItem icon={Megaphone} label="Advertise" href="/advertise" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+      <MenuItem icon={CircleHelp} label="About" href="/about" onSelect={onSelect} />
+      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800 mt-2.5 mb-2.5" />
+      <MenuItem icon={Phone} label="Contact" href="/contact" onSelect={onSelect} />
+    </div>
+  );
+}
 
 export default function Header() {
   const {
     user,
     loading,
-    hasWallet,
     hasLibrary,
     contributor,
     contributorLoading,
@@ -46,89 +128,6 @@ export default function Header() {
       : user?.avatar;
 
   const closeMenu = () => setMenuOpen(false);
-
-  function HeaderSkeleton() {
-    return (
-      <div className="h-9 w-20 rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse" />
-    );
-  }
-
-  const MenuItems = ({ onSelect }: { onSelect: () => void }) => (
-    <div className="py-2 text-sm w-full">
-      <MenuItem icon={Home} label="Home" href="/" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-      <MenuItem icon={User} label="Account" href="/account" onSelect={onSelect} />
-      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-      {showContributorMenu && (
-        hasContributorAccount ? (
-          <>
-            <MenuItem
-              icon={Megaphone}
-              label="Dashboard"
-              href={contributorDashboardHref}
-              onSelect={onSelect}
-            />
-            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-          </>
-        ) : (
-          <>
-            <MenuItem
-              icon={Megaphone}
-              label="Become A Contributor"
-              href="/become-a-contributor"
-              onSelect={onSelect}
-            />
-            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-          </>
-        )
-      )}
-
-      {user?.isAdmin && (
-        <>
-          <MenuItem
-            icon={User}
-            label="Admin"
-            href="/admin"
-            onSelect={onSelect}
-          />
-        </>
-      )}
-
-      {
-        hasLibrary && (
-          <>
-            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-
-            <MenuItem icon={BookMarked} label="Library" href="/library" onSelect={onSelect} />
-          </>
-
-        )
-      }
-
-      {
-        user && (
-          <>
-            <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-
-            <MenuItem icon={Wallet} label="Wallet" href="/wallet" onSelect={onSelect} />
-          </>
-
-        )
-      }
-
-      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-
-      <MenuItem icon={Megaphone} label="Advertise" href="/advertise" onSelect={onSelect} />
-
-      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-
-      <MenuItem icon={CircleHelp} label="About" href="/about" onSelect={onSelect} />
-
-      <div className="my-5 h-px bg-gray-100 dark:bg-gray-800" style={{ marginTop: 10, marginBottom: 10 }} />
-
-      <MenuItem icon={Phone} label="Contact" href="/contact" onSelect={onSelect} />
-    </div>
-  );
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 transition-colors duration-200">
@@ -146,7 +145,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="hidden md:flex gap-6 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-300 dark:text-gray-600">
+        <div className="hidden md:flex gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
           <Link href="/" className="text-gray-900 dark:text-white hover:text-blue-600">
             Home
           </Link>
@@ -218,7 +217,7 @@ export default function Header() {
               </Link>
 
               <Link href="/signup">
-                <button className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 rounded-lg transition-all active:scale-[0.90]">
+                <button className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg transition-all active:scale-[0.90]">
                   Sign Up
                 </button>
               </Link>
@@ -230,6 +229,7 @@ export default function Header() {
             <>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Toggle menu"
                 className="relative z-100 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-800 transition-all active:scale-[0.90]"
               >
                 <span
@@ -308,7 +308,15 @@ export default function Header() {
                         </div>
                       </div>
 
-                      <MenuItems onSelect={closeMenu} />
+                      <MenuItems
+                        onSelect={closeMenu}
+                        showContributorMenu={showContributorMenu}
+                        hasContributorAccount={hasContributorAccount}
+                        contributorDashboardHref={contributorDashboardHref}
+                        hasLibrary={hasLibrary}
+                        user={user}
+                        userIsAdmin={Boolean(user?.isAdmin)}
+                      />
                     </div>
                   )
                 }
@@ -343,7 +351,7 @@ function MenuItem({
     <Link
       href={href}
       onClick={onSelect}
-      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 dark:text-gray-600 transition-all active:scale-[0.98]"
+      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-600 transition-all active:scale-[0.98]"
     >
       <Icon size={18} />
       <span>{label}</span>
