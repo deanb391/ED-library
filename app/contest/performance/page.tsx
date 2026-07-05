@@ -16,6 +16,7 @@ export default function ContributorPerformancePage() {
   // Real performance data state
   const [performance, setPerformance] = useState<ContestPerformance | null>(null);
   const [perfLoading, setPerfLoading] = useState(true);
+  const [userRank, setUserRank] = useState<number | null>(null);
 
   // Compute current day key
   const [dayKey, setDayKey] = useState("day 1");
@@ -49,9 +50,10 @@ export default function ContributorPerformancePage() {
     if (contributor && contributor.joinedContest) {
       const fetchPerf = async () => {
         try {
-          const [perfRes, statsRes] = await Promise.all([
+          const [perfRes, statsRes, rankRes] = await Promise.all([
             fetch(`/api/contest/performance?contributorId=${contributor.$id}`),
-            fetch('/api/contest/stats')
+            fetch('/api/contest/stats'),
+            fetch(`/api/rewards/leaderboard/rank?contributorId=${contributor.$id}`)
           ]);
           if (perfRes.ok) {
             const data = await perfRes.json();
@@ -60,6 +62,10 @@ export default function ContributorPerformancePage() {
           if (statsRes.ok) {
             const stats = await statsRes.json();
             setGlobalStats(stats);
+          }
+          if (rankRes.ok) {
+            const rankData = await rankRes.json();
+            setUserRank(rankData.rank);
           }
         } catch (err) {
           console.error("Failed to fetch performance:", err);
@@ -205,7 +211,7 @@ export default function ContributorPerformancePage() {
             Track your eligibility and projected earnings from the unlocked reward pool. Minimum 100 points required to qualify.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${userRank && userRank <= 3 ? "md:grid-cols-3" : "md:grid-cols-2"} gap-4`}>
             
             {/* Eligibility Status */}
             <div className="p-4 bg-slate-950/45 border border-slate-850 rounded-2xl">
@@ -231,6 +237,35 @@ export default function ContributorPerformancePage() {
                 Top 3 bonus not included
               </div>
             </div>
+
+            {/* Top Contributor Bonus */}
+            {userRank && userRank <= 3 && (
+              <div className="p-4 bg-slate-950/45 border border-amber-500/30 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-amber-500/5 blur-[40px] pointer-events-none" />
+                <div>
+                  <div className="text-xs font-bold uppercase text-amber-500/80 mb-1">Top 3 Bonus</div>
+                  {totalPoints >= 500 ? (
+                    <div className="text-2xl font-black text-amber-400">₦10,000</div>
+                  ) : totalPoints >= 300 ? (
+                    <div className="text-2xl font-black text-amber-400">₦5,000</div>
+                  ) : (
+                    <div className="text-2xl font-black text-slate-500">₦0</div>
+                  )}
+                </div>
+                <div className="text-xs text-slate-400 mt-2">
+                  {totalPoints >= 500 ? (
+                    "Max bonus reached!"
+                  ) : totalPoints >= 300 ? (
+                    "Reach 500 pts for ₦10,000"
+                  ) : (
+                    <>
+                      Reach 300 pts for ₦5,000. <br />
+                      <span className="text-[10px] opacity-75">An additional ₦5,000 after reaching 500 pts.</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
 
