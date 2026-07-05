@@ -138,6 +138,7 @@ export async function updateCourseService(courseId: string, data: any) {
   );
 
   await invalidateLfuCache("course:details", courseId);
+  await clearLfuCacheNamespace("course:lists");
 
   return res;
 }

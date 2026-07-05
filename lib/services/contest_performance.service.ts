@@ -1,6 +1,6 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
-import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
+import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTEST_PERFORMANCE_COLLECTION = "contest_performance";
@@ -106,6 +106,9 @@ export async function updateContestPerformanceService(
   if (contributorId) {
     await invalidateLfuCache("performance:details", contributorId as string);
   }
+  
+  await clearLfuCacheNamespace("performance:lists");
+  await clearLfuCacheNamespace("leaderboard:hydrated");
 
   return doc as unknown as ContestPerformance;
 }
