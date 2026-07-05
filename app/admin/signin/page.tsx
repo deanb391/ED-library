@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { GraduationCap, ArrowRight, Lock, Mail } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "@/components/useRouter";
 import { signIn } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
 
@@ -26,10 +26,10 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900">
+    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
       
       {/* --- Main Card --- */}
-      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
         
         {/* Header Icon */}
         <div className="flex justify-center mb-6">
@@ -40,8 +40,8 @@ export default function AdminLoginPage() {
 
         {/* Title & Subtitle */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Sign In</h1>
-          <p className="text-sm text-gray-500 leading-relaxed px-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Admin Sign In</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed px-4">
             Please enter your credentials to access the dashboard.
           </p>
         </div>
@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
           <div className="space-y-1.5">
             <label 
               htmlFor="email" 
-              className="block text-xs font-bold text-gray-700 ml-1"
+              className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1"
             >
               Email
             </label>
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@academics.edu"
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm group-hover:border-gray-400"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm group-hover:border-gray-400"
               />
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
           <div className="space-y-1.5">
             <label 
               htmlFor="password" 
-              className="block text-xs font-bold text-gray-700 ml-1"
+              className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1"
             >
               Password
             </label>
@@ -86,7 +86,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm group-hover:border-gray-400 font-mono tracking-widest"
+                className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm group-hover:border-gray-400 font-mono tracking-widest"
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
             disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none
     active:scale-[0.98]
-    active:bg-gray-50
+    active:bg-gray-50 dark:bg-gray-900
     cursor-pointer"
           >
             {isLoading ? (
@@ -118,9 +118,9 @@ export default function AdminLoginPage() {
         <div className="mt-10">
           <div className="relative flex items-center justify-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
             </div>
-            <span className="relative bg-white px-3 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+            <span className="relative bg-white dark:bg-gray-900 px-3 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
               Authorized Personnel Only
             </span>
           </div>

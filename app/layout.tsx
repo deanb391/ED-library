@@ -8,12 +8,18 @@ import Footer from "@/components/Footer";
 import TrackPageView from "@/components/TrackPageView";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
+import { PHProvider } from "@/app/providers";
+import AppProgressBar from "@/components/ProgressBar";
+import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
+import ReferralTracker from "@/components/ReferralTracker";
+import WhatsappChannel from "@/components/WhatsappChannel";
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ED-Library",
-  description: "Academic notes and study guides",
+  description: "Share. Discover. Learn",
 };
 
 export default function RootLayout({
@@ -22,39 +28,42 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <UserProvider>
-      <html lang="en">
-        <head>
-          {/* Google AdSense */}
-          <Script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904837010680652"
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Google AdSense */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6904837010680652"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
 
-          {/* Adsterra 
-          <Script
-            src="https://pl28536403.effectivegatecpm.com/5d/f2/b5/5df2b541a3eac4751ebd6c025764badb.js"
-            strategy="afterInteractive"
-          />
-*/}
-        </head>
+      <body
+        className={`${inter.className} bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col transition-colors duration-200`}
+      >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AppProgressBar />
+          <PHProvider>
+            <UserProvider>
+              <Header />
 
-        <body
-          className={`${inter.className} bg-[#F8F9FB] min-h-screen flex flex-col`}
-        >
-          <Header />
+              <main className="grow w-full">
+                <GoogleAnalytics />
+                <TrackPageView />
+                <ReferralTracker />
+                {children}
+              </main>
 
-          <main className="flex-grow w-full">
-            <GoogleAnalytics />
-            <TrackPageView />
-            {children}
-          </main>
-
-          <Footer />
-        </body>
-      </html>
-    </UserProvider>
+              <Footer />
+              <div className="fixed bottom-4 right-4 z-100">
+                <WhatsappChannel />
+              </div>
+              <ContributorChatFAB />
+            </UserProvider>
+          </PHProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

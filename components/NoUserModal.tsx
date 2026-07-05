@@ -25,7 +25,7 @@ export default function NoUserModal({
             <X size={20} />
           </button>
         </div>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-gray-300 dark:text-gray-600">
           To view images, signup!!
         </p>
         <div className="flex justify-end gap-2 mt-4">

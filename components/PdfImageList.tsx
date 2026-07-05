@@ -22,11 +22,11 @@ export default function PdfImageList({
           {/* Image */}
           <div
             onClick={() => onPress(i)}
-            className="relative w-full aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden shadow-sm cursor-pointer"
+            className="relative w-full aspect-[3/4] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm cursor-pointer"
           >
             {!loaded[i] && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
               </div>
             )}
 
@@ -34,7 +34,7 @@ export default function PdfImageList({
               src={img}
               alt=""
               fill
-              className={`object-contain bg-white transition-opacity duration-300 ${
+              className={`object-contain bg-white dark:bg-gray-900 transition-opacity duration-300 ${
                 loaded[i] ? "opacity-100" : "opacity-0"
               }`}
               onLoadingComplete={() =>

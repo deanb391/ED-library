@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { uploadThumbnail, createCourse } from "@/lib/courses";
-import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/appwrite";
+import { uploadThumbnail, createCourse } from "@/lib/api/courses";
+import { useRouter } from "@/components/useRouter";
 import { useUser } from "@/context/UserContext";
 import NativeBanner from "@/components/ads/NativeBanner";
+import CoursePriceModal from "@/components/CoursePriceModalPast";
 
 
 export default function CreateCoursePage() {
@@ -16,8 +16,12 @@ export default function CreateCoursePage() {
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [lecturer, setLecturer] = useState("");
+  const [university, setUniversity] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [price, setPrice] = useState(0);
+  const [isFree, setIsFree] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true);
   const {user} = useUser()
@@ -26,17 +30,6 @@ export default function CreateCoursePage() {
     const [department, setDepartment] = useState("");
 
         const LEVELS = [100, 200, 300, 400, 500, 600];
-
-const DEPARTMENTS = [
-  "Mechanical Engineering",
-  "Electrical Engineering",
-  "Civil Engineering",
-  "Computer Engineering",
-  "Chemical Engineering",
-  "Petroleum Engineering",
-  "Agricultural Engineering",
-  "Marine Engineering",
-];
 
 const sessions = [
   "2023/2024",
@@ -54,10 +47,36 @@ const sessions = [
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!thumbnail) return;
 
-  const lvl = Number(level)
+  if (!user?.$id) {
+    alert("Unable to create course without a signed-in user.");
+    return;
+  }
+
+  if (!thumbnail) {
+    alert("Please upload a course thumbnail.");
+    return;
+  }
+
+  if (!university.trim()) {
+    alert("Please enter the university.");
+    return;
+  }
+
+  setShowPriceModal(true);
+};
+
+const handleCreateCourse = async ({ price, isFree }: { price: number; isFree: boolean }) => {
+  if (!thumbnail) return;
+  if (!user?.$id) {
+    alert("Unable to create course without a signed-in user.");
+    return;
+  }
+
+  const userId = user.$id;
+  const lvl = Number(level);
   setIsLoading(true);
+  setShowPriceModal(false);
 
   try {
     const uploaded = await uploadThumbnail(thumbnail);
@@ -67,17 +86,20 @@ const handleSubmit = async (e: React.FormEvent) => {
       code,
       description,
       lecturer: lecturer || undefined,
+      university,
       thumbnailId: uploaded.fileId,
       thumbnailUrl: uploaded.url,
-      user: user?.$id,
+      user: userId,
       department: department,
       level: lvl,
       session: session,
-      isOnGoing: false
+      isOnGoing: false,
+      price,
+      isFree,
     });
 
     alert("Course created successfully");
-    router.push("/")
+    router.push("/");
   } catch (err) {
     console.error(err);
     alert("Failed to create course");
@@ -88,17 +110,17 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     if (loading) {
     return (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+  <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-    <p className="text-gray-700 text-sm">Loading, please wait...</p>
+    <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
   </div>
 );}
 
   if (!isAdmin) {
     return (
-  <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 bg-white">
+  <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 bg-white dark:bg-gray-900">
     <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
-    <p className="text-gray-500 mb-4">You must be logged in to view this page.</p>
+    <p className="text-gray-500 dark:text-gray-400 mb-4">You must be logged in to view this page.</p>
     <Link href="/">
       <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
         Home
@@ -111,7 +133,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
   <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center px-4 py-10">
-    <div className="w-full max-w-lg bg-white rounded-3xl shadow-sm border border-gray-200 relative">
+    <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 relative">
       
       {/* Accent bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600 rounded-t-3xl" />
@@ -123,10 +145,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
 
         {/* Title */}
-        <h1 className="text-xl font-semibold text-center text-gray-900">
+        <h1 className="text-xl font-semibold text-center text-gray-900 dark:text-white">
           Create new course
         </h1>
-        <p className="text-sm text-gray-500 text-center mt-1 mb-8">
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1 mb-8">
           Add a course to your library
         </p>
 
@@ -140,7 +162,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Course Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Course title
             </label>
             <input
@@ -148,14 +170,14 @@ const handleSubmit = async (e: React.FormEvent) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Engineering Mechanics"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
 
           {/* Course Code */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Course code
             </label>
             <input
@@ -163,14 +185,29 @@ const handleSubmit = async (e: React.FormEvent) => {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="MECH 311"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
+
+          {/* University */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              University
+            </label>
+            <input
+              required
+              value={university}
+              onChange={(e) => setUniversity(e.target.value)}
+              placeholder="University of Lagos"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
             </label>
             <textarea
@@ -179,7 +216,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="Brief description of the course content"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400 resize-none
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 resize-none
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
@@ -187,14 +224,14 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Session */}
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
                 Session
             </label>
             <select
                 required
                 value={session}
                 onChange={(e) => setSession(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
                 <option value="" disabled>
                 Select Session
@@ -209,14 +246,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           {/* Level */}
             <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-gray-700 ml-1">
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
                 Level
             </label>
             <select
                 required
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
                 <option value="" disabled>
                 Select level
@@ -231,43 +268,35 @@ const handleSubmit = async (e: React.FormEvent) => {
 
                     {/* Department */}
 <div className="space-y-1.5">
-  <label className="block text-xs font-bold text-gray-700 ml-1">
+  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
     Department
   </label>
-  <select
+  <input
     required
     value={department}
     onChange={(e) => setDepartment(e.target.value)}
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
-  >
-    <option value="" disabled>
-      Select department
-    </option>
-    {DEPARTMENTS.map((dept) => (
-      <option key={dept} value={dept}>
-        {dept}
-      </option>
-    ))}
-  </select>
+    placeholder="e.g. Computer Science"
+    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+  />
 </div>
 
           {/* Lecturer */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Lecturer <span className="text-gray-400">(optional)</span>
             </label>
             <input
               value={lecturer}
               onChange={(e) => setLecturer(e.target.value)}
               placeholder="Dr. A. Smith"
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
           </div>
 
           {/* Thumbnail */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Course thumbnail
             </label>
             <input
@@ -277,7 +306,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               onChange={(e) =>
                 setThumbnail(e.target.files ? e.target.files[0] : null)
               }
-              className="block w-full text-sm text-gray-600
+              className="block w-full text-sm text-gray-600 dark:text-gray-400
                          file:mr-4 file:py-2.5 file:px-4
                          file:rounded-xl file:border-0
                          file:bg-blue-50 file:text-blue-600 file:font-medium
@@ -292,7 +321,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                        hover:bg-blue-500 active:bg-blue-700
                        disabled:opacity-60 disabled:cursor-not-allowed transition"
           >
-            {isLoading ? "Creating…" : "Create course"}
+            {isLoading ? "Creating…" : "Proceed"}
           </button>
         </form>
 
@@ -300,13 +329,22 @@ const handleSubmit = async (e: React.FormEvent) => {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="text-sm text-gray-500 hover:text-gray-700 transition"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 transition"
           >
             Cancel
           </Link>
         </div>
       </div>
     </div>
+
+    <CoursePriceModal
+      isOpen={showPriceModal}
+      onClose={() => setShowPriceModal(false)}
+      onConfirm={handleCreateCourse}
+      isSaving={isLoading}
+      initialPrice={price}
+      initialFree={isFree}
+    />
   </div>
 );
 

@@ -1,22 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  ZoomIn, 
-  ZoomOut, 
-  Maximize, 
-  RotateCw, 
-  Download, 
-  FileText, 
+import {
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  RotateCw,
+  Download,
+  FileText,
   Trash2,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "@/components/useRouter";
 import { getCurrentUser, storage } from '@/lib/appwrite';
-import { buildDownloadUrlFromView } from '@/lib/courses';
+import { buildDownloadUrlFromView } from '@/lib/api/courses';
 import { useUser } from '@/context/UserContext';
 import { fetchDownloadUrl } from '@/lib/upload';
 
@@ -63,13 +63,13 @@ export default function NoteViewerModal({
   const [rotation, setRotation] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false)
   const [imageLoading, setImageLoading] = useState(true);
-  const {user} = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const [showActions, setShowActions] = useState(false);
 
-  
 
-  
+
+
   // Swipe State
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -107,19 +107,19 @@ export default function NoteViewerModal({
   if (!isOpen || files.length === 0) return null;
 
 
-const nextImage = () => {
-  if (currentIndex < files.length - 1) {
-    setCurrentIndex(i => i + 1);
-    resetView();
-  }
-};
+  const nextImage = () => {
+    if (currentIndex < files.length - 1) {
+      setCurrentIndex(i => i + 1);
+      resetView();
+    }
+  };
 
-const prevImage = () => {
-  if (currentIndex > 0) {
-    setCurrentIndex(i => i - 1);
-    resetView();
-  }
-};
+  const prevImage = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(i => i - 1);
+      resetView();
+    }
+  };
 
 
   const resetView = () => {
@@ -148,30 +148,30 @@ const prevImage = () => {
     }
   };
 
- function downloadFromUrl(url: string, filename?: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename || url.split("/").pop() || "download";
-  a.click();
-}
+  function downloadFromUrl(url: string, filename?: string) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || url.split("/").pop() || "download";
+    a.click();
+  }
 
 
-// example import
+  // example import
 
-// const downloadImage = async () => {
-//   const file = files[currentIndex];
-//   try {
-//     const url = await storage.getFileDownload(file.id); // generates a signed URL
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `note-page-${currentIndex + 1}.png`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
+  // const downloadImage = async () => {
+  //   const file = files[currentIndex];
+  //   try {
+  //     const url = await storage.getFileDownload(file.id); // generates a signed URL
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = `note-page-${currentIndex + 1}.png`;
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     document.body.removeChild(link);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
 
 
@@ -188,33 +188,33 @@ const prevImage = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#15171B] text-white overflow-hidden animate-in fade-in duration-200">
-      
+
       {/* --- Top Header --- */}
       <header className="flex items-center justify-between px-6 py-4 bg-[#15171B] border-b border-gray-800 relative z-50">
-        <div className="flex items-center gap-4"> 
-           <div className="bg-blue-600 p-2 rounded-lg">
+        <div className="flex items-center gap-4">
+          <div className="bg-blue-600 p-2 rounded-lg">
             <FileText size={20} fill="white" className="text-white" />
           </div>
           {
-            !isAdmin &&(
+            !isAdmin && (
               <div>
-            <h2 className="font-bold text-sm md:text-base leading-tight"></h2>
-            <p className="text-xs text-gray-400 mt-0.5">Uploaded By Emmanuel</p>
-          </div>
+                <h2 className="font-bold text-sm md:text-base leading-tight"></h2>
+                <p className="text-xs text-gray-400 mt-0.5">Uploaded</p>
+              </div>
             )
           }
         </div>
 
         <div className="flex items-center gap-3">
-          { isAdmin && course_user === user?.$id && viewMode == "timeline" && (
-            <button 
-              onClick={() => { onDelete(files[currentIndex])}}
+          {isAdmin && course_user === user?.$id && viewMode == "timeline" && (
+            <button
+              onClick={() => { onDelete(files[currentIndex]) }}
               className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg text-xs font-bold border border-red-500/20 transition-colors">
               <Trash2 size={14} />
               Delete Note
             </button>
           )}
-          <button 
+          <button
             onClick={onClose}
             className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors"
           >
@@ -224,52 +224,52 @@ const prevImage = () => {
       </header>
 
       {/* --- Main Content Area --- */}
-      <div 
+      <div
         className="flex-1 relative flex items-center justify-center bg-[#0F1115] overflow-hidden"
-        // onTouchStart={onTouchStart}
-        // onTouchMove={onTouchMove}
-        // onTouchEnd={onTouchEnd}
+      // onTouchStart={onTouchStart}
+      // onTouchMove={onTouchMove}
+      // onTouchEnd={onTouchEnd}
       >
 
-<div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 md:hidden">
-  <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 text-xs font-medium rounded-full border border-white/10 shadow-lg">
-    Page {currentIndex + 1} of {files.length}
-  </span>
-</div>
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-40 md:hidden">
+          <span className="px-3 py-1 bg-black/60 backdrop-blur-md text-gray-300 dark:text-gray-600 text-xs font-medium rounded-full border border-white/10 shadow-lg">
+            Page {currentIndex + 1} of {files.length}
+          </span>
+        </div>
 
- {/* Desktop Navigation */}
-<div className="hidden md:flex absolute inset-0 items-center justify-between px-6 z-40 ">
-  
-  {/* Left Side */}
-  <div className="flex items-center gap-4 pointer-events-auto">
-    <button
-      onClick={prevImage}
-      disabled={currentIndex === 0}
-      className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
-    >
-      <ChevronLeft size={32} />
-    </button>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex absolute inset-0 items-center justify-between px-6 z-40 ">
 
-    <span className="text-sm text-gray-300 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-      Page {currentIndex + 1} of {files.length}
-    </span>
-  </div>
+          {/* Left Side */}
+          <div className="flex items-center gap-4 pointer-events-auto">
+            <button
+              onClick={prevImage}
+              disabled={currentIndex === 0}
+              className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
+            >
+              <ChevronLeft size={32} />
+            </button>
 
-  {/* Right Side */}
-  <div className="pointer-events-auto">
-    <button
-      onClick={nextImage}
-      disabled={currentIndex === files.length - 1}
-      className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
-    >
-      <ChevronRight size={32} />
-    </button>
-  </div>
+            <span className="text-sm text-gray-300 dark:text-gray-600 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
+              Page {currentIndex + 1} of {files.length}
+            </span>
+          </div>
 
-</div>
+          {/* Right Side */}
+          <div className="pointer-events-auto">
+            <button
+              onClick={nextImage}
+              disabled={currentIndex === files.length - 1}
+              className="p-3 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all disabled:opacity-0"
+            >
+              <ChevronRight size={32} />
+            </button>
+          </div>
+
+        </div>
 
         {/* Mobile tap zones */}
-{/* <div className="absolute inset-0 z-30 flex md:hidden">
+        {/* <div className="absolute inset-0 z-30 flex md:hidden">
   <div
     className="w-1/2 h-full"
     onClick={prevImage}
@@ -292,7 +292,7 @@ const prevImage = () => {
 
           {files[currentIndex] ? (
             <div
-  className="
+              className="
     flex
     items-center
     justify-center
@@ -301,25 +301,24 @@ const prevImage = () => {
     max-h-[calc(100vh-120px)]
     md:max-h-[calc(100vh-160px)]
   "
->
-            <Image
-              src={files[currentIndex]}
-              alt={`Page ${currentIndex + 1}`}
-              width={600}
-              height={800}
-              className={`object-contain max-w-full
+            >
+              <Image
+                src={files[currentIndex]}
+                alt={`Page ${currentIndex + 1}`}
+                width={600}
+                height={800}
+                className={`object-contain max-w-full
   max-h-full
-  shadow-2xl transition-transform duration-200 ${
-                imageLoading ? "opacity-0" : "opacity-100"
-              }`}
-              draggable={false}
-              style={{
-                transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                transformOrigin: "center center",
-              }}
-              onLoadingComplete={() => setImageLoading(false)}
-              priority
-            />
+  shadow-2xl transition-transform duration-200 ${imageLoading ? "opacity-0" : "opacity-100"
+                  }`}
+                draggable={false}
+                style={{
+                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
+                  transformOrigin: "center center",
+                }}
+                onLoadingComplete={() => setImageLoading(false)}
+                priority
+              />
             </div>
           ) : (
             <p className="text-white">Image not available</p>
@@ -335,17 +334,17 @@ const prevImage = () => {
 
       {/* --- Bottom Toolbar --- */}
       {/* Action Panel */}
-<div
-  className={`
+      <div
+        className={`
     fixed bottom-6 left-6 z-50
     origin-bottom-left
     transition-all duration-300 ease-out
     ${showActions
-      ? "scale-100 opacity-100 translate-y-0"
-      : "scale-75 opacity-0 pointer-events-none translate-y-4"}
+            ? "scale-100 opacity-100 translate-y-0"
+            : "scale-75 opacity-0 pointer-events-none translate-y-4"}
   `}
->
-  <div className="
+      >
+        <div className="
     relative
     bg-[#1E2126]/90 backdrop-blur-xl
     border border-gray-700/50
@@ -355,20 +354,20 @@ const prevImage = () => {
     flex items-center gap-1
   ">
 
-    {/* Collapse Button */}
-    <button
-      onClick={() => setShowActions(false)}
-      className="
+          {/* Collapse Button */}
+          <button
+            onClick={() => setShowActions(false)}
+            className="
         absolute -top-2 -right-2
         h-6 w-6 rounded-full
         bg-gray-800 hover:bg-gray-700
         flex items-center justify-center
         text-gray-400 hover:text-white
       "
-    >
-      <X size={12} />
-    </button>
-{/* 
+          >
+            <X size={12} />
+          </button>
+          {/* 
     <TooltipButton
       icon={<ZoomOut size={18} />}
       onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
@@ -379,7 +378,7 @@ const prevImage = () => {
       onClick={() => setZoom(z => Math.min(3, z + 0.25))}
     /> */}
 
-    {/* <div className="w-px h-6 bg-gray-700 mx-1" />
+          {/* <div className="w-px h-6 bg-gray-700 mx-1" />
 
     <TooltipButton
       icon={<RotateCw size={18} />}
@@ -393,7 +392,7 @@ const prevImage = () => {
 
     <div className="w-px h-6 bg-gray-700 mx-1" /> */}
 
-    {/* <button
+          {/* <button
       onClick={ async () => {
         if (user) {
           const url = await fetchDownloadUrl(files[currentIndex]);
@@ -419,13 +418,13 @@ const prevImage = () => {
       <span className="hidden sm:inline">Download</span>
     </button> */}
 
-  </div>
-</div>
+        </div>
+      </div>
 
 
       <TooltipButton icon={<Maximize size={18} />} onClick={toggleFullScreen} />
 
-{/* {!showActions && (
+      {/* {!showActions && (
   <button
     onClick={() => setShowActions(true)}
     className="
@@ -442,32 +441,32 @@ const prevImage = () => {
 )} */}
 
 
-{/* Mobile Bottom Navigation */}
-<div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] z-50" style={{bottom: 15}}>
-  <div className="flex w-full bg-black/15 backdrop-blur-md border border-white/10 rounded-2xl py-4"
-  >
-  
-  <button
-    onClick={prevImage}
-    disabled={currentIndex === 0}
-    className="flex w-1/2 items-center justify-start gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
-  >
-    <ChevronLeft size={24} />
-    <span className="text-sm font-medium">Prev</span>
-  </button>
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] z-50" style={{ bottom: 15 }}>
+        <div className="flex w-full bg-black/15 backdrop-blur-md border border-white/10 rounded-2xl py-4"
+        >
 
-  <button
-    onClick={nextImage}
-    disabled={currentIndex === files.length - 1}
-    className="flex w-1/2 items-center justify-end gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
-  >
-    <span className="text-sm font-medium">Next</span>
-    <ChevronRight size={24} />
-  </button>
+          <button
+            onClick={prevImage}
+            disabled={currentIndex === 0}
+            className="flex w-1/2 items-center justify-start gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
+          >
+            <ChevronLeft size={24} />
+            <span className="text-sm font-medium">Prev</span>
+          </button>
 
-</div>
+          <button
+            onClick={nextImage}
+            disabled={currentIndex === files.length - 1}
+            className="flex w-1/2 items-center justify-end gap-2 px-6 text-white disabled:opacity-30 transition-all active:scale-[0.90]"
+          >
+            <span className="text-sm font-medium">Next</span>
+            <ChevronRight size={24} />
+          </button>
 
-</div>
+        </div>
+
+      </div>
 
 
 
@@ -478,7 +477,7 @@ const prevImage = () => {
 // Helper Component for Toolbar Buttons
 function TooltipButton({ icon, onClick }: { icon: React.ReactNode, onClick: () => void }) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className="p-2.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
     >

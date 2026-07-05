@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useUser } from "@/context/UserContext";
-import { recordAdView } from "@/lib/ads";
+import { recordAdView, recordAdClick } from "@/lib/ads";
 
 type AdFileType = "image" | "video";
 
@@ -45,7 +45,7 @@ export default function RectangularAd({
     if (!activeAd) return;
 
     if (activeAd.fileType === "image") {
-      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 4000);
+      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 7000);
     }
 
     return () => {
@@ -86,8 +86,10 @@ export default function RectangularAd({
         className
       )}
       style={{
-        width: width ? `${width}px` : "100%",
-        height: `${height}px`,
+        width: "100%",
+        minHeight: height ? `${height}px` : "150px",
+        maxHeight: "400px",
+        maxWidth: "1300px"
       }}
     >
       <div
@@ -111,7 +113,10 @@ export default function RectangularAd({
                 alt="Sponsored content"
                 className="h-full w-full object-cover"
                 loading="lazy"
-                onClick={() => ad.link && window.open(ad.link, "_blank")}
+                onClick={() => {
+                  recordAdClick(ad.id);
+                  if (ad.link) window.open(ad.link, "_blank");
+                }}
               />
             )}
 
@@ -124,7 +129,10 @@ export default function RectangularAd({
                 muted
                 playsInline
                 onEnded={goNext}
-                onClick={() => ad.link && window.open(ad.link, "_blank")}
+                onClick={() => {
+                  recordAdClick(ad.id);
+                  if (ad.link) window.open(ad.link, "_blank");
+                }}
               />
             )}
           </div>
@@ -144,7 +152,7 @@ export default function RectangularAd({
         ))}
       </div>
 
-      <span className="absolute bottom-2 right-2 text-[10px] text-neutral-500 bg-white/70 px-2 py-0.5 rounded">
+      <span className="absolute bottom-2 right-2 text-[10px] text-neutral-500 bg-white dark:bg-gray-900/70 px-2 py-0.5 rounded">
         Sponsored
       </span>
     </div>

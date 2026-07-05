@@ -1,0 +1,233 @@
+// lib/api/ads.ts
+
+import { uploadToServer } from "../upload";
+import { shuffle } from "../utils/ad-formatter";
+
+
+export type AdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link?: string,
+};
+
+export async function fetchAds({
+  limit = 10,
+  cursor,
+  filter,
+}: {
+  limit?: number;
+  cursor?: string;
+  filter?: {
+    name?: string;
+    type?: string;
+    isExpired?: boolean;
+    user?: string;
+  };
+} = {}) {
+  const query = new URLSearchParams();
+
+  query.append("limit", String(limit));
+
+  if (cursor) query.append("cursor", cursor);
+
+  if (filter?.name) query.append("name", filter.name);
+  if (filter?.type) query.append("type", filter.type);
+  if (filter?.user) query.append("user", filter.user);
+  if (filter?.isExpired !== undefined) {
+    query.append("isExpired", String(filter.isExpired));
+  }
+
+  const res = await fetch(`/api/ads/list?${query.toString()}`);
+
+  if (!res.ok) throw new Error("Failed to fetch ads");
+
+  return res.json();
+}
+
+export async function fetchActiveAds() {
+  const res = await fetch("/api/ads/active");
+  return res.json();
+}
+
+export async function fetchAdById(id: string) {
+  const res = await fetch(`/api/ads/get?id=${id}`);
+  return res.json();
+}
+
+export async function createAd(data: any) {
+  const res = await fetch("/api/ads/create", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+}
+
+export async function editAd(adId: string, data: any) {
+  const res = await fetch("/api/ads/update", {
+    method: "PATCH",
+    body: JSON.stringify({ adId, data }),
+  });
+
+  return res.json();
+}
+
+export async function deleteAd(adId: string) {
+  const res = await fetch("/api/ads/delete", {
+    method: "DELETE",
+    body: JSON.stringify({ adId }),
+  });
+
+  return res.json();
+}
+
+export async function recordAdView(adId: string, userId?: string) {
+  await fetch("/api/ads/view", {
+    method: "POST",
+    body: JSON.stringify({ adId, userId }),
+  });
+}
+
+export async function fetchMediumAds(): Promise<{
+  oneAds: AdItem[];
+  twoAds: AdItem[];
+  threeAds: AdItem[];
+}> {
+  const activeAds = await fetchActiveAds();
+
+  // Step 1: flatten all rectangular creatives
+  const formatted: AdItem[] = [];
+
+  for (const ad of activeAds) {
+    // Rectangular images
+    for (const imageUrl of ad.mediumImages) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: imageUrl,
+        fileType: "image",
+        link: ad.link,
+      });
+    }
+
+    // Videos can also be used in rectangular slots
+    for (const videoUrl of ad.videos) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: videoUrl,
+        fileType: "video",
+        link: ad.link,
+      });
+    }
+  }
+
+  // Nothing to work with? Return emptiness honestly.
+  if (formatted.length === 0) {
+    return {
+      oneAds: [],
+      twoAds: [],
+      threeAds: [],
+    };
+  }
+
+  // Step 2: shuffle once
+  const shuffled = shuffle(formatted);
+
+  // Step 3: slice safely
+  const pick = (items: AdItem[]) =>
+    items.slice(0, Math.min(6, items.length));
+
+  return {
+    oneAds: pick(shuffled),
+    twoAds: pick(shuffle(shuffled)),
+    threeAds: pick(shuffle(shuffled)),
+  };
+}
+
+
+export type BannerOrSquareAdItem = {
+  id: string;
+  fileUrl: string;
+  fileType: "image" | "video";
+  link: string; // we'll use ad type/link if needed, otherwise can be '#'
+};
+
+export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
+  const activeAds = await fetchActiveAds();
+
+  const formatted: BannerOrSquareAdItem[] = [];
+
+  for (const ad of activeAds) {
+    for (const imageUrl of ad.largeImages) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: imageUrl,
+        fileType: "image",
+        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+      });
+    }
+
+    for (const videoUrl of ad.videos) {
+      formatted.push({
+        id: ad.id,
+        fileUrl: videoUrl,
+        fileType: "video",
+        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+      });
+    }
+  }
+
+  return formatted;
+}
+
+export async function uploadAdImage(file: File): Promise<string> {
+  return uploadToServer(file, "ads/images", "video");
+}
+
+export async function uploadAdVideo(file: File): Promise<string> {
+  return uploadToServer(file, "ads/videos", "video");
+}
+
+export async function fetchAdUniqueUsersCount(id: string): Promise<{ count: number }> {
+  const res = await fetch(`/api/ads/unique-count?id=${id}`);
+  if (!res.ok) throw new Error("Failed to fetch unique users count");
+  return res.json();
+}
+
+export async function createVendorAd(data: {
+  name: string;
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
+  videos: string[];
+  link?: string;
+  user: string;
+  email: string;
+}): Promise<{ success: boolean; checkoutUrl: string; paymentId: string; adId: string }> {
+  const res = await fetch("/api/ads/create-vendor", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create vendor ad campaign");
+  }
+
+  return res.json();
+}
+
+export async function verifyAdPayment(paymentId: string, adId?: string): Promise<{ success: boolean; message?: string }> {
+  const url = adId
+    ? `/api/ads/verify-payment?paymentId=${encodeURIComponent(paymentId)}&adId=${encodeURIComponent(adId)}`
+    : `/api/ads/verify-payment?paymentId=${encodeURIComponent(paymentId)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to verify ad payment");
+  }
+  return res.json();
+}

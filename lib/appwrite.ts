@@ -3,7 +3,7 @@ import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from 
 // @ts-ignore: 'expo-web-browser' may not be installed in this environment
 
 
-const client = new Client()
+export const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
@@ -81,16 +81,21 @@ export async function updateUser({
   userId: string,
   lastTime: Date
 }) {
-
-  return databases.updateDocument(
-    DATABASE_ID,
-    USER_COLLECTION,
-    userId,
-    {
-      lastTime: lastTime
-    }
-  )
-
+  try {
+    const jwtResponse = await account.createJWT();
+    const res = await fetch("/api/user/activity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwtResponse.jwt}`
+      },
+      body: JSON.stringify({ userId, lastTime })
+    });
+    return res.json();
+  } catch (error) {
+    console.error("Failed to update user activity", error);
+    return null;
+  }
 }
 
 
@@ -114,24 +119,8 @@ export async function getCurrentUser() {
 
       return userDoc;
     } catch {
-      // 4. If document doesn't exist, create it
-      const avatar = generateAvatar(authUser.name || "User");
-
-      const newUserDoc = await databases.createDocument(
-        DATABASE_ID,
-        USER_COLLECTION,
-        authUser.$id,
-        {
-          username: authUser.name,
-          email: authUser.email,
-          level: null,
-          department: null,
-          avatar,
-          isAdmin: false,
-        }
-      );
-
-      return newUserDoc;
+      // 4. If document doesn't exist, return null (don't create)
+      return null;
     }
   } catch {
     return null;
@@ -190,4 +179,56 @@ export async function completePasswordRecovery(
 //     throw error;
 //   }
 // };
+
+export async function googleSignIn() {
+  try {
+    const redirectUrl = `https://www.ed-library.app/auth/callback`;
+
+    const response = await account.createOAuth2Token(
+      OAuthProvider.Google,
+      redirectUrl,
+      redirectUrl
+    );
+
+    // Redirect manually
+    if (!response) {
+  throw new Error("OAuth URL was not returned");
+}
+
+window.location.href = response;
+
+  } catch (error) {
+    console.error("Error during Google sign-in:", error);
+    throw error;
+  }
+}
+
+
+
+export async function handleOAuthSignIn(userId: string, secret: string) {
+  // 1. Create session
+  await account.createSession(userId, secret);
+
+  // 2. Get auth user
+  const authUser = await account.get();
+
+  // 3. Check if profile exists
+  try {
+    await databases.getDocument(
+      DATABASE_ID,
+      USER_COLLECTION,
+      authUser.$id
+    );
+
+    return {
+      status: "EXISTS",
+      user: authUser,
+    };
+  } catch {
+    return {
+      status: "NEW",
+      user: authUser,
+    };
+  }
+}
 
