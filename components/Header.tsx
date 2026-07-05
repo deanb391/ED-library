@@ -145,7 +145,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="hidden md:flex gap-6 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-300 dark:text-gray-600">
+        <div className="hidden md:flex gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
           <Link href="/" className="text-gray-900 dark:text-white hover:text-blue-600">
             Home
           </Link>
@@ -217,7 +217,7 @@ export default function Header() {
               </Link>
 
               <Link href="/signup">
-                <button className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 rounded-lg transition-all active:scale-[0.90]">
+                <button className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg transition-all active:scale-[0.90]">
                   Sign Up
                 </button>
               </Link>
@@ -351,7 +351,7 @@ function MenuItem({
     <Link
       href={href}
       onClick={onSelect}
-      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 dark:text-gray-600 transition-all active:scale-[0.98]"
+      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-600 transition-all active:scale-[0.98]"
     >
       <Icon size={18} />
       <span>{label}</span>

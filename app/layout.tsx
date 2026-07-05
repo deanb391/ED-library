@@ -1,5 +1,5 @@
 // app/layout.tsx
-import "./globals.css";
+// import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/Header";
@@ -40,7 +40,7 @@ export default function RootLayout({
       </head>
 
       <body
-        className={`${inter.className} bg-gray-50 dark:bg-gray-900 dark:bg-gray-950 min-h-screen flex flex-col transition-colors duration-200`}
+        className={`${inter.className} bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col transition-colors duration-200`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppProgressBar />
@@ -56,7 +56,7 @@ export default function RootLayout({
               </main>
 
               <Footer />
-              <div className="fixed bottom-4 right-4 z-[100]">
+              <div className="fixed bottom-4 right-4 z-100">
                 <WhatsappChannel />
               </div>
               <ContributorChatFAB />
