@@ -251,7 +251,7 @@ export default function Header() {
                 </span>
               </button>
 
-              {/* ================= MOBILE MENU ================= */}
+              {/* ================= MOBILE MENU ================== */}
 
               {/* ================= MOBILE MENU ================= */}
               <>
