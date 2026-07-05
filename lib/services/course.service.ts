@@ -4,6 +4,7 @@ import { ID, Query } from "appwrite";
 import { databases, storage } from "@/lib/appwrite/server";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { safeRedisOp } from "@/lib/redis";
+import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const COURSE_COLLECTION = "courses";
@@ -82,6 +83,8 @@ export async function createCourseService(data: any) {
     console.error("Error updating contest performance on course creation:", err);
   }
 
+  await clearLfuCacheNamespace("course:lists");
+
   return doc;
 }
 
@@ -109,12 +112,7 @@ export async function fetchCoursesByAdminService(userId: string) {
 }
 
 export async function fetchCourseByIdService(courseId: string) {
-  const cacheKey = `course:${courseId}:details`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cached = await getLfuCache<any>("course:details", courseId);
   if (cached) return cached;
 
   const doc = await databases.getDocument(
@@ -125,9 +123,8 @@ export async function fetchCourseByIdService(courseId: string) {
 
   const mapped = mapCourse(doc);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 3600, JSON.stringify(mapped));
-  }, null);
+  // max 200 courses stored in course details cache
+  await setLfuCache("course:details", courseId, mapped, 200);
 
   return mapped;
 }
@@ -140,14 +137,13 @@ export async function updateCourseService(courseId: string, data: any) {
     data
   );
 
-  await safeRedisOp(async (client) => {
-    await client.del(`course:${courseId}:details`);
-  }, null);
+  await invalidateLfuCache("course:details", courseId);
 
   return res;
 }
 
 export async function deleteCourseService(courseId: string) {
+  await clearLfuCacheNamespace("course:lists");
   return databases.deleteDocument(
     DATABASE_ID,
     COURSE_COLLECTION,
@@ -615,12 +611,8 @@ export async function recordCourseVisitService(courseId: string, userId: string)
 
 
 export async function fetchNewCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `courses:new:${limit}:${offset}`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cacheKey = `new:${limit}:${offset}`;
+  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
   if (cached) return cached;
 
   const res = await databases.listDocuments(
@@ -636,20 +628,15 @@ export async function fetchNewCoursesService(limit = 10, offset = 0) {
 
   const mapped = res.documents.map(mapCourse);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
+  // cache up to 50 paginated queries
+  await setLfuCache("course:lists", cacheKey, mapped, 50);
 
   return mapped;
 }
 
 export async function fetchPopularCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `courses:popular:${limit}:${offset}`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cacheKey = `popular:${limit}:${offset}`;
+  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
   if (cached) return cached;
 
   const res = await databases.listDocuments(
@@ -665,20 +652,14 @@ export async function fetchPopularCoursesService(limit = 10, offset = 0) {
 
   const mapped = res.documents.map(mapCourse);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
+  await setLfuCache("course:lists", cacheKey, mapped, 50);
 
   return mapped;
 }
 
 export async function fetchFreeCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `courses:free:${limit}:${offset}`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cacheKey = `free:${limit}:${offset}`;
+  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
   if (cached) return cached;
 
   const res = await databases.listDocuments(
@@ -695,9 +676,7 @@ export async function fetchFreeCoursesService(limit = 10, offset = 0) {
 
   const mapped = res.documents.map(mapCourse);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
+  await setLfuCache("course:lists", cacheKey, mapped, 50);
 
   return mapped;
 }

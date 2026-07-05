@@ -1,5 +1,6 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTEST_PERFORMANCE_COLLECTION = "contest_performance";
@@ -51,6 +52,9 @@ export async function createContestPerformanceService(contributorId: string): Pr
 }
 
 export async function getContestPerformanceByContributorService(contributorId: string): Promise<ContestPerformance | null> {
+  const cached = await getLfuCache<ContestPerformance>("performance:details", contributorId);
+  if (cached) return cached;
+
   try {
     const res = await databases.listDocuments(
       DATABASE_ID,
@@ -66,7 +70,9 @@ export async function getContestPerformanceByContributorService(contributorId: s
 
 
 
-    return res.documents[0] as unknown as ContestPerformance;
+    const performance = res.documents[0] as unknown as ContestPerformance;
+    await setLfuCache("performance:details", contributorId, performance, 100);
+    return performance;
   } catch (err) {
     console.error("Error fetching contest performance:", err);
     return null;
@@ -93,17 +99,30 @@ export async function updateContestPerformanceService(
     updates
   );
 
+  const contributorId = typeof doc.contributors === 'object' 
+        ? (Array.isArray(doc.contributors) ? doc.contributors[0]?.$id : doc.contributors.$id)
+        : doc.contributors;
+
+  if (contributorId) {
+    await invalidateLfuCache("performance:details", contributorId as string);
+  }
+
   return doc as unknown as ContestPerformance;
 }
 
 export async function fetchAllContestPerformancesService(): Promise<ContestPerformance[]> {
+  const cached = await getLfuCache<ContestPerformance[]>("performance:lists", "all");
+  if (cached) return cached;
+
   try {
     const res = await databases.listDocuments(
       DATABASE_ID,
       CONTEST_PERFORMANCE_COLLECTION,
       [Query.limit(500)]
     );
-    return res.documents as unknown as ContestPerformance[];
+    const performances = res.documents as unknown as ContestPerformance[];
+    await setLfuCache("performance:lists", "all", performances, 20);
+    return performances;
   } catch (err) {
     console.error("Error fetching all contest performances:", err);
     return [];

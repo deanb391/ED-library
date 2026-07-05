@@ -2,6 +2,7 @@
 
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const ADS_COLLECTION = "ads";
@@ -26,7 +27,7 @@ export function mapAd(doc: any) {
 }
 
 export async function createAdService(data: any) {
-  return databases.createDocument(
+  const doc = databases.createDocument(
     DATABASE_ID,
     ADS_COLLECTION,
     ID.unique(),
@@ -37,20 +38,31 @@ export async function createAdService(data: any) {
       isExpired: data.isExpired !== undefined ? data.isExpired : false,
     }
   );
+  await clearLfuCacheNamespace("ad:lists");
+  return doc;
 }
 
 export async function fetchAdsService(queries: any[]) {
+  const cacheKey = JSON.stringify(queries);
+  const cached = await getLfuCache<any>("ad:lists", cacheKey);
+  if (cached) return cached;
+
   const res = await databases.listDocuments(DATABASE_ID, ADS_COLLECTION, queries);
-  return {
+  const result = {
     ads: res.documents.map(mapAd),
     nextCursor:
       res.documents.length > 0
         ? res.documents[res.documents.length - 1].$id
         : null,
   };
+  await setLfuCache("ad:lists", cacheKey, result, 50);
+  return result;
 }
 
 export async function fetchActiveAdsService() {
+  const cached = await getLfuCache<any[]>("ad:lists", "active");
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     ADS_COLLECTION,
@@ -61,12 +73,19 @@ export async function fetchActiveAdsService() {
     ]
   );
 
-  return res.documents.map(mapAd);
+  const mapped = res.documents.map(mapAd);
+  await setLfuCache("ad:lists", "active", mapped, 20);
+  return mapped;
 }
 
 export async function fetchAdByIdService(adId: string) {
+  const cached = await getLfuCache<any>("ad:details", adId);
+  if (cached) return cached;
+
   const doc = await databases.getDocument(DATABASE_ID, ADS_COLLECTION, adId);
-  return mapAd(doc);
+  const mapped = mapAd(doc);
+  await setLfuCache("ad:details", adId, mapped, 50);
+  return mapped;
 }
 
 export async function fetchAdByIdRawService(adId: string) {
@@ -74,9 +93,13 @@ export async function fetchAdByIdRawService(adId: string) {
 }
 
 export async function updateAdService(adId: string, data: any) {
+  await invalidateLfuCache("ad:details", adId);
+  await clearLfuCacheNamespace("ad:lists");
   return databases.updateDocument(DATABASE_ID, ADS_COLLECTION, adId, data);
 }
 
 export async function deleteAdService(adId: string) {
+  await invalidateLfuCache("ad:details", adId);
+  await clearLfuCacheNamespace("ad:lists");
   return databases.deleteDocument(DATABASE_ID, ADS_COLLECTION, adId);
 }

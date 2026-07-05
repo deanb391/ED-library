@@ -3,7 +3,7 @@
 import { Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { getRedis, safeRedisOp } from "@/lib/redis";
-
+import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
 const LEADERBOARD_KEY = "leaderboard:uploads";
@@ -59,6 +59,9 @@ export async function incrementUploadCount(
       await client.zincrby(LEADERBOARD_KEY, amount, contributorId);
     }
   }, undefined);
+
+  // Invalidate the first page of the leaderboard since it changed
+  await invalidateLfuCache("leaderboard:hydrated_lists", "list:50:0");
 }
 
 /**
@@ -68,6 +71,10 @@ export async function getLeaderboard(
   limit: number = 50,
   offset: number = 0
 ): Promise<LeaderboardEntry[]> {
+  const cacheKey = `list:${limit}:${offset}`;
+  const cached = await getLfuCache<LeaderboardEntry[]>("leaderboard:hydrated_lists", cacheKey);
+  if (cached) return cached;
+
   // Try Redis first
   const redisEntries = await safeRedisOp(async (client) => {
     const exists = await client.exists(LEADERBOARD_KEY);
@@ -103,11 +110,14 @@ export async function getLeaderboard(
     console.log("redisEntries: ", redisEntries)
     const values = await hydrateLeaderboard(redisEntries, offset);
     console.log("Values: ", values)
+    await setLfuCache("leaderboard:hydrated_lists", cacheKey, values, 20);
     return values
   }
 
   // Fallback: read from Appwrite directly
-  return getLeaderboardFromAppwrite(limit, offset);
+  const appwriteValues = await getLeaderboardFromAppwrite(limit, offset);
+  await setLfuCache("leaderboard:hydrated_lists", cacheKey, appwriteValues, 20);
+  return appwriteValues;
 }
 
 /**

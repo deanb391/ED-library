@@ -6,7 +6,7 @@ import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";
 import { safeRedisOp } from "@/lib/redis";
-
+import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
 
@@ -107,6 +107,8 @@ export async function createContributorService(
 
   trackContributorApplication(user, { username: draft.username, institution: draft.institution });
 
+  await clearLfuCacheNamespace("contributor:lists");
+
   return mapContributor(doc);
 }
 
@@ -204,12 +206,16 @@ export async function editContributorService(
     });
   }
 
+  await invalidateLfuCache("contributor:details", contributorId);
+  await clearLfuCacheNamespace("contributor:lists");
+
   return mapContributor(doc);
 }
 
 export async function deleteContributorService(
   contributorId: string
 ): Promise<void> {
+  await clearLfuCacheNamespace("contributor:lists");
   await databases.deleteDocument(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,
@@ -220,13 +226,19 @@ export async function deleteContributorService(
 export async function fetchContributorService(
   contributorId: string
 ): Promise<Contributor> {
+  const cached = await getLfuCache<Contributor>("contributor:details", contributorId);
+  if (cached) return cached;
+
   const doc = await databases.getDocument(
     DATABASE_ID,
     CONTRIBUTORS_COLLECTION,
     contributorId
   );
 
-  return mapContributor(doc);
+  const mapped = mapContributor(doc);
+  await setLfuCache("contributor:details", contributorId, mapped, 100);
+
+  return mapped;
 }
 
 export async function getContributorByUserIdService(
@@ -323,12 +335,8 @@ export async function toggleFollowContributorService(
 }
 
 export async function fetchTopContributorsCoursesService(limit = 50, offset = 0) {
-  const cacheKey = `contributors:top:${limit}:${offset}`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cacheKey = `top:${limit}:${offset}`;
+  const cached = await getLfuCache<Contributor[]>("contributor:lists", cacheKey);
   if (cached) return cached;
 
   const res = await databases.listDocuments(
@@ -343,20 +351,14 @@ export async function fetchTopContributorsCoursesService(limit = 50, offset = 0)
 
   const mapped = res.documents.map(mapContributor);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
+  await setLfuCache("contributor:lists", cacheKey, mapped, 50);
 
   return mapped;
 }
 
 export async function fetchNewContributorsCoursesService(limit = 50, offset = 0) {
-  const cacheKey = `contributors:new:${limit}:${offset}`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
+  const cacheKey = `new:${limit}:${offset}`;
+  const cached = await getLfuCache<Contributor[]>("contributor:lists", cacheKey);
   if (cached) return cached;
 
   const res = await databases.listDocuments(
@@ -374,9 +376,7 @@ export async function fetchNewContributorsCoursesService(limit = 50, offset = 0)
 
   const mapped = res.documents.map(mapContributor);
 
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
+  await setLfuCache("contributor:lists", cacheKey, mapped, 50);
 
   return mapped;
 }
@@ -433,7 +433,9 @@ export async function fetchContributorsService(
   nextCursor?: string;
   hasMore: boolean;
 }> {
-
+  const cacheKey = `all:${type || "all"}:${limit}:${cursor || "none"}:${search || "none"}`;
+  const cached = await getLfuCache<any>("contributor:lists", cacheKey);
+  if (cached) return cached;
 
   const queries: any[] = [
     Query.orderDesc("$createdAt"),
@@ -457,29 +459,19 @@ export async function fetchContributorsService(
     queries
   );
 
-
   const contributors = res.documents.map(mapContributor);
   const nextCursor =
     res.documents.length === limit
       ? res.documents[res.documents.length - 1].$id
       : undefined;
 
-  // // Hydrate user data
-  // const userIds = [...new Set(reviews.map(review => review.user as string))];
-  // const userPromises = userIds.map(userId => getUserById(userId));
-  // const users = await Promise.all(userPromises);
-  // const userMap = new Map(userIds.map((id, index) => [id, users[index]]));
-
-  // reviews.forEach(review => {
-  //   const userDoc = userMap.get(review.user as string);
-  //   if (userDoc) {
-  //     review.user = userDoc;
-  //   }
-  // });
-
-  return {
+  const result = {
     contributors,
     nextCursor,
     hasMore: Boolean(nextCursor),
   };
+
+  await setLfuCache("contributor:lists", cacheKey, result, 50);
+
+  return result;
 }
