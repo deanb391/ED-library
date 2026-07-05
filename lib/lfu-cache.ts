@@ -19,7 +19,15 @@ export async function getLfuCache<T>(namespace: string, key: string): Promise<T 
       // Increment frequency if the item exists
       await client.zincrby(freqKey, 1, key);
       try {
-        return JSON.parse(data) as T;
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object' && parsed.__lfu_wrapped) {
+          if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
+            console.log(`[LFU Cache] Expired: ${namespace} -> ${key}`);
+            return null; // Expired, return null so it gets re-fetched
+          }
+          return parsed.data as T;
+        }
+        return parsed as T;
       } catch (err) {
         console.error(`[LFU Cache] Failed to parse cached data for ${namespace}:${key}`, err);
         return null;
@@ -39,15 +47,19 @@ export async function getLfuCache<T>(namespace: string, key: string): Promise<T 
  * @param value The value to cache (will be JSON stringified).
  * @param maxSize The maximum number of items allowed in this namespace.
  */
-export async function setLfuCache<T>(namespace: string, key: string, value: T, maxSize: number): Promise<void> {
+export async function setLfuCache<T>(namespace: string, key: string, value: T, maxSize: number, ttlInSeconds?: number): Promise<void> {
   await safeRedisOp(async (client) => {
     const dataKey = `lfu_data:${namespace}`;
     const freqKey = `lfu_freq:${namespace}`;
 
     console.log(`[LFU Cache] DB Hit & Setting Cache: ${namespace} -> ${key}`);
 
+    const payload = ttlInSeconds 
+      ? { __lfu_wrapped: true, data: value, expiresAt: Date.now() + ttlInSeconds * 1000 }
+      : value;
+
     // Set the actual data
-    await client.hset(dataKey, key, JSON.stringify(value));
+    await client.hset(dataKey, key, JSON.stringify(payload));
 
     // Initialize or increment frequency
     const exists = await client.zscore(freqKey, key);

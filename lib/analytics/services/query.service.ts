@@ -136,7 +136,7 @@ async function fetchMonthlyUsersSeries(
 
 export async function getAcquisitionSummary(timeframe: Timeframe): Promise<AcquisitionSummary> {
   const cacheKey = `acquisition:${timeframe}`;
-  const cached = await getLfuCache<AcquisitionSummary>("analytics:summaries", cacheKey);
+  const cached = await getLfuCache<AcquisitionSummary>("analytics:summaries_v2", cacheKey);
   if (cached) return cached;
 
   const { startDate, endDate } = getDateRange(timeframe);
@@ -204,7 +204,7 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     signupsByDept,
   };
 
-  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+  await setLfuCache("analytics:summaries_v2", cacheKey, result, 50, 900);
 
   return result;
 }
@@ -213,7 +213,7 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
 
 export async function getContributorSummary(timeframe: Timeframe): Promise<ContributorSummary> {
   const cacheKey = `contributors:${timeframe}`;
-  const cached = await getLfuCache<ContributorSummary>("analytics:summaries", cacheKey);
+  const cached = await getLfuCache<ContributorSummary>("analytics:summaries_v2", cacheKey);
   if (cached) return cached;
 
   const { startDate, endDate } = getDateRange(timeframe);
@@ -237,7 +237,7 @@ export async function getContributorSummary(timeframe: Timeframe): Promise<Contr
     uploadSeries: aggregateSeries(fillDateSeries(uploadSeries, startDate, endDate), timeframe),
   };
 
-  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+  await setLfuCache("analytics:summaries_v2", cacheKey, result, 50, 900);
 
   return result;
 }
@@ -246,7 +246,7 @@ export async function getContributorSummary(timeframe: Timeframe): Promise<Contr
 
 export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSummary> {
   const cacheKey = `revenue:${timeframe}`;
-  const cached = await getLfuCache<RevenueSummary>("analytics:summaries", cacheKey);
+  const cached = await getLfuCache<RevenueSummary>("analytics:summaries_v2", cacheKey);
   if (cached) return cached;
 
   const { startDate, endDate } = getDateRange(timeframe);
@@ -287,7 +287,7 @@ export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSu
     subscriptionSeries: aggregateSeries(fillDateSeries(subscriptionSeries, startDate, endDate), timeframe),
   };
 
-  await setLfuCache("analytics:summaries", cacheKey, result, 50);
+  await setLfuCache("analytics:summaries_v2", cacheKey, result, 50, 900);
 
   return result;
 }
@@ -296,13 +296,13 @@ export async function getRevenueSummary(timeframe: Timeframe): Promise<RevenueSu
 
 export async function getMetricSeries(metric: AnalyticsMetricName, timeframe: Timeframe) {
   const cacheKey = `series:${metric}:${timeframe}`;
-  const cached = await getLfuCache<any>("analytics:series", cacheKey);
+  const cached = await getLfuCache<any>("analytics:series_v2", cacheKey);
   if (cached) return cached;
 
   const { startDate, endDate } = getDateRange(timeframe);
   const raw = await fetchMetricSeries(metric, startDate, endDate);
   const result = aggregateSeries(fillDateSeries(raw, startDate, endDate), timeframe);
   
-  await setLfuCache("analytics:series", cacheKey, result, 100);
+  await setLfuCache("analytics:series_v2", cacheKey, result, 100, 900);
   return result;
 }
