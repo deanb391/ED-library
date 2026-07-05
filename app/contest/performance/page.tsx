@@ -205,7 +205,7 @@ export default function ContributorPerformancePage() {
             Track your eligibility and projected earnings from the unlocked reward pool. Minimum 100 points required to qualify.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Eligibility Status */}
             <div className="p-4 bg-slate-950/45 border border-slate-850 rounded-2xl">
@@ -217,17 +217,6 @@ export default function ContributorPerformancePage() {
                 {isQualified 
                   ? "You are eligible for the reward pool!" 
                   : `Earn ${100 - totalPoints} more points to qualify.`}
-              </div>
-            </div>
-
-            {/* Unlocked Pool */}
-            <div className="p-4 bg-slate-950/45 border border-slate-850 rounded-2xl">
-              <div className="text-xs font-bold uppercase text-slate-500 mb-1">Unlocked Pool</div>
-              <div className="text-lg font-black text-slate-200">
-                ₦{globalStats ? unlockedPool.toLocaleString(undefined, { maximumFractionDigits: 0 }) : "0"}
-              </div>
-              <div className="text-xs text-slate-400 mt-1">
-                of max ₦100,000.
               </div>
             </div>
 
