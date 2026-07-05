@@ -982,7 +982,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           <div className="flex items-center gap-3">
             <button
               onClick={handleShare}
-              className="p-2 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg transition-colors border border-gray-200 dark:border-gray-800 flex items-center justify-center">
+              className="p-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg transition-colors border border-gray-200 dark:border-gray-800 flex items-center justify-center">
               <Share2 size={18} />
             </button>
             {isOwner && (
@@ -1271,7 +1271,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 }}
                 className={`p-2 rounded-lg border transition ${viewMode === "timeline"
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50"
                   }`}
                 title="Timeline view"
               >
@@ -1285,7 +1285,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 }}
                 className={`p-2 rounded-lg border transition ${viewMode === "pdf"
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
+                  : "bg-white text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
                   }`}
                 title="PDF view"
               >

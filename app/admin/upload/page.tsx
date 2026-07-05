@@ -266,7 +266,7 @@ const handleFiles = (incoming: FileList | null) => {
                 {files.map((file, index) => (
                   <div
                     key={index}
-                    className="relative w-28 h-36 flex-shrink-0 rounded-lg overflow-hidden border"
+                    className="relative w-28 h-36 shrink-0 rounded-lg overflow-hidden border"
                   >
                     <p>
                       {index}
