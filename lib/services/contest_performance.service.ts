@@ -108,7 +108,7 @@ export async function updateContestPerformanceService(
   }
   
   await clearLfuCacheNamespace("performance:lists");
-  await clearLfuCacheNamespace("leaderboard:hydrated");
+  await clearLfuCacheNamespace("leaderboard:hydrated_lists");
 
   return doc as unknown as ContestPerformance;
 }
