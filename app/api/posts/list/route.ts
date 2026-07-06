@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   if (cursor) queries.push(Query.cursorAfter(cursor));
 
-  const res = await fetchPostsService(queries);
+  const res = await fetchPostsService(courseId, queries);
 
   return NextResponse.json(res);
 }

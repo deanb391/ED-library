@@ -250,14 +250,19 @@ export async function fetchCoursesByDepartmentService({
 
 /* ================= POSTS ================= */
 
-export async function fetchPostsService(queries: any[]) {
+export async function fetchPostsService(courseId: string, queries: any[]) {
+  const namespace = `course:posts:${courseId}`;
+  const cacheKey = `list:${JSON.stringify(queries)}`;
+  const cached = await getLfuCache<any>(namespace, cacheKey);
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     POST_COLLECTION,
     queries
   );
 
-  return {
+  const result = {
     posts: res.documents.map((doc: any) => ({
       id: doc.$id,
       images: doc.images ?? [],
@@ -268,16 +273,24 @@ export async function fetchPostsService(queries: any[]) {
         ? res.documents[res.documents.length - 1].$id
         : null,
   };
+
+  await setLfuCache(namespace, cacheKey, result, 50);
+  return result;
 }
 
-export async function fetchAllPostsService(queries: any[]) {
+export async function fetchAllPostsService(courseId: string, queries: any[]) {
+  const namespace = `course:posts:${courseId}`;
+  const cacheKey = `all:${JSON.stringify(queries)}`;
+  const cached = await getLfuCache<any>(namespace, cacheKey);
+  if (cached) return cached;
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     POST_COLLECTION,
     queries
   );
 
-  return {
+  const result = {
     posts: res.documents.map((doc: any) => ({
       id: doc.$id,
       images: doc.images ?? [],
@@ -288,9 +301,17 @@ export async function fetchAllPostsService(queries: any[]) {
         ? res.documents[res.documents.length - 1].$id
         : null,
   };
+
+  await setLfuCache(namespace, cacheKey, result, 50);
+  return result;
 }
 
 export async function fetchPostsAscService(courseId: string, limit = 10, cursor?: string) {
+  const namespace = `course:posts:${courseId}`;
+  const cacheKey = `list:${limit}:${cursor || 'start'}`;
+  const cached = await getLfuCache<any>(namespace, cacheKey);
+  if (cached) return cached;
+
   const queries = [
     Query.equal("courses", courseId),
     Query.orderAsc("$createdAt"),
@@ -307,7 +328,7 @@ export async function fetchPostsAscService(courseId: string, limit = 10, cursor?
     queries
   );
 
-  return {
+  const result = {
     posts: res.documents.map((doc: any) => ({
       id: doc.$id,
       images: doc.images ?? [],
@@ -318,6 +339,9 @@ export async function fetchPostsAscService(courseId: string, limit = 10, cursor?
         ? res.documents[res.documents.length - 1].$id
         : null,
   };
+
+  await setLfuCache(namespace, cacheKey, result, 50);
+  return result;
 }
 
 export async function createPostService(data: { courses: string; images: string[]; description: string }) {
@@ -335,33 +359,40 @@ export async function createPostService(data: { courses: string; images: string[
     lastOperation: "Now",
   });
 
+  await clearLfuCacheNamespace(`course:posts:${data.courses}`);
+
   return post;
 }
 
 export async function updatePostService(postId: string, data: any) {
+  const oldPost = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
+  const courseId = typeof oldPost.courses === 'string' ? oldPost.courses : (oldPost.courses?.$id || oldPost.courses);
+
   if (data.images) {
-    const oldPost = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
     const oldImagesCount = (oldPost.images || []).length;
     const newImagesCount = data.images.length;
     const diff = newImagesCount - oldImagesCount;
 
-    if (diff !== 0) {
-      const courseId = typeof oldPost.courses === 'string' ? oldPost.courses : (oldPost.courses?.$id || oldPost.courses);
-      if (courseId) {
-        const course = await fetchCourseByIdService(courseId);
-        await updateCourseService(courseId, {
-          pageCount: Math.max(0, (course.pageCount || 0) + diff)
-        });
-      }
+    if (diff !== 0 && courseId) {
+      const course = await fetchCourseByIdService(courseId);
+      await updateCourseService(courseId, {
+        pageCount: Math.max(0, (course.pageCount || 0) + diff)
+      });
     }
   }
 
-  return databases.updateDocument(
+  const res = await databases.updateDocument(
     DATABASE_ID,
     POST_COLLECTION,
     postId,
     data
   );
+
+  if (courseId) {
+    await clearLfuCacheNamespace(`course:posts:${courseId}`);
+  }
+
+  return res;
 }
 
 export async function deletePostService(postId: string) {
@@ -376,11 +407,17 @@ export async function deletePostService(postId: string) {
     });
   }
 
-  return databases.deleteDocument(
+  const res = await databases.deleteDocument(
     DATABASE_ID,
     POST_COLLECTION,
     postId
   );
+
+  if (courseId) {
+    await clearLfuCacheNamespace(`course:posts:${courseId}`);
+  }
+
+  return res;
 }
 
 export async function deleteFileFromPostService(postId: string, fileUrl: string) {
@@ -407,6 +444,7 @@ export async function deleteFileFromPostService(postId: string, fileUrl: string)
     await updateCourseService(courseId, {
       pageCount: Math.max(0, (course.pageCount || 0) - 1)
     });
+    await clearLfuCacheNamespace(`course:posts:${courseId}`);
   }
 
   return true;

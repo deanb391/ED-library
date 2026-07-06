@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   ];
 
 
-  const res = await fetchAllPostsService(queries);
+  const res = await fetchAllPostsService(courseId, queries);
 
   return NextResponse.json(res);
 }
