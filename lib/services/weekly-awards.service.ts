@@ -3,6 +3,7 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { safeRedisOp } from "@/lib/redis";
+import { invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
@@ -104,6 +105,7 @@ export async function calculateTopContributor(): Promise<WeeklyAward | null> {
           prev.$id,
           { isTopContributor: false }
         );
+        await invalidateLfuCache("contributor:details", prev.$id);
       }
     } catch {
       // Non-critical
@@ -119,6 +121,8 @@ export async function calculateTopContributor(): Promise<WeeklyAward | null> {
         topContributorWeek: weekString,
       }
     );
+
+    await invalidateLfuCache("contributor:details", winner.$id);
 
     // Create award document
     const awardData = {
@@ -141,6 +145,8 @@ export async function calculateTopContributor(): Promise<WeeklyAward | null> {
 
     // Reset ALL contributors' weeklyUploadCount to 0
     await resetWeeklyUploads();
+
+    await clearLfuCacheNamespace("contributor:lists");
 
     // Cache in Redis
     const award = mapAward(awardDoc);
@@ -235,6 +241,7 @@ async function resetWeeklyUploads() {
           doc.$id,
           { weeklyUploadCount: 0 }
         );
+        await invalidateLfuCache("contributor:details", doc.$id);
       }
 
       if (res.documents.length < batchSize) break;
