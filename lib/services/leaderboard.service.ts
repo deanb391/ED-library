@@ -3,7 +3,7 @@
 import { Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
 import { getRedis, safeRedisOp } from "@/lib/redis";
-import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
+import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 const DATABASE_ID = "69617e75000c6c010a75";
 const CONTRIBUTORS_COLLECTION = "contributors";
 const LEADERBOARD_KEY = "leaderboard:uploads";
@@ -62,6 +62,10 @@ export async function incrementUploadCount(
 
   // Invalidate the first page of the leaderboard since it changed
   await invalidateLfuCache("leaderboard:hydrated_lists", "list:50:0");
+
+  // Invalidate the contributor cache since their stats changed
+  await invalidateLfuCache("contributor:details", contributorId);
+  await clearLfuCacheNamespace("contributor:lists");
 }
 
 /**

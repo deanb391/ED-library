@@ -304,6 +304,9 @@ export async function toggleFollowContributorService(
       }
     );
 
+    await invalidateLfuCache("contributor:details", contributorId);
+    await clearLfuCacheNamespace("contributor:lists");
+
     // Send email only when it is a new follow, not an unfollow
     if (!isFollowing) {
       try {
