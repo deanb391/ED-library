@@ -47,7 +47,7 @@ export default function RootLayout({
           <PHProvider>
             <UserProvider>
               <Header />
-
+              {/*
               <div className="bg-amber-300 dark:bg-amber-900/60 text-blue-900 dark:text-blue-200 py-2.5 overflow-hidden relative z-40 border border-amber-400 dark:border-amber-700 shadow-sm mx-4 mt-2 mb-4 rounded-xl">
                 <div className="animate-marquee inline-block whitespace-nowrap">
                   {[...Array(8)].map((_, i) => (
@@ -56,8 +56,8 @@ export default function RootLayout({
                     </span>
                   ))}
                 </div>
-              </div>
-
+              </div> 
+              */}
               <main className="grow w-full">
                 <GoogleAnalytics />
                 <TrackPageView />
