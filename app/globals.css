@@ -76,3 +76,14 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: #4b5563; /* Tailwind gray-600 */
 }
+
+@keyframes marquee {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 60s linear infinite;
+}
