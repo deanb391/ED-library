@@ -45,7 +45,7 @@ export default function RectangularAd({
     if (!activeAd) return;
 
     if (activeAd.fileType === "image") {
-      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 7000);
+      timeoutRef.current = setTimeout(goNext, activeAd.duration ?? 10000);
     }
 
     return () => {
