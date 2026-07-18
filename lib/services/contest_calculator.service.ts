@@ -27,9 +27,18 @@ export async function runContestCalculate(performanceId?: string) {
     }
 
     // Determine current dayKey
+    const CONTEST_DURATION_DAYS = 15;
     const startDate = new Date("2026-06-29T00:00:00Z");
+    const endDate = new Date(startDate.getTime() + CONTEST_DURATION_DAYS * 24 * 60 * 60 * 1000);
     const now = new Date();
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+    // If the contest has ended, do nothing.
+    if (today >= endDate) {
+      console.log("Contest has ended. Skipping score calculation.");
+      return true;
+    }
+
     const diffTime = Math.max(0, today.getTime() - startDate.getTime());
     const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const dayKey = `day ${dayNumber}`;
