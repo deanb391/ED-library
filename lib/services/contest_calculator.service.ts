@@ -27,7 +27,7 @@ export async function runContestCalculate(performanceId?: string) {
     }
 
     // Determine current dayKey
-    const CONTEST_DURATION_DAYS = 30;
+    const CONTEST_DURATION_DAYS = 15;
     const startDate = new Date("2026-06-29T00:00:00Z");
     const endDate = new Date(startDate.getTime() + CONTEST_DURATION_DAYS * 24 * 60 * 60 * 1000);
     const now = new Date();
