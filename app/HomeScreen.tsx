@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/courses";
 
 import { useUser } from "@/context/UserContext";
+import { useHome } from "@/context/HomeContext";
 import { fetchLibraryCourse } from "@/lib/api/library";
 import {
   getTopContributors,
@@ -477,150 +478,29 @@ function pickRandom<T>(arr: T[]): T | null {
 
 export default function EDLibraryHome() {
   const router = useRouter();
+  const { user, contributor } = useUser();
+
   const {
-    user,
-    loading: userLoading,
-    contributor,
-    homeBannerAds,
-    showAdHome,
-  } = useUser();
+    popular,
+    newCourses,
+    newContributors,
+    setNewContributors,
+    forYou,
+    library,
+    related,
+    contributors,
+    setContributors,
+    smallMiddleAds,
+    largeSearchAds,
+    smallTopAds,
+    loading,
+    loadingMore,
+    loadMore,
+  } = useHome();
 
-  const [popular, setPopular] = useState<Course[]>([]);
-  const [newCourses, setNewCourses] = useState<Course[]>([]);
-  const [newContributors, setNewContributors] = useState<HomeContributor[]>([]);
-
-  const [forYou, setForYou] = useState<Course[]>([]);
-  const [library, setLibrary] = useState<Course[]>([]);
-  const [related, setRelated] = useState<Course[]>([]);
-  const [contributors, setContributors] = useState<HomeContributor[]>([]);
-
-  const [smallSearchAds, setSmallSearchAds] = useState<AdItem[]>([]);
-  const [smallTopAds, setSmallTopAds] = useState<AdItem[]>([]);
-  const [smallMiddleAds, setSmallMiddleAds] = useState<AdItem[]>([]);
-  const [largeSearchAds, setLargeSearchAds] = useState<AdItem[]>([]);
-  const [largeTopAds, setLargeTopAds] = useState<AdItem[]>([]);
-  const [largeMiddleAds, setLargeMiddleAds] = useState<AdItem[]>([]);
-  const [bannerAdOpen, setBannerAdOpen] = useState(false);
-  const [currentBanner, setCurrentBanner] = useState<AdItem | null>(null);
-
-  const [offsets, setOffsets] = useState({
-    popular: 0,
-    new: 0,
-  });
-
-  const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<Course[] | null>(null);
-  const [contributorResults, setContributorResults] = useState<
-    HomeContributor[]
-  >([]);
-  const [courseResults, setCourseResults] = useState<Course[] | null>(null);
+  const [contributorResults, setContributorResults] = useState<HomeContributor[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-
-  const [loadingMore, setLoadingMore] = useState({
-    popular: false,
-    new: false,
-  });
-
-  useEffect(() => {
-    if (userLoading) return;
-
-    async function load() {
-      setLoading(true);
-
-      const value = showAdHome();
-      setBannerAdOpen(value);
-      setCurrentBanner(pickRandom(homeBannerAds));
-      const { searchAds, topAds, middleAds } = await fetchSmallAds();
-      setSmallSearchAds(searchAds);
-      setSmallTopAds(topAds);
-      setSmallMiddleAds(middleAds);
-
-      const { oneAds, twoAds, threeAds } = await fetchMediumAds();
-      setLargeSearchAds(oneAds);
-      setLargeTopAds(twoAds);
-      setLargeMiddleAds(threeAds);
-
-      const [p, n, nc, t] = await Promise.all([
-        fetchPopularCourses(10, 0),
-        fetchNewCourses(10, 0),
-        getNewContributors(),
-        getTopContributors(),
-      ]);
-
-      setPopular(p);
-      setNewCourses(n);
-
-      if (user) {
-        const [fy, lib, rel] = await Promise.all([
-          fetchCoursesForUser(user),
-          fetchLibraryCourse(user.$id),
-          fetchRelatedCourse(user),
-        ]);
-
-        setForYou(fy);
-        setLibrary(lib);
-        setRelated(rel);
-      }
-      const mapped = t.map((c: Contributor) => {
-        let ids: string[] = [];
-
-        try {
-          ids = JSON.parse(c.followersIds || "[]");
-          if (!Array.isArray(ids)) ids = [];
-        } catch {
-          ids = [];
-        }
-
-        return {
-          ...c,
-          isFollowing: user?.$id ? ids.includes(user.$id) : false,
-        };
-      });
-
-      const mappedNew = nc.map((c: Contributor) => {
-        let ids: string[] = [];
-
-        try {
-          ids = JSON.parse(c.followersIds || "[]");
-          if (!Array.isArray(ids)) ids = [];
-        } catch {
-          ids = [];
-        }
-
-        return {
-          ...c,
-          isFollowing: user?.$id ? ids.includes(user.$id) : false,
-        };
-      });
-
-      setContributors(mapped);
-      setNewContributors(mappedNew);
-      setLoading(false);
-    }
-
-    load();
-  }, [userLoading, user]);
-
-  const loadMore = async (type: "popular" | "new") => {
-    if (loadingMore[type]) return;
-
-    setLoadingMore((l) => ({ ...l, [type]: true }));
-    const nextOffset = offsets[type] + 10;
-
-    let data: Course[] = [];
-
-    if (type === "popular") data = await fetchPopularCourses(10, nextOffset);
-    if (type === "new") data = await fetchNewCourses(10, nextOffset);
-
-    if (!data.length) return;
-
-    if (type === "popular") setPopular((p) => [...p, ...data]);
-    if (type === "new") setNewCourses((p) => [...p, ...data]);
-
-    setOffsets((o) => ({ ...o, [type]: nextOffset }));
-
-    setLoadingMore((l) => ({ ...l, [type]: false }));
-  };
 
   if (loading) {
     return (
@@ -679,24 +559,7 @@ export default function EDLibraryHome() {
   return (
     <div className="min-h-screen bg-transparent">
       <main className="max-w-7xl mx-auto px-5 py-10">
-        {/* Contest Banner */}
-        <div
-          onClick={() => router.push("/contest")}
-          className="w-full max-w-4xl mx-auto mb-8 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg transition-all active:scale-[0.98] flex flex-col md:flex-row items-center justify-between shadow-md"
-        >
-          <div>
-            <h3 className="text-xl font-bold mb-1">
-              🎉 Join The 15 days Contributor Challenge!
-            </h3>
-            <p className="text-blue-100 text-sm">
-              Win exciting prizes by sharing your knowledge and growing the
-              community.
-            </p>
-          </div>
-          <button className="mt-4 md:mt-0 bg-white dark:bg-gray-900 text-blue-600 px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors shrink-0 shadow-sm">
-            View Contest
-          </button>
-        </div>
+
 
         <CourseSearch
           onCourseResults={setResults}

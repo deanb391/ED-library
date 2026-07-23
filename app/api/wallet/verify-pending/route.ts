@@ -17,6 +17,11 @@ export async function POST(req: Request) {
         // 1. Check Flutterwave status
         const flwRes = await verifyFlutterwaveTransfer(withdrawal.$id);
 
+        if (flwRes.status === "error") {
+          results.push({ id: withdrawal.$id, error: flwRes.message });
+          continue;
+        }
+
         // /transfers?reference=X typically returns a list of transfers in the data array
         const transfers = Array.isArray(flwRes.data) ? flwRes.data : (flwRes.data ? [flwRes.data] : []);
         const transfer = transfers.find((t: any) => t.reference === withdrawal.$id);

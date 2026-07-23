@@ -457,11 +457,17 @@ export default function DashboardUnderReviewPage() {
                     </div>
                   </div>
 
-                  <Link
+                  {/* <Link
                     href="/contest"
                     className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
                   >
                     {timeLeft.isPastStart ? "Enter Contest Arena" : "Join & View Rules"}
+                  </Link> */}
+                  <Link
+                    href="/contributor/dashboard/contest-report"
+                    className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
+                  >
+                    View Contest Report
                   </Link>
                 </div>
               </div>
@@ -494,11 +500,17 @@ export default function DashboardUnderReviewPage() {
                     </div>
                   </div>
 
-                  <Link
+                  {/* <Link
                     href="/contest/leaderboard"
                     className="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-550 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-indigo-600/10 text-decoration-none"
                   >
                     View Contest Leaderboard
+                  </Link> */}
+                  <Link
+                    href="/contributor/dashboard/contest-report"
+                    className="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-550 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-indigo-600/10 text-decoration-none"
+                  >
+                    View Contest Report
                   </Link>
                   <Link
                     href="/contributor/dashboard/referrals"

@@ -196,6 +196,10 @@ export async function processWithdrawal({
       reference: withdrawal.$id,
     });
 
+    if (flw.status === "network_error") {
+      throw new Error("network_error");
+    }
+
     if (flw.status === "error") {
       // Synchronous definitive failure from Flutterwave
       throw new Error(`Flutterwave error: ${flw.message}`);
@@ -210,11 +214,11 @@ export async function processWithdrawal({
     return { success: true, receipt: withdrawal, message: flw.message || "Transfer processing" };
 
   } catch (err) {
-    console.error("processWithdrawal Error:", err);
+    const errorMessage = (err as Error).message || "";
+    console.error("processWithdrawal Error:", errorMessage);
 
     // Determine if it was a network error/timeout (fetch failed) vs an API rejection
-    const errorMessage = (err as Error).message || "";
-    const isNetworkError = errorMessage.includes("fetch failed") || (err as Error).name === "TypeError";
+    const isNetworkError = errorMessage === "network_error" || errorMessage.includes("fetch failed") || (err as Error).name === "TypeError";
 
     if (!isNetworkError) {
       // Explicit failure: Safe to refund immediately
