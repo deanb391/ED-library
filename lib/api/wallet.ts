@@ -109,8 +109,15 @@ export async function verifyPayment(paymentId: string) {
 }
 
 export async function withdraw(userId: string, amount: string) {
-   const jwt = await account.createJWT();
-   const res = await fetch("/api/wallet/withdraw", {
+  let jwt;
+  try {
+    jwt = await account.createJWT();
+  } catch (error) {
+    console.error("JWT creation failed:", error);
+    return { error: "Authentication failed. Please check your network or disable adblockers." };
+  }
+
+  const res = await fetch("/api/wallet/withdraw", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
