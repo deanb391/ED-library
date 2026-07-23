@@ -23,6 +23,8 @@ export type ContestPerformance = {
   uploadQuality?: string;
   referralClicks?: string;
   uploadsCreated?: string;
+  Prize?: number;
+  isTop3Contributor?: boolean;
 };
 
 export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {

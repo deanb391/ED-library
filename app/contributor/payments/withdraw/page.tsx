@@ -119,7 +119,7 @@ export default function WithdrawPage() {
   const [showFailedVerification, setShowFailedVerification] = useState(false);
 
 
-  const MIN_WITHDRAWAL = 1000;
+  const MIN_WITHDRAWAL = 100;
 
   let isValidAmount = (Number(amount) >= MIN_WITHDRAWAL);
 
@@ -458,7 +458,7 @@ export default function WithdrawPage() {
             }}
           >
             <CheckCircle2 size={16} fill="#10B981" color="white" />
-            <span>Min. withdrawal: ₦1,000</span>
+            <span>Min. withdrawal: ₦100</span>
           </div>
         </div>
 
@@ -541,7 +541,7 @@ export default function WithdrawPage() {
                 }}
               >
                 <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                  Min. withdrawal: NGN 1,000
+                  Min. withdrawal: NGN 100
                 </span>
                 <button
                   style={{

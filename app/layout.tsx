@@ -7,6 +7,7 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import Footer from "@/components/Footer";
 import TrackPageView from "@/components/TrackPageView";
 import { UserProvider } from "@/context/UserContext";
+import { HomeProvider } from "@/context/HomeContext";
 import Script from "next/script";
 import { PHProvider } from "@/app/providers";
 import AppProgressBar from "@/components/ProgressBar";
@@ -46,7 +47,8 @@ export default function RootLayout({
           <AppProgressBar />
           <PHProvider>
             <UserProvider>
-              <Header />
+              <HomeProvider>
+                <Header />
               {/*
               <div className="bg-amber-300 dark:bg-amber-900/60 text-blue-900 dark:text-blue-200 py-2.5 overflow-hidden relative z-40 border border-amber-400 dark:border-amber-700 shadow-sm mx-4 mt-2 mb-4 rounded-xl">
                 <div className="animate-marquee inline-block whitespace-nowrap">
@@ -66,10 +68,11 @@ export default function RootLayout({
               </main>
 
               <Footer />
-              <div className="fixed bottom-4 right-4 z-100">
+              <div className="fixed bottom-4 left-4 z-100">
                 <WhatsappChannel />
               </div>
-              <ContributorChatFAB />
+                <ContributorChatFAB />
+              </HomeProvider>
             </UserProvider>
           </PHProvider>
         </ThemeProvider>
