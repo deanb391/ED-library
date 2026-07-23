@@ -169,8 +169,11 @@ export async function processWithdrawal({
   });
 
   try {
-    const ed_cut = 0.05 * amount;
-    const before_cut = 0.95 * amount;
+    const FEE_WAIVER_END = new Date("2026-07-26T00:00:00Z");
+    const isFeeWaived = new Date() < FEE_WAIVER_END;
+    
+    const ed_cut = isFeeWaived ? 0 : 0.05 * amount;
+    const before_cut = amount - ed_cut;
     let flutter_charge = 10.8;
     if (before_cut - flutter_charge > 5000 && before_cut - flutter_charge < 50000) {
       flutter_charge = 26.9;
@@ -184,8 +187,11 @@ export async function processWithdrawal({
     // 2. Debit wallet first (Pessimistic approach to prevent double-debits)
     await debitWalletService(userId, amount, "Withdrawal");
     await createTransactionService({ user: userId, type: "withdrawal", direction: "debit", amount: amount, reference: "Withdrawal" });
-    await createTransactionService({ user: "admin", type: "withdrawal_fee", direction: "debit", amount: ed_cut, reference: "Earning from withdrawal" });
-    await createTransactionService({ user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: ed_cut, reference: "FlutterWave Charge" });
+    
+    if (ed_cut > 0) {
+      await createTransactionService({ user: "admin", type: "withdrawal_fee", direction: "debit", amount: ed_cut, reference: "Earning from withdrawal" });
+    }
+    await createTransactionService({ user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: flutter_charge, reference: "FlutterWave Charge" });
 
     // 3. Call Flutterwave
     const flw = await initiateWithdrawal({

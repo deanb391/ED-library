@@ -1,4 +1,9 @@
+import fetch from "node-fetch";
+import { HttpsProxyAgent } from "https-proxy-agent";
+
 const FLW_BASE = "https://api.flutterwave.com/v3";
+const proxyUrl = process.env.FIXIE_URL;
+const proxyAgent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
 
 function getHeaders() {
   return {
@@ -18,6 +23,7 @@ export async function initFlutterwavePayment(params: {
     const res = await fetch(`${FLW_BASE}/payments`, {
       method: "POST",
       headers: getHeaders(),
+      agent: proxyAgent,
       body: JSON.stringify({
         tx_ref: params.tx_ref,
         amount: params.amount,
@@ -59,6 +65,7 @@ export async function verifyFlutterwaveTransaction(tx_ref: string) {
       {
         method: "GET",
         headers: getHeaders(),
+        agent: proxyAgent,
       }
     );
 
@@ -83,6 +90,7 @@ export async function createTransferRecipient(params: {
     const res = await fetch(`${FLW_BASE}/beneficiaries`, {
       method: "POST",
       headers: getHeaders(),
+      agent: proxyAgent,
       body: JSON.stringify({
         account_number: params.account_number,
         account_bank: params.account_bank,
@@ -132,6 +140,7 @@ export async function initiateWithdrawal(params: {
     const res = await fetch(`${FLW_BASE}/transfers`, {
       method: "POST",
       headers: getHeaders(),
+      agent: proxyAgent,
       body: JSON.stringify(body),
     });
     console.log("Flutterwave transfer:", res);
@@ -139,7 +148,7 @@ export async function initiateWithdrawal(params: {
     if (!res.ok) {
       console.error(`Flutterwave transfer failed with status: ${res.status}`);
       try {
-        const errorData = await res.json();
+        const errorData = await res.json() as any;
         return { status: "error", message: errorData.message || "Transfer initialization failed" };
       } catch (e) {
         return { status: "error", message: `Transfer initialization failed with status ${res.status}` };
@@ -160,6 +169,7 @@ export async function verifyFlutterwaveTransfer(reference: string) {
     const res = await fetch(`${FLW_BASE}/transfers?reference=${reference}`, {
       method: "GET",
       headers: getHeaders(),
+      agent: proxyAgent,
     });
 
     if (!res.ok) {

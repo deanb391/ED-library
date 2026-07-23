@@ -221,8 +221,11 @@ export default function WithdrawPage() {
   }
 
   function calculateWithdrawal(amount: number) {
-    const ed_cut = 0.05 * amount;
-    const before_cut = 0.95 * amount;
+    const FEE_WAIVER_END = new Date("2026-07-26T00:00:00Z");
+    const isFeeWaived = new Date() < FEE_WAIVER_END;
+
+    const ed_cut = isFeeWaived ? 0 : 0.05 * amount;
+    const before_cut = amount - ed_cut;
 
     let flutter_charge = 10.8;
 
@@ -241,6 +244,7 @@ export default function WithdrawPage() {
       charges,
       net,
       before_cut,
+      isFeeWaived
     };
   }
 
@@ -588,6 +592,17 @@ export default function WithdrawPage() {
                       -₦{feeBreakdown.charges.toLocaleString()}
                     </strong>
                   </div>
+
+                  {feeBreakdown.isFeeWaived && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "0.85rem", color: "#16a34a" }}>
+                        Platform Fee
+                      </span>
+                      <strong style={{ fontSize: "0.85rem", color: "#16a34a" }}>
+                        Waived!
+                      </strong>
+                    </div>
+                  )}
 
                   <div
                     style={{
