@@ -7,6 +7,7 @@ import {
   Wallet,
   Landmark,
   ChevronRight,
+  ChevronLeft,
   Send,
   Info,
   LayoutGrid,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { fetchWallet, fetchWithdrawalHistory, updateWalletAccount, Wallet as WalletType, withdraw, verifyPendingWithdrawals } from '@/lib/api/wallet';
+import { useRouter } from 'next/navigation';
 
 // --- Dummy Data ---
 const RECENT_WITHDRAWALS = [
@@ -103,6 +105,7 @@ function getBankName(bankCode: string): string | null {
 const BRAND_BLUE = "#2563EB";
 
 export default function WithdrawPage() {
+  const router = useRouter();
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
   type WithdrawalStatus = "pending" | "successful" | "failed";
@@ -373,6 +376,28 @@ export default function WithdrawPage() {
       >
         {/* Page Header */}
         <div>
+          <button
+            onClick={() => router.back()}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.25rem",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              color: "#6b7280",
+              fontSize: "0.875rem",
+              fontWeight: "500",
+              marginBottom: "1rem",
+              transition: "color 0.2s"
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.color = "#111827")}
+            onMouseOut={(e) => (e.currentTarget.style.color = "#6b7280")}
+          >
+            <ChevronLeft size={16} />
+            <span>Back</span>
+          </button>
           <h2
             style={{
               fontSize: "1.875rem",
@@ -956,8 +981,13 @@ export default function WithdrawPage() {
 
 
         const amount = receipt.amount ?? 0;
-        const ed_cut = 0.05 * amount;
-        const before_cut = 0.95 * amount;
+        
+        const FEE_WAIVER_END = new Date("2026-07-26T00:00:00Z");
+        const isFeeWaived = new Date(receipt.$createdAt) < FEE_WAIVER_END;
+        
+        const ed_cut = isFeeWaived ? 0 : 0.05 * amount;
+        const before_cut = amount - ed_cut;
+        
         let flutter_charge = 10.8;
         if (((before_cut - flutter_charge) > 5000) && ((before_cut - flutter_charge) < 50000)) {
           flutter_charge = 26.9
@@ -1033,6 +1063,13 @@ export default function WithdrawPage() {
                   <span>Charges</span>
                   <strong>₦{charges.toLocaleString()}</strong>
                 </div>
+
+                {isFeeWaived && (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#16a34a" }}>Platform Fee</span>
+                    <strong style={{ color: "#16a34a" }}>Waived</strong>
+                  </div>
+                )}
 
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>Net</span>
