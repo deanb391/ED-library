@@ -380,7 +380,7 @@ export default function DashboardUnderReviewPage() {
   const followerCount = contributor?.followers ?? 0;
   const profileName = contributor?.username ?? user?.username ?? "Contributor";
   const profileInstitution = contributor?.institution ?? "Institution unavailable";
-  const profileCountry = contributor?.country ?? "Country unavailable";
+
   const profileBio = contributor?.bio ?? "No bio available yet.";
   const profileStatus = contributor?.status ?? "pending";
 
@@ -615,7 +615,7 @@ export default function DashboardUnderReviewPage() {
                       </h2>
 
                       <div className="text-sm text-slate-500 mb-2" style={{ fontSize: 10 }}>
-                        {profileInstitution} • {profileCountry}
+                        {profileInstitution}
                       </div>
 
                       <p className="text-sm text-slate-600 mb-3 line-clamp-2" style={{ fontSize: 10 }}>
