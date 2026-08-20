@@ -23,6 +23,7 @@ type User = {
   department: string;
   avatar: string;
   isAdmin?: boolean;
+  isContributor?: boolean;
   $createdAt: string;
 };
 
@@ -196,4 +197,5 @@ export function useUser() {
   }
   return context;
 }
+
 

@@ -290,3 +290,18 @@ export async function createUserProfile(authUser: any, data: {
 
   return userDoc;
 }
+
+export async function updateUserService(userId: string, data: Record<string, any>) {
+  try {
+    const updatedDoc = await databases.updateDocument(
+      DATABASE_ID,
+      USER_COLLECTION,
+      userId,
+      data
+    );
+    return updatedDoc;
+  } catch (error) {
+    console.error("Error updating user document:", error);
+    throw error;
+  }
+}
