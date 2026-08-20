@@ -23,7 +23,7 @@ import { editContributor } from "@/lib/api/contributors";
 type ContributorDraft = {
   username: string;
   institution: string;
-  country: string;
+  phone: string;
   bio: string;
   category: string[];
   reviewImages: string[];
@@ -131,15 +131,14 @@ function Step1({
             className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
             style={{ color: "black" }}
           />
-          <select
-            value={draft.country}
-            onChange={(e) => updateDraft({ country: e.target.value })}
+          <input
+            placeholder="Phone Number (Required)"
+            value={draft.phone}
+            onChange={(e) => updateDraft({ phone: e.target.value })}
             className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 transition"
-            style={{ color: "grey" }}
-          >
-            <option value="">Country (Required)</option>
-            <option value="Nigeria">Nigeria</option>
-          </select>
+            style={{ color: "black" }}
+          />
+
         </div>
 
         <textarea
@@ -717,7 +716,7 @@ export default function OnboardingFlow() {
   const [draft, setDraft] = useState<ContributorDraft>({
     username: "",
     institution: "",
-    country: "",
+    phone: "",
     bio: "",
     category: [],
     reviewImages: ["", "", ""],
