@@ -19,7 +19,7 @@ export default function EditContributorModal({
   const [draft, setDraft] = useState<Partial<ContributorDraft>>({
     username: contributor.username,
     institution: contributor.institution,
-    country: contributor.country,
+    phone: contributor.phone,
     bio: contributor.bio,
     category: contributor.category,
     profileImage: contributor.profileImage,
@@ -155,11 +155,11 @@ export default function EditContributorModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Country</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
                 <input
-                  placeholder="Country"
-                  value={draft.country || ""}
-                  onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))}
+                  placeholder="Phone Number"
+                  value={draft.phone || ""}
+                  onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl text-sm outline-none focus:bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   style={{ color: "black" }}
                 />
