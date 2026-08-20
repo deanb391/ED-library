@@ -61,9 +61,9 @@ export default function ContributorSection({ userId }: { userId: string }) {
 
         <div className="min-w-0 flex-1 space-y-1">
           <p className="font-medium text-gray-900 dark:text-white truncate">{contributor.username}</p>
-          {(contributor.institution || contributor.country) && (
+          {(contributor.institution) && (
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-              {[contributor.institution, contributor.country].filter(Boolean).join(", ")}
+              {[contributor.institution].filter(Boolean).join(", ")}
             </p>
           )}
         </div>
