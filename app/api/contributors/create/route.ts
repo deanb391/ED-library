@@ -3,6 +3,7 @@ import {
   createContributorService,
   ContributorDraft,
 } from "@/lib/services/contributors.service";
+import { updateUserService } from "@/lib/services/auth.service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     const missingFields = [];
     if (!draft.username) missingFields.push("Display name");
-    if (!draft.country) missingFields.push("Country");
+    if (!draft.phone) missingFields.push("Phone");
     if (!draft.bio) missingFields.push("Bio");
     if (!Array.isArray(draft.category) || draft.category.length === 0) missingFields.push("Category");
     if (!draft.profileImage) missingFields.push("Profile Image");
@@ -28,12 +29,15 @@ export async function POST(req: NextRequest) {
 
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(", ")}` },
+        { error: "Missing required fields: " + missingFields.join(", ") },
         { status: 400 }
       );
     }
 
     const contributor = await createContributorService(draft as ContributorDraft, userId);
+
+    // Update user document to mark as contributor
+    await updateUserService(userId, { isContributor: true });
 
     return NextResponse.json(
       { success: true, data: contributor },

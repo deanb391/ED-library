@@ -13,7 +13,7 @@ const CONTRIBUTORS_COLLECTION = "contributors";
 export type ContributorDraft = {
   username: string;
   institution: string;
-  country: string;
+  phone: string;
   bio: string;
   category: string[];
   reviewImages: string[];
@@ -50,7 +50,7 @@ function mapContributor(doc: any): Contributor {
     $id: doc.$id,
     username: doc.username,
     institution: doc.institution,
-    country: doc.country,
+    phone: doc.phone,
     bio: doc.bio,
     category: doc.category || [],
     reviewImages: doc.reviewImages || [],
@@ -149,7 +149,7 @@ export async function editContributorService(
     }
   } else {
     // Only allow client modification of these safe fields
-    const safeFields = ['username', 'institution', 'country', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
+    const safeFields = ['username', 'institution', 'phone', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
     for (const field of safeFields) {
       if (updates[field as keyof ContributorDraft] !== undefined) {
         payload[field] = updates[field as keyof ContributorDraft];
