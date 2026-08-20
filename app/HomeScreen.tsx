@@ -149,7 +149,7 @@ function ContributorSection({
 
             {/* Institution + Country */}
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-1">
-              {contributor.institution} • {contributor.country}
+              {contributor.institution}
             </p>
 
             {/* Categories */}
