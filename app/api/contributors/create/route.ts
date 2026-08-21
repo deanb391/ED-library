@@ -3,7 +3,7 @@ import {
   createContributorService,
   ContributorDraft,
 } from "@/lib/services/contributors.service";
-import { updateUserService } from "@/lib/services/auth.service";
+import { updateUserServer } from "@/lib/appwrite/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const contributor = await createContributorService(draft as ContributorDraft, userId);
 
     // Update user document to mark as contributor
-    await updateUserService(userId, { isContributor: true });
+    await updateUserServer(userId, { isContributor: true });
 
     return NextResponse.json(
       { success: true, data: contributor },
