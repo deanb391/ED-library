@@ -276,9 +276,10 @@ export async function toggleFollowContributorService(
 ): Promise<boolean> {
   try {
     const contributor = await fetchContributorService(contributorId);
+    // Fetch the follower doc early so we can update it
+    const followerDoc = await databases.getDocument(DATABASE_ID, "user", userId);
 
     const raw = contributor.followersIds;
-
     let followersIds: string[] = [];
 
     if (raw) {
@@ -290,16 +291,25 @@ export async function toggleFollowContributorService(
       }
     }
 
+    let followingContributors: string[] = followerDoc.followingContributors || [];
+
     const isFollowing = followersIds.includes(userId);
 
     if (isFollowing) {
+      // Unfollow
       followersIds = followersIds.filter((id) => id !== userId);
+      followingContributors = followingContributors.filter((id) => id !== contributorId);
     } else {
+      // Follow
       followersIds.push(userId);
+      if (!followingContributors.includes(contributorId)) {
+        followingContributors.push(contributorId);
+      }
     }
 
     const updatedFollowersCount = followersIds.length;
 
+    // Update the contributor's followers
     await databases.updateDocument(
       DATABASE_ID,
       CONTRIBUTORS_COLLECTION,
@@ -310,13 +320,22 @@ export async function toggleFollowContributorService(
       }
     );
 
+    // Update the user's following list
+    await databases.updateDocument(
+      DATABASE_ID,
+      "user",
+      userId,
+      {
+        followingContributors: followingContributors,
+      }
+    );
+
     await invalidateLfuCache("contributor:details", contributorId);
     await clearLfuCacheNamespace("contributor:lists");
 
     // Send email only when it is a new follow, not an unfollow
     if (!isFollowing) {
       try {
-        const followerDoc = await databases.getDocument(DATABASE_ID, "user", userId);
         const contributorUserDoc = await databases.getDocument(DATABASE_ID, "user", contributor.user);
         if (contributorUserDoc?.email) {
           sendNewFollowerEmail(
@@ -342,6 +361,7 @@ export async function toggleFollowContributorService(
     return false;
   }
 }
+
 
 export async function fetchTopContributorsCoursesService(limit = 50, offset = 0) {
   const cacheKey = `top:${limit}:${offset}`;
