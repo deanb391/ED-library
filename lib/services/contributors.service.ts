@@ -1,7 +1,13 @@
 import { ID, Query } from "appwrite";
 import { databases } from "@/lib/appwrite/server";
+import { createCommunityService } from './communities.service';
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
+  try {
+    await createCommunityService(doc.$id);
+  } catch (err) {
+    console.error("Failed to create community", err);
+  }
 import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";

@@ -26,3 +26,18 @@ export async function getUserById(userId: string) {
     return null; // Return null instead of throwing to avoid breaking callers
   }
 }
+
+export async function updateUserServer(userId: string, data: Record<string, any>) {
+  try {
+    const updatedDoc = await databases.updateDocument(
+      DATABASE_ID,
+      USER_COLLECTION,
+      userId,
+      data
+    );
+    return updatedDoc;
+  } catch (error) {
+    console.error("Error updating user document (server):", error);
+    throw error;
+  }
+}

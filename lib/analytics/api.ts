@@ -21,7 +21,9 @@ export async function postTrackEvent(
   metricIncrements: MetricIncrement[] = []
 ): Promise<void> {
   try {
-    await fetch("/api/analytics/track", {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const url = typeof window !== "undefined" ? "/api/analytics/track" : `${baseUrl}/api/analytics/track`;
+    await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ event, payload, metricIncrements }),
