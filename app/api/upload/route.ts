@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     let buffer: any = Buffer.from(await file.arrayBuffer());
     let contentType = file.type || "image/jpeg";
-    let extension;
+    let extension = file.name.split('.').pop() || 'bin';
 
     if (type === "image") {
       extension = "jpg";
