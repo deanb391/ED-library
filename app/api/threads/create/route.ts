@@ -4,7 +4,7 @@ import { createThreadService } from '@/lib/services/threads.service';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { communityId, posterId, isPosterAContributor, content, mediaUrl, mediaType } = body;
+    const { communityId, posterId, isPosterAContributor, content, mediaUrl, mediaType, parentId } = body;
 
     if (!communityId || !posterId || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
       isPosterAContributor: !!isPosterAContributor,
       content,
       mediaUrl,
-      mediaType
+      mediaType,
+      parentId
     });
 
     return NextResponse.json({ thread });
