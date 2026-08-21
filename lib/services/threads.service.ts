@@ -12,6 +12,7 @@ export async function createThreadService(payload: {
   content: string;
   mediaUrl?: string;
   mediaType?: string;
+  mediaData?: string;
   parentId?: string;
 }) {
   const doc = await databases.createDocument(
@@ -115,3 +116,4 @@ export async function likeThreadService(threadId: string, userId: string) {
     likes: JSON.stringify(likesArray)
   });
 }
+
