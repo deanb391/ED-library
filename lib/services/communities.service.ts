@@ -1,5 +1,6 @@
 import { ID, Query } from 'appwrite';
-import { databases } from '@/lib/appwrite/server';\nimport { fetchContributorService } from './contributors.service';
+import { databases } from '@/lib/appwrite/server';
+import { fetchContributorService } from './contributors.service';
 
 const DATABASE_ID = '69617e75000c6c010a75';
 const COMMUNITIES_COLLECTION = 'communities';
@@ -22,10 +23,10 @@ export async function fetchCommunityByContributorService(contributorId: string) 
   if (res.documents.length === 0) return null;
   return res.documents[0];
 }
-\n
+
 export async function getFollowedCommunitiesService(followingContributors: string[]) {
   if (!followingContributors || followingContributors.length === 0) return [];
-  
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     COMMUNITIES_COLLECTION,
@@ -34,14 +35,14 @@ export async function getFollowedCommunitiesService(followingContributors: strin
       Query.limit(50)
     ]
   );
-  
+
   const communitiesWithDetails = await Promise.all(res.documents.map(async (community) => {
     let latestThread = null;
     let contributorDetails = null;
 
     try {
       contributorDetails = await fetchContributorService(community.contributors);
-    } catch(e) {
+    } catch (e) {
       console.error("Error fetching contributor for community", community.$id, e);
     }
 
@@ -62,14 +63,14 @@ export async function getFollowedCommunitiesService(followingContributors: strin
     } catch (e) {
       console.error("Error fetching latest thread for community", community.$id, e);
     }
-    
+
     return {
       ...community,
       contributorDetails,
       latestThread
     };
   }));
-  
+
   return communitiesWithDetails;
 }
 
@@ -78,7 +79,7 @@ export async function getSuggestedCommunitiesService(followingContributors: stri
     Query.orderDesc('$createdAt'),
     Query.limit(20)
   ];
-  
+
   const res = await databases.listDocuments(
     DATABASE_ID,
     COMMUNITIES_COLLECTION,
@@ -94,7 +95,7 @@ export async function getSuggestedCommunitiesService(followingContributors: stri
     let contributorDetails = null;
     try {
       contributorDetails = await fetchContributorService(community.contributors);
-    } catch(e) {
+    } catch (e) {
       console.error("Error fetching contributor", e);
     }
     return {
