@@ -12,7 +12,10 @@ export async function GET(req: Request) {
     }
 
     const userDoc = await getUserById(userId);
-    const following = userDoc?.followingContributors || [];
+    let following: string[] = [];
+    if (userDoc?.followingContributors) {
+      try { following = typeof userDoc.followingContributors === 'string' ? JSON.parse(userDoc.followingContributors) : userDoc.followingContributors; } catch(e){}
+    }
 
     const communities = await getFollowedCommunitiesService(following);
 

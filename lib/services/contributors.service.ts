@@ -291,7 +291,12 @@ export async function toggleFollowContributorService(
       }
     }
 
-    let followingContributors: string[] = followerDoc.followingContributors || [];
+    let followingContributors: string[] = [];
+    if (followerDoc.followingContributors) {
+      try {
+        followingContributors = typeof followerDoc.followingContributors === 'string' ? JSON.parse(followerDoc.followingContributors) : followerDoc.followingContributors;
+      } catch(e) {}
+    }
 
     const isFollowing = followersIds.includes(userId);
 
@@ -326,7 +331,7 @@ export async function toggleFollowContributorService(
       "user",
       userId,
       {
-        followingContributors: followingContributors,
+        followingContributors: JSON.stringify(followingContributors),
       }
     );
 
