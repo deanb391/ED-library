@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { fetchAds } from "@/lib/ads";
-import { useRouter } from "next/navigation";
+import { fetchAds } from "@/lib/api/ads";
+import { useRouter } from "@/components/useRouter";
 
 
 
@@ -52,7 +52,7 @@ export default function AllAdsPage() {
 
   return (
     <div className="min-h-screen px-4 py-10 bg-[#F8F9FA]">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+      <div className="max-w-5xl mx-auto bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
   <h1 className="text-2xl font-semibold text-black" style={{color: "black"}}>
     All Ads
@@ -119,16 +119,16 @@ export default function AllAdsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Name</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Type</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700">Status</th>
-                <th className="px-4 py-2 text-sm font-medium text-gray-700" style={{fontSize: 12}}>End Time</th>
+              <tr className="border-b border-gray-200 dark:border-gray-800">
+                <th className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Name</th>
+                <th className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Type</th>
+                <th className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Status</th>
+                <th className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300" style={{fontSize: 12}}>End Time</th>
               </tr>
             </thead>
             <tbody>
               {ads.map((ad) => (
-                <tr key={ad.id} className="border-b border-gray-100 hover:bg-gray-50" onClick={() => {
+                <tr key={ad.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900" onClick={() => {
                     router.push(`/admin/ads/ad/${ad.id}`)
                 }}>
                   <td className="px-4 py-3 text-blue-600" style={{color: "black", textTransform: 'capitalize', fontSize: 14}}>{ad.name}</td>
@@ -164,7 +164,7 @@ export default function AllAdsPage() {
         )}
 
         {loading && ads.length === 0 && (
-          <p className="text-center py-10 text-gray-500">Loading ads…</p>
+          <p className="text-center py-10 text-gray-500 dark:text-gray-400">Loading ads…</p>
         )}
       </div>
     </div>

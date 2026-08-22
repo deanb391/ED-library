@@ -3,32 +3,31 @@
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import clsx from "clsx";
+import ContributorSection from "@/components/ContributorSection";
+
+import AccessWall from "@/components/AccessWall";
 
 export default function AccountScreen() {
   const { user, loading } = useUser();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 dark:border-gray-700 border-t-blue-600" />
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FB] text-gray-500">
-        Not logged in. Which already explains a lot.
-      </div>
-    );
+    return <AccessWall type="user" />;
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] px-4 py-6">
+    <div className="min-h-screen bg-transparent px-4 py-6">
       <div className="mx-auto max-w-xl space-y-6">
         {/* Header card */}
-        <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm">
-          <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-100 shrink-0">
+        <div className="flex items-center gap-4 rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0">
             {user.avatar ? (
               <Image
                 src={user.avatar}
@@ -39,17 +38,17 @@ export default function AccountScreen() {
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-gray-600">
+              <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-gray-600 dark:text-gray-400">
                 {user.username?.[0]?.toUpperCase() || "U"}
               </div>
             )}
           </div>
 
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold text-gray-900 truncate">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
               {user.username}
             </h2>
-            <p className="text-sm text-gray-500 truncate">{user.email}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
 
             <span
               className={clsx(
@@ -67,7 +66,7 @@ export default function AccountScreen() {
         </div>
 
         {/* Info card */}
-        <div className="rounded-2xl bg-white shadow-sm divide-y">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm divide-y">
           <InfoRow label="Department" value={user.department || "—"} />
           <InfoRow label="Level" value={(user.level ?? "-") + "lvl"} />
           <InfoRow
@@ -79,6 +78,8 @@ export default function AccountScreen() {
             value={user.lastTime ? formatDate(user.lastTime) : "—"}
           /> */}
         </div>
+        
+        <ContributorSection userId={user.$id} />
       </div>
     </div>
   );
@@ -93,8 +94,8 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900">{value}</span>
+      <span className="text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="font-medium text-gray-900 dark:text-white">{value}</span>
     </div>
   );
 }

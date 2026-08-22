@@ -18,11 +18,11 @@ export default function PostActionModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-xl shadow-lg p-4 w-48 space-y-2"
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-4 w-48 space-y-2"
       >
         <button
           onClick={onEdit}
-          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 text-sm"
+          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 dark:bg-gray-800 text-sm"
         >
           Edit
         </button>
