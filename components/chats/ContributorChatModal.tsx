@@ -3,14 +3,16 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Send, Clock, Check, CheckCheck } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import type { Chat } from "@/lib/services/chats.service";
-import type { Message } from "@/lib/services/messages.service";
-import { getChatForContributorService, createChatService, clearChatUnreadCountService } from "@/lib/services/chats.service";
-import { createMessageService, getMessagesByChatService } from "@/lib/services/messages.service";
-import { client } from "@/lib/appwrite";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const MESSAGE_COLLECTION = "messages";
+import {
+  type Chat,
+  type Message,
+  getChatForContributor,
+  createChat,
+  clearChatUnreadCount,
+  createMessage,
+  getMessagesByChat,
+  updateMessagesStatus,
+} from "@/lib/api/chats";
 
 interface Props {
   onClose: () => void;
@@ -35,27 +37,25 @@ export default function ContributorChatModal({ onClose }: Props) {
     const initChat = async () => {
       setLoading(true);
       try {
-        let currentChat = await getChatForContributorService(user.$id);
+        let currentChat = await getChatForContributor(user.$id);
         if (currentChat) {
           setChat(currentChat);
 
-          const currentUnread = currentChat.unreadCounts[user.$id] || 0;
+          const currentUnread = currentChat.unreadCounts?.[user.$id] || 0;
           setInitialUnreadCount(currentUnread);
 
-          const res = await getMessagesByChatService(currentChat.$id, 15);
+          const res = await getMessagesByChat(currentChat.$id, 15);
           setMessages(res.messages);
           setNextCursor(res.nextCursor);
           setHasMore(res.hasMore);
 
           if (currentUnread > 0) {
-            await clearChatUnreadCountService(currentChat.$id, user.$id);
+            await clearChatUnreadCount(currentChat.$id, user.$id);
             const unseenMsgIds = res.messages
               .filter((m) => m.senderId !== user.$id && m.status !== "seen")
               .map((m) => m.$id);
             if (unseenMsgIds.length > 0) {
-              import("@/lib/services/messages.service").then((mod) => {
-                mod.updateMessagesStatusService(unseenMsgIds, "seen").catch(() => null);
-              });
+              updateMessagesStatus(unseenMsgIds, "seen").catch(() => null);
             }
           }
         }
@@ -70,50 +70,6 @@ export default function ContributorChatModal({ onClose }: Props) {
     initChat();
   }, [user]);
 
-  useEffect(() => {
-    if (!chat || !user) return;
-
-    const unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${MESSAGE_COLLECTION}.documents`,
-      (response) => {
-        if (
-          response.events.includes("databases.*.collections.*.documents.*.create")
-        ) {
-          const newMsg = response.payload as any as Message;
-          if (newMsg.chatId === chat.$id) {
-            setMessages((prev) => {
-              if (prev.some(m => m.$id === newMsg.$id)) return prev;
-
-              const tempIndex = prev.findIndex(
-                (m) =>
-                  m.$id.startsWith("temp-") &&
-                  m.senderId === newMsg.senderId &&
-                  m.text === newMsg.text
-              );
-
-              if (tempIndex !== -1) {
-                const next = [...prev];
-                next[tempIndex] = newMsg;
-                return next.sort((a, b) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
-              }
-
-              return [...prev, newMsg].sort((a, b) =>
-                new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
-              );
-            });
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-
-            // Auto clear unread
-            clearChatUnreadCountService(chat.$id, user.$id).catch(console.error);
-          }
-        }
-      }
-    );
-
-    return () => unsubscribe();
-  }, [chat, user]);
-
-
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || !user) return;
@@ -125,7 +81,7 @@ export default function ContributorChatModal({ onClose }: Props) {
       let activeChat = chat;
       // If chat doesn't exist yet, create it on first message
       if (!activeChat) {
-        activeChat = await createChatService(user.$id);
+        activeChat = await createChat(user.$id);
         setChat(activeChat);
       }
 
@@ -143,12 +99,15 @@ export default function ContributorChatModal({ onClose }: Props) {
       setMessages((prev) => [...prev, tempMsg]);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
-      await createMessageService({
+      const sent = await createMessage({
         chatId: activeChat.$id,
         senderId: user.$id,
         text: currentText,
       });
-      // The appwrite subscription will handle replacing the temp message
+
+      setMessages((prev) =>
+        prev.map((m) => (m.$id === tempId ? sent : m))
+      );
     } catch (err) {
       console.error("Failed to send message", err);
     }
@@ -158,7 +117,7 @@ export default function ContributorChatModal({ onClose }: Props) {
     if (!chat || loadingMore || !hasMore || !nextCursor) return;
     setLoadingMore(true);
     try {
-      const res = await getMessagesByChatService(chat.$id, 15, nextCursor);
+      const res = await getMessagesByChat(chat.$id, 15, nextCursor);
 
       const scrollContainer = messagesEndRef.current?.parentElement;
       const previousScrollHeight = scrollContainer?.scrollHeight || 0;

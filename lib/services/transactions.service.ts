@@ -1,8 +1,5 @@
-import { databases } from "@/lib/appwrite/server";
-import { ID } from "appwrite";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const TRANSACTIONS_COLLECTION = "transactions";
+import prisma from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export type TransactionType =
   | "deposit"
@@ -32,20 +29,22 @@ export async function createTransactionService(
     throw new Error("Transaction amount must be greater than zero");
   }
 
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    TRANSACTIONS_COLLECTION,
-    ID.unique(),
-    {
-      user: payload.user,
+  const id = randomUUID();
+  const doc = await prisma.transaction.create({
+    data: {
+      id,
+      userId: payload.user,
       type: payload.type,
       direction: payload.direction,
       amount: payload.amount,
       reference: payload.reference ?? null,
-      $createdAt: new Date().toISOString(),
-      $updatedAt: new Date().toISOString(),
-    }
-  );
+    },
+  });
 
-  return doc;
+  return {
+    ...doc,
+    $id: doc.id,
+    $createdAt: doc.createdAt.toISOString(),
+    $updatedAt: doc.updatedAt.toISOString(),
+  };
 }

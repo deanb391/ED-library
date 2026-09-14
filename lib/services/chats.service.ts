@@ -1,9 +1,5 @@
-"use server";
-import { ID, Query } from "node-appwrite";
-import { databases } from "@/lib/appwrite/server";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const CHAT_COLLECTION = "chats";
+import prisma from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export type Chat = {
   $id: string;
@@ -16,7 +12,8 @@ export type Chat = {
   $updatedAt: string;
 };
 
-function mapChatDoc(doc: any): Chat {
+export function mapChatDoc(doc: any): Chat {
+  if (!doc) return null as any;
   let participants: string[] = [];
   if (doc.participants) {
     if (typeof doc.participants === "string") {
@@ -34,14 +31,14 @@ function mapChatDoc(doc: any): Chat {
   }
 
   return {
-    $id: doc.$id,
+    $id: doc.id || doc.$id,
     participants,
     lastMessage: doc.lastMessage || "",
     lastMessageSenderId: doc.lastMessageSenderId || "",
-    lastMessageAt: doc.lastMessageAt || "",
+    lastMessageAt: doc.lastMessageAt instanceof Date ? doc.lastMessageAt.toISOString() : (doc.lastMessageAt || ""),
     unreadCounts,
-    $createdAt: doc.$createdAt,
-    $updatedAt: doc.$updatedAt,
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
   };
 }
 
@@ -49,14 +46,18 @@ export async function createChatService(contributorId: string): Promise<Chat> {
   const participants = [contributorId, "admin"].sort();
 
   try {
-    const res = await databases.listDocuments(DATABASE_ID, CHAT_COLLECTION, [
-      Query.contains("participants", contributorId),
-      Query.contains("participants", "admin"),
-      Query.limit(1)
-    ]);
+    const chats = await prisma.chat.findMany();
+    const existing = chats.find((c) => {
+      try {
+        const p = Array.isArray(c.participants) ? c.participants : JSON.parse(c.participants || "[]");
+        return p.includes(contributorId) && p.includes("admin");
+      } catch {
+        return false;
+      }
+    });
 
-    if (res.documents.length > 0) {
-      return mapChatDoc(res.documents[0]);
+    if (existing) {
+      return mapChatDoc(existing);
     }
   } catch (err) {
     console.error("Error checking existing chat:", err);
@@ -67,32 +68,28 @@ export async function createChatService(contributorId: string): Promise<Chat> {
     "admin": 0
   };
 
-  const payload = {
-    participants,
-    unreadCounts: JSON.stringify(unreadCounts),
-    lastMessage: "",
-    lastMessageSenderId: "",
-    lastMessageAt: new Date().toISOString(),
-  };
-
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    CHAT_COLLECTION,
-    ID.unique(),
-    payload
-  );
+  const id = randomUUID();
+  const doc = await prisma.chat.create({
+    data: {
+      id,
+      participants: participants,
+      unreadCounts: JSON.stringify(unreadCounts),
+      lastMessage: "",
+      lastMessageSenderId: "",
+      lastMessageAt: new Date(),
+    },
+  });
 
   return mapChatDoc(doc);
 }
 
 export async function getChatsForAdminService(): Promise<Chat[]> {
   try {
-    const res = await databases.listDocuments(DATABASE_ID, CHAT_COLLECTION, [
-      Query.contains("participants", "admin"),
-      Query.orderDesc("lastMessageAt"),
-      Query.limit(100),
-    ]);
-    return res.documents.map(mapChatDoc);
+    const docs = await prisma.chat.findMany({
+      orderBy: { lastMessageAt: 'desc' },
+      take: 100,
+    });
+    return docs.map(mapChatDoc);
   } catch (error) {
     console.error("getChatsForAdminService error:", error);
     return [];
@@ -101,13 +98,18 @@ export async function getChatsForAdminService(): Promise<Chat[]> {
 
 export async function getChatForContributorService(contributorId: string): Promise<Chat | null> {
   try {
-    const res = await databases.listDocuments(DATABASE_ID, CHAT_COLLECTION, [
-      Query.contains("participants", contributorId),
-      Query.contains("participants", "admin"),
-      Query.limit(1),
-    ]);
-    if (res.documents.length > 0) {
-      return mapChatDoc(res.documents[0]);
+    const chats = await prisma.chat.findMany();
+    const existing = chats.find((c) => {
+      try {
+        const p = Array.isArray(c.participants) ? c.participants : JSON.parse(c.participants || "[]");
+        return p.includes(contributorId) && p.includes("admin");
+      } catch {
+        return false;
+      }
+    });
+
+    if (existing) {
+      return mapChatDoc(existing);
     }
     return null;
   } catch (error) {
@@ -118,7 +120,10 @@ export async function getChatForContributorService(contributorId: string): Promi
 
 export async function getChatByIdService(chatId: string): Promise<Chat | null> {
   try {
-    const doc = await databases.getDocument(DATABASE_ID, CHAT_COLLECTION, chatId);
+    const doc = await prisma.chat.findUnique({
+      where: { id: chatId },
+    });
+    if (!doc) return null;
     return mapChatDoc(doc);
   } catch (error) {
     console.error(`getChatByIdService error for ${chatId}:`, error);
@@ -131,7 +136,9 @@ export async function updateChatLastMessageService(
   text: string,
   senderId: string
 ): Promise<Chat> {
-  const doc = await databases.getDocument(DATABASE_ID, CHAT_COLLECTION, chatId);
+  const doc = await prisma.chat.findUnique({ where: { id: chatId } });
+  if (!doc) throw new Error("Chat not found");
+
   const chat = mapChatDoc(doc);
 
   const updatedUnreadCounts = { ...chat.unreadCounts };
@@ -141,12 +148,15 @@ export async function updateChatLastMessageService(
     }
   }
 
-  const now = new Date().toISOString();
-  const updated = await databases.updateDocument(DATABASE_ID, CHAT_COLLECTION, chatId, {
-    lastMessage: text,
-    lastMessageSenderId: senderId,
-    lastMessageAt: now,
-    unreadCounts: JSON.stringify(updatedUnreadCounts),
+  const now = new Date();
+  const updated = await prisma.chat.update({
+    where: { id: chatId },
+    data: {
+      lastMessage: text,
+      lastMessageSenderId: senderId,
+      lastMessageAt: now,
+      unreadCounts: JSON.stringify(updatedUnreadCounts),
+    },
   });
 
   return mapChatDoc(updated);
@@ -156,14 +166,19 @@ export async function clearChatUnreadCountService(
   chatId: string,
   userId: string
 ): Promise<Chat> {
-  const doc = await databases.getDocument(DATABASE_ID, CHAT_COLLECTION, chatId);
+  const doc = await prisma.chat.findUnique({ where: { id: chatId } });
+  if (!doc) throw new Error("Chat not found");
+
   const chat = mapChatDoc(doc);
 
   const updatedUnreadCounts = { ...chat.unreadCounts };
   updatedUnreadCounts[userId] = 0;
 
-  const updated = await databases.updateDocument(DATABASE_ID, CHAT_COLLECTION, chatId, {
-    unreadCounts: JSON.stringify(updatedUnreadCounts),
+  const updated = await prisma.chat.update({
+    where: { id: chatId },
+    data: {
+      unreadCounts: JSON.stringify(updatedUnreadCounts),
+    },
   });
 
   return mapChatDoc(updated);

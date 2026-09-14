@@ -9,9 +9,8 @@ import {
   Layers,
 } from "lucide-react";
 import { useRouter } from "@/components/useRouter";
-import { account, databases } from "@/lib/appwrite";
 import { useUser } from "@/context/UserContext";
-import { createUserProfile } from "@/lib/services/auth.service";
+import { createUserProfile, getCurrentUser } from "@/lib/services/auth.service";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -30,9 +29,13 @@ export default function CompleteProfilePage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = await account.get();
+        const user = await getCurrentUser();
+        if (!user) {
+          router.replace("/signin");
+          return;
+        }
         setAuthUser(user);
-        setUsername(user.name || "");
+        setUsername(user.name || user.username || "");
       } catch {
         router.replace("/signin");
       }
@@ -71,26 +74,26 @@ export default function CompleteProfilePage() {
 
   if (!authUser) {
     return (
-      <div className="min-h-screen bg-[#F4F6F8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F4F6F8] dark:bg-gray-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
-      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+    <div className="min-h-screen bg-[#F4F6F8] dark:bg-gray-950 flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
 
         {/* Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center shadow-sm">
             <GraduationCap size={28} />
           </div>
         </div>
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Complete Your Profile</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
             Just a few more details to get started.
           </p>
@@ -117,13 +120,13 @@ export default function CompleteProfilePage() {
               required
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
-              <option value="" disabled>
+              <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">
                 Select level
               </option>
               {LEVELS.map((lvl) => (
-                <option key={lvl} value={lvl}>
+                <option key={lvl} value={lvl} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   {lvl}
                 </option>
               ))}
@@ -139,21 +142,21 @@ export default function CompleteProfilePage() {
             placeholder="Mechanical Engineering"
           />
 
-          {/* Sign Up As Contributor Switch */}
+          {/* Contributor switch */}
           <div className="flex items-center justify-between py-2 border-t border-b border-gray-100 dark:border-gray-800">
             <div>
               <p className="text-sm font-bold text-gray-800 dark:text-gray-300">Sign Up As Contributor</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Enable to apply as a contributor after completing profile.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Enable to apply as a contributor.</p>
             </div>
             <button
               type="button"
               onClick={() => setIsContributorSignUp(v => !v)}
               className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${
-                isContributorSignUp ? "bg-blue-600" : "bg-gray-300"
+                isContributorSignUp ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
               <div
-                className={`w-4 h-4 bg-white dark:bg-gray-900 rounded-full shadow-sm transform transition-transform ${
+                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
                   isContributorSignUp ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -212,7 +215,7 @@ function Input({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${
+          className={`w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${
             mono ? "font-mono tracking-widest" : ""
           }`}
         />

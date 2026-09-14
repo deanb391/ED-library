@@ -41,6 +41,10 @@ yarn-error.log*
 next-env.d.ts
 .env.local
 
-#AI agents
+# AI agents
 .idea
 .junie
+
+# migration dumps
+migration_data/
+appwrite_schema_dump.json

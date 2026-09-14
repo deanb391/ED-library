@@ -8,15 +8,19 @@ export async function fetchLibrary(userId: string) {
 }
 
 export async function fetchLibraryCourse(userId: string) {
-  const res = await fetch(`/api/library/library-courses?user_id=${userId}`);
+  try {
+    const res = await fetch(`/api/library/library-courses?user_id=${encodeURIComponent(userId)}`);
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch library courses");
+    if (!res.ok) {
+      return [];
+    }
+
+    const data = await res.json();
+    return Array.isArray(data?.courses) ? data.courses : (Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("fetchLibraryCourse error:", err);
+    return [];
   }
-
-  const data = await res.json();
-
-  return data.courses ?? [];
 }
 
 export async function addCourseToLibrary(userId: string, courseIds: string[], type: string) {

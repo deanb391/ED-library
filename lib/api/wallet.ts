@@ -1,4 +1,4 @@
-import { account } from "@/lib/appwrite";
+import { getAuthToken } from "@/lib/services/auth.service";
 
 export type Wallet = {
   $id: string;
@@ -10,48 +10,57 @@ export type Wallet = {
 };
 
 export async function createWallet(userId: string) {
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/create", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ userId }),
-});
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ userId }),
+  });
 
   return res.json();
 }
 
 export async function fetchWallet(userId: string) {
-  const jwt = await account.createJWT();
+  const token = getAuthToken();
   const res = await fetch(`/api/wallet/fetch?userId=${userId}`, {
-    headers: { Authorization: `Bearer ${jwt.jwt}` }
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   return res.json();
 }
 
 export async function fetchWalletHistory(userId: string) {
-  const jwt = await account.createJWT();
+  const token = getAuthToken();
   const res = await fetch(`/api/wallet/fetchHistory?userId=${userId}`, {
-    headers: { Authorization: `Bearer ${jwt.jwt}` }
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   return res.json();
 }
 
-
 export async function fetchWithdrawalHistory(userId: string) {
-  const jwt = await account.createJWT();
+  const token = getAuthToken();
   const res = await fetch(`/api/wallet/fetchWithdrawalHistory?userId=${userId}`, {
-    headers: { Authorization: `Bearer ${jwt.jwt}` }
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   return res.json();
 }
 
 export async function topUpWallet(userId: string, amount: number, email: string) {
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/topup", {
     method: "POST",
     headers: {
-    "Content-Type": "application/json",
-  },
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ userId, amount, email }),
   });
 
@@ -59,11 +68,13 @@ export async function topUpWallet(userId: string, amount: number, email: string)
 }
 
 export async function verifyAccount(account_number: string, account_bank: string) {
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/verifyAccount", {
     method: "POST",
     headers: {
-    "Content-Type": "application/json",
-  },
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ account_number, account_bank }),
   });
 
@@ -71,12 +82,12 @@ export async function verifyAccount(account_number: string, account_bank: string
 }
 
 export async function updateWalletAccount(userId: string, number: string, bank: string, name: string) {
-  const jwt = await account.createJWT();
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/updateAccount", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt.jwt}`
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ userId, number, bank, name }),
   });
@@ -85,18 +96,21 @@ export async function updateWalletAccount(userId: string, number: string, bank: 
 }
 
 export async function debitWallet(userId: string, amount: number, description: string) {
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/debit", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ userId, amount, description }),
   });
 
   return res.json();
 }
 
-
-
 export async function verifyPayment(paymentId: string) {
-  const res = await fetch(`/api/wallet/verify?paymentId=${encodeURIComponent(paymentId)}&`, {
+  const res = await fetch(`/api/wallet/verify?paymentId=${encodeURIComponent(paymentId)}`, {
     method: "GET",
   });
 
@@ -109,19 +123,13 @@ export async function verifyPayment(paymentId: string) {
 }
 
 export async function withdraw(userId: string, amount: string) {
-  let jwt;
-  try {
-    jwt = await account.createJWT();
-  } catch (error) {
-    console.error("JWT creation failed:", error);
-    return { error: "Authentication failed. Please check your network or disable adblockers." };
-  }
+  const token = getAuthToken();
 
   const res = await fetch("/api/wallet/withdraw", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt.jwt}`
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ userId, amount }),
   });
@@ -130,8 +138,12 @@ export async function withdraw(userId: string, amount: string) {
 }
 
 export async function verifyPendingWithdrawals() {
+  const token = getAuthToken();
   const res = await fetch("/api/wallet/verify-pending", {
-    method: "POST"
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   return res.json();
 }

@@ -4,17 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "@/components/useRouter";
 import AccessWall from "@/components/AccessWall";
-import { getChatsForAdminService, createChatService, clearChatUnreadCountService, type Chat } from "@/lib/services/chats.service";
-import { createMessageService, getMessagesByChatService, type Message } from "@/lib/services/messages.service";
-import { client } from "@/lib/appwrite";
+import { getChatsForAdmin, createChat, type Chat } from "@/lib/api/chats";
 import { ArrowLeft, MessageSquare, Search, Plus, Send } from "lucide-react";
-import NewChatModal from "@/components/chats/NewChatModal"; // Ensure this import points to your actual file
-import { AdminChatDetails } from "@/components/chats/AdminChatDetails"
-import { AdminChatsSidebar } from "@/components/chats/AdminChatsSidebar"
+import NewChatModal from "@/components/chats/NewChatModal";
+import { AdminChatDetails } from "@/components/chats/AdminChatDetails";
+import { AdminChatsSidebar } from "@/components/chats/AdminChatsSidebar";
 
-const DATABASE_ID = "69617e75000c6c010a75";
-const CHAT_COLLECTION = "chats";
-const MESSAGE_COLLECTION = "messages";
 const BRAND_BLUE = "#2563eb";
 
 import { getContributorByUserId } from "@/lib/api/contributors";
@@ -48,12 +43,11 @@ export default function AdminChatsPage() {
 
   useEffect(() => {
     if (!user?.isAdmin) return;
-    let unsubscribe: () => void;
 
     const loadChatsAndContributors = async () => {
       setLoading(true);
       try {
-        const fetchedChats = await getChatsForAdminService();
+        const fetchedChats = await getChatsForAdmin();
         setChats(fetchedChats);
 
         // Fetch contributors for these chats
@@ -72,84 +66,11 @@ export default function AdminChatsPage() {
     };
 
     loadChatsAndContributors();
-
-    unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${CHAT_COLLECTION}.documents`,
-      async (response) => {
-        if (
-          response.events.includes("databases.*.collections.*.documents.*.update") ||
-          response.events.includes("databases.*.collections.*.documents.*.create")
-        ) {
-          const updatedChat = response.payload as any as Chat;
-          if (updatedChat.participants.includes("admin")) {
-            setChats((prev) => {
-              const exists = prev.some(c => c.$id === updatedChat.$id);
-              if (exists) {
-                return prev.map(c => c.$id === updatedChat.$id ? updatedChat : c).sort((a, b) =>
-                  new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
-                );
-              } else {
-                return [updatedChat, ...prev].sort((a, b) =>
-                  new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime()
-                );
-              }
-            });
-
-            // Fetch contributor if not in map
-            const contributorUserId = updatedChat.participants.find(p => p !== "admin");
-            if (contributorUserId) {
-              setContributorsMap(prev => {
-                if (prev[contributorUserId]) return prev;
-                // If not in prev map, fetch it and update state
-                getContributorByUserId(contributorUserId).then(c => {
-                  if (c) {
-                    setContributorsMap(current => ({ ...current, [contributorUserId]: c }));
-                  }
-                });
-                return prev;
-              });
-            }
-          }
-        }
-      }
-    );
-
-    const unsubscribeMessages = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${MESSAGE_COLLECTION}.documents`,
-      (response) => {
-        if (response.events.includes("databases.*.collections.*.documents.*.create")) {
-          const newMsg = response.payload as any;
-          if (newMsg.senderId !== "admin") {
-            // We need to check if the admin is a participant of this chat
-            setChats((prevChats) => {
-              const isParticipant = prevChats.some(c => c.$id === newMsg.chatId);
-              if (isParticipant) {
-                if (newMsg.chatId === activeChatIdRef.current) {
-                  // If it's active, AdminChatDetails will handle marking it as "seen"
-                  // But just in case, we can also do it here, or let AdminChatDetails do it.
-                } else {
-                  // Mark as delivered since it was received by the client but not opened
-                  import("@/lib/services/messages.service").then((mod) => {
-                    mod.updateMessagesStatusService([newMsg.$id], "delivered").catch(() => null);
-                  });
-                }
-              }
-              return prevChats;
-            });
-          }
-        }
-      }
-    );
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-      if (unsubscribeMessages) unsubscribeMessages();
-    };
   }, [user]);
 
   const handleCreateChat = async (contributorUserId: string) => {
     try {
-      const chat = await createChatService(contributorUserId);
+      const chat = await createChat(contributorUserId);
       setChats(prev => {
         if (!prev.some(c => c.$id === chat.$id)) {
           return [chat, ...prev];

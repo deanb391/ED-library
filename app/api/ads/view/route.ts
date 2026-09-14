@@ -11,13 +11,16 @@ export async function POST(req: NextRequest) {
     const { adId, userId } = await req.json();
 
     const ad = await fetchAdByIdRawService(adId);
+    if (!ad) {
+      return NextResponse.json({ error: "Ad not found" }, { status: 404 });
+    }
 
     const uniqueUsers = new Set(ad.uniqueUsers || []);
 
     if (userId) uniqueUsers.add(userId);
 
     await updateAdService(adId, {
-      views: ad.views + 1,
+      views: (ad.views || 0) + 1,
       uniqueUsers: Array.from(uniqueUsers),
     });
 

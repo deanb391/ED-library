@@ -1,0 +1,471 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                    String    @id
+  email                 String    @unique
+  username              String?
+  name                  String?
+  password              String?
+  googleId              String?   @unique
+  accountId             String?
+  avatar                String?
+  department            String?
+  level                 Int?
+  university            String?
+  referredBy            String?
+  isAdmin               Boolean   @default(false)
+  isContributor         Boolean   @default(false)
+  followingContributors String?   @db.Text
+  deactivatedAt         DateTime?
+  lastTime              DateTime?
+  status                Boolean   @default(true)
+  emailVerification     Boolean   @default(false)
+  phone                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  courses               Course[]
+  ads                   Ad[]
+  contributor           Contributor?
+  courseReviews         CourseReviewAndRating[]
+  payments              Payment[]
+  wallet                Wallet?
+  library               Library?
+  transactions          Transaction[]
+  walletHistory         WalletHistory[]
+  withdrawals           Withdrawal[]
+  withdrawalRequests    WithdrawalRequest[]
+  subscriptions         Subscription[]
+  documents             Document[]
+  streaks               Streak[]
+  businesses            Business?
+}
+
+model Course {
+  id              String                  @id
+  title           String?
+  code            String?
+  description     String?                 @db.Text
+  lecturer        String?
+  thumbnailId     String?
+  thumbnailUrl    String?
+  files           String[]
+  lastOperation   String?
+  userId          String?
+  user            User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  session         String?
+  department      String?
+  level           Int?
+  isOnGoing       Boolean                 @default(true)
+  price           String?
+  university      String?
+  analytics       String?                 @db.Text
+  pageCount       Int                     @default(0)
+  isFree          Boolean?
+  rating          Float?
+  status          String?                 @default("live")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  posts           Post[]
+  reviews         CourseReviewAndRating[]
+  subscriptions   Subscription[]
+  documents       Document[]
+  documentReviews DocumentReview[]
+}
+
+model Post {
+  id          String   @id
+  description String?  @db.Text
+  images      String[]
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Ad {
+  id           String    @id
+  name         String?
+  videos       String[]
+  uniqueUsers  String[]
+  isExpired    Boolean   @default(false)
+  endTime      DateTime?
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  views        Int       @default(0)
+  type         String?
+  link         String?
+  smallImages  String[]
+  mediumImages String[]
+  largeImages  String[]
+  clicks       Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model DailyUser {
+  id        String   @id
+  date      String
+  count     Int
+  day       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contributor {
+  id                 String               @id
+  username           String?
+  institution        String?
+  country            String?
+  bio                String?              @db.Text
+  category           String[]
+  reviewImages       String[]
+  profileImage       String?              @db.Text
+  status             String?
+  userId             String?              @unique
+  user               User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  approvalNotes      String?              @db.Text
+  followers          Int                  @default(0)
+  followersIds       String?              @db.Text
+  total_earnings     Int?
+  hasSeenCelebration Boolean              @default(false)
+  agreed             Boolean              @default(false)
+  uploadCount        Int                  @default(0)
+  weeklyUploadCount  Int                  @default(0)
+  isTopContributor   Boolean              @default(false)
+  topContributorWeek String?
+  joinedContest      Boolean              @default(false)
+  joinedContestAt    String?
+  phone              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  earnings           Earning[]
+  streaks            Streak[]
+  weeklyAwards       WeeklyAward[]
+  documentReviews    DocumentReview[]
+  contestPerformances ContestPerformance[]
+  community          Community?
+}
+
+model CourseReviewAndRating {
+  id        String   @id
+  courseId  String?
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating    Int?
+  review    String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id
+  type          String?
+  status        String?
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  description   String?  @db.Text
+  transactionId String?
+  courses       String?  @db.Text
+  provider      String?
+  amount        Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Earning {
+  id            String       @id
+  description   String?      @db.Text
+  courses       String?      @db.Text
+  type          String?
+  contributorId String?
+  contributor   Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  amount        Float?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Wallet {
+  id              String   @id
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  cashout_account String?  @db.Text
+  balance         Float?   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Library {
+  id           String   @id
+  userId       String?  @unique
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  oneTime      String?  @db.Text
+  subscription String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Transaction {
+  id        String   @id
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type      String?  @default("deposit")
+  direction String?
+  amount    Float?
+  reference String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletHistory {
+  id          String   @id
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type        String?
+  description String?  @db.Text
+  amount      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Withdrawal {
+  id          String   @id
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount      Float?
+  status      String?  @default("pending")
+  description String?  @db.Text
+  refund      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WithdrawalRequest {
+  id        String   @id
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount    Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id        String    @id
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  courseId  String?
+  course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  startDate DateTime?
+  endDate   DateTime?
+  status    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model AnalyticsEvent {
+  id         String   @id
+  eventName  String
+  distinctId String
+  userId     String?
+  metadata   String?  @db.Text
+  value      Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AnalyticsDailyMetric {
+  id        String   @id
+  date      String
+  metric    String
+  value     Float
+  category  String?
+  dimension String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id             String           @id
+  courseId       String?
+  course         Course?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fileUrl        String?          @db.Text
+  fileName       String?          @db.Text
+  fileSize       Float?
+  fileType       String?
+  description    String?          @db.Text
+  status         String?          @default("pending")
+  reviewReason   String?          @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  documentReviews DocumentReview[]
+}
+
+model Streak {
+  id             String       @id
+  contributorId  String?
+  contributor    Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  currentStreak  Int?
+  longestStreak  Int?
+  joinedDate     String?
+  lastUploadDate String?
+  streakHistory  String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model WeeklyAward {
+  id               String       @id
+  contributorId    String?
+  contributor      Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  contributorName  String?
+  contributorImage String?      @db.Text
+  weekStart        String?
+  weekEnd          String?
+  weeklyUploads    Int?
+  totalUploads     Int?
+  awardedAt        String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model DocumentReview {
+  id            String       @id
+  documentId    String?
+  document      Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  courseId      String?
+  course        Course?      @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  contributorId String?
+  contributor   Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  complaint     String?      @db.Text
+  status        String?      @default("pending")
+  adminReason   String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model MonthlyUser {
+  id        String   @id
+  date      String?
+  month     String?
+  count     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WeeklyUser {
+  id        String   @id
+  date      String?
+  count     Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id                  String    @id
+  participants        String[]
+  lastMessage         String?   @db.Text
+  lastMessageSenderId String?
+  lastMessageAt       DateTime?
+  unreadCounts        String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model Message {
+  id        String   @id
+  chatId    String?
+  senderId  String?
+  text      String?  @db.Text
+  status    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Business {
+  id          String   @id
+  name        String?
+  phone       String?
+  bannerImage String?  @db.Text
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContestPerformance {
+  id                 String       @id
+  contributorId      String?
+  contributor        Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  totalPoints        Float?
+  dailyPoints        String?      @db.Text
+  uniqueUsersReached String?      @db.Text
+  newUsers           String?      @db.Text
+  usersReachedIds    String?      @db.Text
+  returningUsers     String?      @db.Text
+  acquisitionScore   Float?       @default(0)
+  engagementScore    Float?       @default(0)
+  contentScore       Float?       @default(0)
+  engagementActivity String?      @db.Text
+  dailyCourseRatings String?      @db.Text
+  coursesPoints      String?      @db.Text
+  uploadQuality      String?      @db.Text
+  referralClicks     String?      @db.Text
+  uploadsCreated     String?      @db.Text
+  Prize              Float?
+  isTop3Contributor  Boolean      @default(false)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model Source {
+  id               String   @id
+  name             String?
+  clickCount       Int?
+  signUpCount      Int?
+  contributorCount Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Community {
+  id            String       @id
+  contributorId String?      @unique
+  contributor   Contributor? @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Thread {
+  id                   String   @id
+  communityId          String
+  posterId             String
+  isPosterAContributor Boolean
+  content              String   @db.Text
+  mediaUrl             String?  @db.Text
+  mediaType            String?
+  parentId             String?
+  likes                String?  @db.Text
+  commentCount         Int      @default(0)
+  mediaData            String?  @db.Text
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}

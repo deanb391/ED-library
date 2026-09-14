@@ -1,71 +1,84 @@
-import { ID, Query } from 'appwrite';
-import { databases } from '@/lib/appwrite/server';
+import prisma from '@/lib/prisma';
 import { fetchContributorService } from './contributors.service';
-
-const DATABASE_ID = '69617e75000c6c010a75';
-const COMMUNITIES_COLLECTION = 'communities';
+import { randomUUID } from 'crypto';
 
 export async function createCommunityService(contributorId: string) {
-  return await databases.createDocument(
-    DATABASE_ID,
-    COMMUNITIES_COLLECTION,
-    ID.unique(),
-    { contributors: contributorId }
-  );
+  const id = randomUUID();
+  const doc = await prisma.community.create({
+    data: {
+      id,
+      contributorId,
+    },
+  });
+  return {
+    ...doc,
+    contributors: doc.contributorId || contributorId,
+    $id: doc.id,
+    $createdAt: doc.createdAt.toISOString(),
+    $updatedAt: doc.updatedAt.toISOString(),
+  };
 }
 
 export async function fetchCommunityByContributorService(contributorId: string) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COMMUNITIES_COLLECTION,
-    [Query.equal('contributors', contributorId), Query.limit(1)]
-  );
-  if (res.documents.length === 0) return null;
-  return res.documents[0];
+  const doc = await prisma.community.findFirst({
+    where: { contributorId },
+  });
+  if (!doc) return null;
+  return {
+    ...doc,
+    contributors: doc.contributorId || contributorId,
+    $id: doc.id,
+    $createdAt: doc.createdAt.toISOString(),
+    $updatedAt: doc.updatedAt.toISOString(),
+  };
 }
 
 export async function getFollowedCommunitiesService(followingContributors: string[]) {
   if (!followingContributors || followingContributors.length === 0) return [];
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COMMUNITIES_COLLECTION,
-    [
-      Query.equal('contributors', followingContributors),
-      Query.limit(50)
-    ]
-  );
+  const docs = await prisma.community.findMany({
+    where: { contributorId: { in: followingContributors } },
+    take: 50,
+  });
 
-  const communitiesWithDetails = await Promise.all(res.documents.map(async (community) => {
+  const communitiesWithDetails = await Promise.all(docs.map(async (community) => {
     let latestThread = null;
     let contributorDetails = null;
 
     try {
-      contributorDetails = await fetchContributorService(community.contributors);
+      if (community.contributorId) {
+        contributorDetails = await fetchContributorService(community.contributorId);
+      }
     } catch (e) {
-      console.error("Error fetching contributor for community", community.$id, e);
+      console.error("Error fetching contributor for community", community.id, e);
     }
 
     try {
-      const threadRes = await databases.listDocuments(
-        DATABASE_ID,
-        'threads',
-        [
-          Query.equal('communityId', community.$id),
-          Query.isNull('parentId'),
-          Query.orderDesc('$createdAt'),
-          Query.limit(1)
-        ]
-      );
-      if (threadRes.documents.length > 0) {
-        latestThread = threadRes.documents[0];
+      const thread = await prisma.thread.findFirst({
+        where: {
+          communityId: community.id,
+          parentId: null,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (thread) {
+        latestThread = {
+          ...thread,
+          $id: thread.id,
+          $createdAt: thread.createdAt.toISOString(),
+          $updatedAt: thread.updatedAt.toISOString(),
+        };
       }
     } catch (e) {
-      console.error("Error fetching latest thread for community", community.$id, e);
+      console.error("Error fetching latest thread for community", community.id, e);
     }
 
     return {
       ...community,
+      contributors: community.contributorId || "",
+      $id: community.id,
+      $createdAt: community.createdAt.toISOString(),
+      $updatedAt: community.updatedAt.toISOString(),
       contributorDetails,
       latestThread
     };
@@ -75,31 +88,32 @@ export async function getFollowedCommunitiesService(followingContributors: strin
 }
 
 export async function getSuggestedCommunitiesService(followingContributors: string[]) {
-  const queries = [
-    Query.orderDesc('$createdAt'),
-    Query.limit(20)
-  ];
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COMMUNITIES_COLLECTION,
-    queries
-  );
-
-  let suggested = res.documents;
+  const where: any = {};
   if (followingContributors && followingContributors.length > 0) {
-    suggested = suggested.filter((c: any) => !followingContributors.includes(c.contributors));
+    where.contributorId = { notIn: followingContributors };
   }
 
-  const communitiesWithDetails = await Promise.all(suggested.map(async (community) => {
+  const docs = await prisma.community.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  const communitiesWithDetails = await Promise.all(docs.map(async (community) => {
     let contributorDetails = null;
     try {
-      contributorDetails = await fetchContributorService(community.contributors);
+      if (community.contributorId) {
+        contributorDetails = await fetchContributorService(community.contributorId);
+      }
     } catch (e) {
       console.error("Error fetching contributor", e);
     }
     return {
       ...community,
+      contributors: community.contributorId || "",
+      $id: community.id,
+      $createdAt: community.createdAt.toISOString(),
+      $updatedAt: community.updatedAt.toISOString(),
       contributorDetails
     };
   }));

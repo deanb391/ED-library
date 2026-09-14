@@ -1,11 +1,8 @@
-import { databases } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 import { 
   sendNewPostFollowersEmail, 
   sendNewCourseFollowersEmail 
 } from "@/lib/email/events";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const CONTRIBUTORS_COLLECTION = "contributors";
 
 export async function notifyFollowersOfPost(
   contributorId: string,
@@ -13,11 +10,11 @@ export async function notifyFollowersOfPost(
   noteDescription: string
 ): Promise<void> {
   try {
-    const contributor = await databases.getDocument(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      contributorId
-    );
+    const contributor = await prisma.contributor.findUnique({
+      where: { id: contributorId },
+    });
+
+    if (!contributor) return;
 
     const raw = contributor.followersIds;
     if (!raw) return;
@@ -32,20 +29,18 @@ export async function notifyFollowersOfPost(
 
     if (followersIds.length === 0) return;
 
-    // Send email to each follower
-    for (const userId of followersIds) {
-      try {
-        const userDoc = await databases.getDocument(DATABASE_ID, "user", userId);
-        if (userDoc?.email) {
-          sendNewPostFollowersEmail(
-            userDoc.email,
-            contributor.username || "Contributor",
-            courseTitle,
-            noteDescription
-          );
-        }
-      } catch (err) {
-        console.error(`[Follower Notification] Failed to notify user ${userId} of new post:`, err);
+    const followers = await prisma.user.findMany({
+      where: { id: { in: followersIds } },
+    });
+
+    for (const userDoc of followers) {
+      if (userDoc?.email) {
+        sendNewPostFollowersEmail(
+          userDoc.email,
+          contributor.username || "Contributor",
+          courseTitle,
+          noteDescription
+        );
       }
     }
   } catch (error) {
@@ -59,11 +54,11 @@ export async function notifyFollowersOfCourse(
   courseDescription: string
 ): Promise<void> {
   try {
-    const contributor = await databases.getDocument(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      contributorId
-    );
+    const contributor = await prisma.contributor.findUnique({
+      where: { id: contributorId },
+    });
+
+    if (!contributor) return;
 
     const raw = contributor.followersIds;
     if (!raw) return;
@@ -78,20 +73,18 @@ export async function notifyFollowersOfCourse(
 
     if (followersIds.length === 0) return;
 
-    // Send email to each follower
-    for (const userId of followersIds) {
-      try {
-        const userDoc = await databases.getDocument(DATABASE_ID, "user", userId);
-        if (userDoc?.email) {
-          sendNewCourseFollowersEmail(
-            userDoc.email,
-            contributor.username || "Contributor",
-            courseTitle,
-            courseDescription
-          );
-        }
-      } catch (err) {
-        console.error(`[Follower Notification] Failed to notify user ${userId} of new course:`, err);
+    const followers = await prisma.user.findMany({
+      where: { id: { in: followersIds } },
+    });
+
+    for (const userDoc of followers) {
+      if (userDoc?.email) {
+        sendNewCourseFollowersEmail(
+          userDoc.email,
+          contributor.username || "Contributor",
+          courseTitle,
+          courseDescription
+        );
       }
     }
   } catch (error) {

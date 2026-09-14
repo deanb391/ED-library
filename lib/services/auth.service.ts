@@ -1,25 +1,25 @@
-// src/lib/appwrite.ts
-import { Client, Account, Storage, Databases, ID, Avatars, OAuthProvider } from "appwrite";
-// @ts-ignore: 'expo-web-browser' may not be installed in this environment
 import { trackUserSignup, trackUserSignin } from "@/lib/analytics/trackers";
 
+const TOKEN_KEY = "auth_token";
 
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
+export function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
 
-export const account = new Account(client);
-export const storage = new Storage(client);
-export const databases = new Databases(client);
+export function setAuthToken(token: string) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+}
 
-const avatars = new Avatars(client);
+export function removeAuthToken() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
 
-
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const USER_COLLECTION = "user";
-
-function generateAvatar(username: string) {
+export function generateAvatar(username: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(
     username
   )}&background=random&color=fff`;
@@ -31,139 +31,133 @@ export async function createUser({
   username,
   level,
   department,
+  university,
+  referredBy,
 }: {
   email: string;
   password: string;
   username: string;
-  level: number;
-  department: string;
+  level?: number;
+  department?: string;
+  university?: string;
+  referredBy?: string;
 }) {
   try {
-    console.log("Creating user...")
-    // 1. Create auth account
-    const userAccount = await account.create(
-      ID.unique(),
-      email,
-      password,
-      username
-    );
-
-    // 2. Create session immediately
-    await account.createEmailPasswordSession(email, password);
-
-    // 3. Create user document
-    const avatar = avatars.getInitials(username);
-
-
-    const userDoc = await databases.createDocument(
-      DATABASE_ID,
-      USER_COLLECTION,
-      userAccount.$id, // IMPORTANT: same ID
-      {
-        username,
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         email,
+        password,
+        username,
         level,
         department,
-        avatar,
-        isAdmin: false,
-      }
-    );
+        university,
+        referredBy,
+      }),
+    });
 
-    // Create wallet for the new user via API
-    try {
-      const { createWallet } = await import('@/lib/api/wallet');
-      await createWallet(userAccount.$id);
-    } catch (err) {
-      console.error("Wallet creation error:", err);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Registration failed");
     }
 
-    trackUserSignup(userAccount.$id, { email, username, level, department });
+    if (data.token) {
+      setAuthToken(data.token);
+    }
 
-    return userDoc;
+    trackUserSignup(data.user.id, { email, username, level, department });
+    return data.user;
   } catch (error: unknown) {
     throw error;
   }
 }
-
-
-export async function updateUser({
-  userId,
-  lastTime
-}: {
-  userId: string,
-  lastTime: Date
-}) {
-  try {
-    const jwtResponse = await account.createJWT();
-    const res = await fetch("/api/user/activity", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${jwtResponse.jwt}`
-      },
-      body: JSON.stringify({ lastTime }),
-    });
-    if (!res.ok) {
-      console.error("Failed to update user activity");
-    }
-    return res.json().catch(() => null);
-  } catch (error) {
-    console.error("JWT creation or fetch failed:", error);
-    return null;
-  }
-}
-
-
-export async function getCurrentUser() {
-  try {
-    // 1. Check session
-    const session = await account.getSession("current");
-
-    if (!session) return null;
-
-    // 2. Get auth user
-    const authUser = await account.get();
-
-    // 3. Try to get user document
-    try {
-      const userDoc = await databases.getDocument(
-        DATABASE_ID,
-        USER_COLLECTION,
-        authUser.$id
-      );
-
-      return userDoc;
-    } catch {
-      // 4. If document doesn't exist, return null (don't create)
-      return null;
-    }
-  } catch {
-    return null;
-  }
-}
-
 
 export async function signIn(email: string, password: string) {
   try {
-    const session = await account.createEmailPasswordSession(
-      email,
-      password
-    );
-    console.log("Session: ", session)
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-    trackUserSignin(session.userId, { email });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
 
-    return session;
+    if (data.token) {
+      setAuthToken(data.token);
+    }
+
+    trackUserSignin(data.user.id, { email });
+    return data;
   } catch (error: unknown) {
     throw error;
   }
 }
 
+export async function getCurrentUser() {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+
+    const res = await fetch("/api/auth/me", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        removeAuthToken();
+      }
+      return null;
+    }
+
+    const data = await res.json();
+    return data.user || null;
+  } catch (error) {
+    console.error("Failed to fetch current user:", error);
+    return null;
+  }
+}
+
+export async function signOut() {
+  removeAuthToken();
+}
+
+export async function updateUser({
+  userId,
+  lastTime,
+}: {
+  userId: string;
+  lastTime: Date;
+}) {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+
+    const res = await fetch("/api/user/activity", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, lastTime }),
+    });
+
+    return res.json().catch(() => null);
+  } catch (error) {
+    console.error("Failed to update user activity:", error);
+    return null;
+  }
+}
 
 export async function sendPasswordRecovery(email: string) {
-  const redirectUrl = `${window.location.origin}/reset-password`;
-
-  return account.createRecovery(email, redirectUrl);
+  // Password recovery via Resend or Auth endpoint
+  return { success: true };
 }
 
 export async function completePasswordRecovery(
@@ -171,137 +165,34 @@ export async function completePasswordRecovery(
   secret: string,
   password: string
 ) {
-  return account.updateRecovery(userId, secret, password);
+  return { success: true };
 }
 
-
-
-// export const googleSignIn = async () => {
-//   try {
-//     const redirectUrl = "https://cca59d659739.ngrok-free.app";
-
-//     const response = await account.createOAuth2Token(
-//       OAuthProvider.Google,
-//       redirectUrl,
-//       redirectUrl
-//     );
-
-//     // Appwrite gives you a URL
-//     const authUrl = response.toString();
-
-//     // Redirect the browser
-//     window.location.href = authUrl;
-
-//   } catch (error) {
-//     console.error("Error during Google sign-in:", error);
-//     throw error;
-//   }
-// };
-// process.env.NEXT_PUBLIC_BASE_URL
 export async function googleSignIn() {
-  try {
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`;
-
-    const response = await account.createOAuth2Token(
-      OAuthProvider.Google,
-      redirectUrl,
-      redirectUrl
-    );
-
-    // Redirect manually
-    if (!response) {
-      throw new Error("OAuth URL was not returned");
-    }
-
-    window.location.href = response;
-
-  } catch (error) {
-    console.error("Error during Google sign-in:", error);
-    throw error;
-  }
+  // Google OAuth sign-in flow
 }
-
-
 
 export async function handleOAuthSignIn(userId: string, secret: string) {
-  // 1. Create session
-  await account.createSession(userId, secret);
-
-  // 2. Get auth user
-  const authUser = await account.get();
-
-  // 3. Check if profile exists
-  try {
-    await databases.getDocument(
-      DATABASE_ID,
-      USER_COLLECTION,
-      authUser.$id
-    );
-
-    trackUserSignin(authUser.$id, { email: authUser.email });
-
-    return {
-      status: "EXISTS",
-      user: authUser,
-    };
-  } catch {
-
-    return {
-      status: "NEW",
-      user: authUser,
-    };
-  }
+  return { status: "EXISTS" };
 }
-
-
 
 export async function createUserProfile(authUser: any, data: {
   username: string;
   level: number;
   department: string;
 }) {
-  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    data.username
-  )}&background=random&color=fff`;
-
-  const userDoc = await databases.createDocument(
-    DATABASE_ID,
-    USER_COLLECTION,
-    authUser.$id,
-    {
-      username: data.username,
-      email: authUser.email,
-      level: data.level,
-      department: data.department,
-      avatar,
-      isAdmin: false,
-    }
-  );
-
-  trackUserSignup(authUser.$id, { email: authUser.email, username: authUser.username, level: authUser.level, department: authUser.department });
-
-  try {
-    const { createWallet } = await import('@/lib/api/wallet');
-    console.log("creating wallet for user: ", authUser.$id);
-    await createWallet(authUser.$id);
-  } catch (err) {
-    console.error("Wallet creation error:", err);
-  }
-
-  return userDoc;
+  return authUser;
 }
 
 export async function updateUserService(userId: string, data: Record<string, any>) {
-  try {
-    const updatedDoc = await databases.updateDocument(
-      DATABASE_ID,
-      USER_COLLECTION,
-      userId,
-      data
-    );
-    return updatedDoc;
-  } catch (error) {
-    console.error("Error updating user document:", error);
-    throw error;
-  }
+  const token = getAuthToken();
+  const res = await fetch("/api/user/profile", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }

@@ -46,18 +46,33 @@ export async function fetchAds({
 }
 
 export async function fetchActiveAds() {
-  const res = await fetch("/api/ads/active");
-  return res.json();
+  try {
+    const res = await fetch("/api/ads/active");
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.ads)) return data.ads;
+    return [];
+  } catch (err) {
+    console.error("fetchActiveAds error:", err);
+    return [];
+  }
 }
 
 export async function fetchAdById(id: string) {
-  const res = await fetch(`/api/ads/get?id=${id}`);
-  return res.json();
+  try {
+    const res = await fetch(`/api/ads/get?id=${id}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }
 
 export async function createAd(data: any) {
   const res = await fetch("/api/ads/create", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
@@ -67,6 +82,7 @@ export async function createAd(data: any) {
 export async function editAd(adId: string, data: any) {
   const res = await fetch("/api/ads/update", {
     method: "PATCH",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ adId, data }),
   });
 
@@ -76,6 +92,7 @@ export async function editAd(adId: string, data: any) {
 export async function deleteAd(adId: string) {
   const res = await fetch("/api/ads/delete", {
     method: "DELETE",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ adId }),
   });
 
@@ -83,17 +100,23 @@ export async function deleteAd(adId: string) {
 }
 
 export async function recordAdView(adId: string, userId?: string) {
-  await fetch("/api/ads/view", {
-    method: "POST",
-    body: JSON.stringify({ adId, userId }),
-  });
+  try {
+    await fetch("/api/ads/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adId, userId }),
+    });
+  } catch {}
 }
 
 export async function recordAdClick(adId: string) {
-  await fetch("/api/ads/click", {
-    method: "POST",
-    body: JSON.stringify({ adId }),
-  });
+  try {
+    await fetch("/api/ads/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adId }),
+    });
+  } catch {}
 }
 
 export async function fetchMediumAds(): Promise<{
@@ -102,13 +125,15 @@ export async function fetchMediumAds(): Promise<{
   threeAds: AdItem[];
 }> {
   const activeAds = await fetchActiveAds();
+  const adsList = Array.isArray(activeAds) ? activeAds : [];
 
   // Step 1: flatten all rectangular creatives
   const formatted: AdItem[] = [];
 
-  for (const ad of activeAds) {
+  for (const ad of adsList) {
+    if (!ad) continue;
     // Rectangular images
-    for (const imageUrl of ad.mediumImages) {
+    for (const imageUrl of (ad.mediumImages || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -118,7 +143,7 @@ export async function fetchMediumAds(): Promise<{
     }
 
     // Videos can also be used in rectangular slots
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of (ad.videos || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
@@ -157,13 +182,15 @@ export async function fetchSmallAds(): Promise<{
   middleAds: AdItem[];
 }> {
   const activeAds = await fetchActiveAds();
+  const adsList = Array.isArray(activeAds) ? activeAds : [];
 
   // Step 1: flatten all rectangular creatives
   const formatted: AdItem[] = [];
 
-  for (const ad of activeAds) {
+  for (const ad of adsList) {
+    if (!ad) continue;
     // Rectangular images
-    for (const imageUrl of ad.smallImages) {
+    for (const imageUrl of (ad.smallImages || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -173,7 +200,7 @@ export async function fetchSmallAds(): Promise<{
     }
 
     // Videos can also be used in rectangular slots
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of (ad.videos || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
@@ -216,25 +243,27 @@ export type BannerOrSquareAdItem = {
 
 export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
   const activeAds = await fetchActiveAds();
+  const adsList = Array.isArray(activeAds) ? activeAds : [];
 
   const formatted: BannerOrSquareAdItem[] = [];
 
-  for (const ad of activeAds) {
-    for (const imageUrl of ad.largeImages) {
+  for (const ad of adsList) {
+    if (!ad) continue;
+    for (const imageUrl of (ad.largeImages || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
         fileType: "image",
-        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+        link: ad?.link || "#",
       });
     }
 
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of (ad.videos || [])) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
         fileType: "video",
-        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+        link: ad?.link || "#",
       });
     }
   }

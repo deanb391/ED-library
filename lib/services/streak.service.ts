@@ -1,11 +1,8 @@
 // lib/services/streak.service.ts — Upload streak tracking
 
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
-import { getRedis, safeRedisOp } from "@/lib/redis";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const STREAKS_COLLECTION = "streaks";
+import prisma from "@/lib/prisma";
+import { safeRedisOp } from "@/lib/redis";
+import { randomUUID } from "crypto";
 
 export type StreakData = {
   contributors: string;
@@ -31,7 +28,7 @@ function getDayName(): string {
   return new Date().toLocaleDateString("en-US", { weekday: "long" });
 }
 
-function mapStreak(doc: any): StreakData {
+export function mapStreak(doc: any): StreakData {
   let history: string[] = [];
   try {
     history = doc.streakHistory
@@ -44,8 +41,8 @@ function mapStreak(doc: any): StreakData {
   }
 
   return {
-    contributors: doc.contributors?.$id || doc.contributors || "",
-    user: doc.user || "",
+    contributors: doc.contributorId || doc.contributors || "",
+    user: doc.userId || doc.user || "",
     currentStreak: doc.currentStreak || 0,
     longestStreak: doc.longestStreak || 0,
     lastUploadDate: doc.lastUploadDate || "",
@@ -71,44 +68,34 @@ export async function recordUploadStreak(
   const yesterday = yesterdayStr();
   const dayName = getDayName();
 
-  // Try to get existing streak document
   let streakDoc: any = null;
   try {
-    const res = await databases.listDocuments(DATABASE_ID, STREAKS_COLLECTION, [
-      Query.equal("contributors", contributorId),
-      Query.limit(1),
-    ]);
-    if (res.documents.length > 0) {
-      streakDoc = res.documents[0];
-    }
+    streakDoc = await prisma.streak.findFirst({
+      where: { contributorId },
+    });
   } catch (err) {
     console.error("[Streak] Failed to fetch streak doc:", err);
   }
 
   if (!streakDoc) {
-    // First ever upload — create streak document
-    const newStreak = {
-      contributors: contributorId,
-      user: userId,
-      currentStreak: 1,
-      longestStreak: 1,
-      lastUploadDate: today,
-      streakHistory: JSON.stringify([today]),
-      joinedDate: joinedDate || today,
-    };
-
+    const id = randomUUID();
     try {
-      await databases.createDocument(
-        DATABASE_ID,
-        STREAKS_COLLECTION,
-        ID.unique(),
-        newStreak
-      );
+      await prisma.streak.create({
+        data: {
+          id,
+          contributorId,
+          userId,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastUploadDate: today,
+          streakHistory: JSON.stringify([today]),
+          joinedDate: joinedDate || today,
+        },
+      });
     } catch (err) {
       console.error("[Streak] Failed to create streak doc:", err);
     }
 
-    // Cache in Redis
     await cacheStreakInRedis(contributorId, 1, 1, today);
 
     return { isFirstToday: true, currentStreak: 1, dayName };
@@ -116,18 +103,14 @@ export async function recordUploadStreak(
 
   const streak = mapStreak(streakDoc);
 
-  // Already uploaded today
   if (streak.lastUploadDate === today) {
     return { isFirstToday: false, currentStreak: streak.currentStreak, dayName };
   }
 
-  // Calculate new streak
   let newCurrentStreak: number;
   if (streak.lastUploadDate === yesterday) {
-    // Consecutive day — extend streak
     newCurrentStreak = streak.currentStreak + 1;
   } else {
-    // Streak broken — restart at 1
     newCurrentStreak = 1;
   }
 
@@ -135,22 +118,19 @@ export async function recordUploadStreak(
   const history = [...streak.streakHistory, today];
 
   try {
-    await databases.updateDocument(
-      DATABASE_ID,
-      STREAKS_COLLECTION,
-      streakDoc.$id,
-      {
+    await prisma.streak.update({
+      where: { id: streakDoc.id },
+      data: {
         currentStreak: newCurrentStreak,
         longestStreak: newLongest,
         lastUploadDate: today,
         streakHistory: JSON.stringify(history),
-      }
-    );
+      },
+    });
   } catch (err) {
     console.error("[Streak] Failed to update streak doc:", err);
   }
 
-  // Update Redis cache
   await cacheStreakInRedis(contributorId, newCurrentStreak, newLongest, today);
 
   return { isFirstToday: true, currentStreak: newCurrentStreak, dayName };
@@ -158,12 +138,11 @@ export async function recordUploadStreak(
 
 /**
  * Get streak data for a contributor.
- * Tries Redis first, falls back to Appwrite.
+ * Tries Redis first, falls back to Prisma.
  */
 export async function getStreakData(
   contributorId: string
 ): Promise<StreakData | null> {
-  // Try Redis cache first
   const cached = await safeRedisOp(async (client) => {
     const data = await client.hgetall(`streak:${contributorId}`);
     if (data && data.currentStreak) {
@@ -173,18 +152,14 @@ export async function getStreakData(
   }, null);
 
   if (cached) {
-    // We still need the full history from Appwrite for the calendar
     try {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        STREAKS_COLLECTION,
-        [Query.equal("contributors", contributorId), Query.limit(1)]
-      );
-      if (res.documents.length > 0) {
-        return mapStreak(res.documents[0]);
+      const doc = await prisma.streak.findFirst({
+        where: { contributorId },
+      });
+      if (doc) {
+        return mapStreak(doc);
       }
     } catch {
-      // Return partial data from Redis
       return {
         contributors: contributorId,
         user: "",
@@ -197,16 +172,12 @@ export async function getStreakData(
     }
   }
 
-  // Fallback to Appwrite
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      STREAKS_COLLECTION,
-      [Query.equal("contributors", contributorId), Query.limit(1)]
-    );
-    if (res.documents.length > 0) {
-      const streak = mapStreak(res.documents[0]);
-      // Populate Redis cache for next time
+    const doc = await prisma.streak.findFirst({
+      where: { contributorId },
+    });
+    if (doc) {
+      const streak = mapStreak(doc);
       await cacheStreakInRedis(
         contributorId,
         streak.currentStreak,
@@ -216,7 +187,7 @@ export async function getStreakData(
       return streak;
     }
   } catch (err) {
-    console.error("[Streak] Failed to fetch from Appwrite:", err);
+    console.error("[Streak] Failed to fetch from DB:", err);
   }
 
   return null;
@@ -234,7 +205,6 @@ async function cacheStreakInRedis(
       longestStreak: String(longest),
       lastDate,
     });
-    // Expire after 48 hours — will be refreshed on next upload/read
     await client.expire(`streak:${contributorId}`, 172800);
   }, undefined);
 }

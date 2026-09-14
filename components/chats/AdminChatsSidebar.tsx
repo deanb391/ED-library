@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, Plus, Filter } from "lucide-react";
-import type { Chat } from "@/lib/services/chats.service";
+import type { Chat } from "@/lib/api/chats";
 import NewChatModal from "./NewChatModal";
 
 import type { Contributor } from "@/lib/services/contributors.service";
@@ -24,7 +24,7 @@ export function AdminChatsSidebar({ chats, activeChatId, onSelectChat, onCreateC
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 
   const filteredChats = chats.filter((chat) => {
-    if (filter === "unread" && (chat.unreadCounts["admin"] || 0) === 0) return false;
+    if (filter === "unread" && (chat.unreadCounts?.["admin"] || 0) === 0) return false;
     const contributorId = chat.participants.find(p => p !== "admin");
     const contributor = contributorId ? contributorsMap[contributorId] : null;
     const name = contributor?.username || contributorId || "";

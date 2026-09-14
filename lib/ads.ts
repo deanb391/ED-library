@@ -1,7 +1,12 @@
-import { ID, Query } from "appwrite";
-import { databases } from "./appwrite";
 import { uploadToServer } from "./upload";
-import { safeRedisOp } from "./redis";
+import {
+  fetchActiveAdsService,
+  fetchAdByIdService,
+  createAdService,
+  updateAdService,
+  deleteAdService,
+  mapAd as mapAdService,
+} from "./services/ad.service";
 
 export type Ad = {
   id: string;
@@ -12,38 +17,13 @@ export type Ad = {
   videos: string[];
   views: number;
   clicks: number;
-  uniqueUsers: string[];
+  uniqueUsers?: string[];
   isExpired: boolean;
   endTime: string;
   user: string;
-  type: string,
-  link?: string
+  type: string;
+  link?: string;
 };
-
-const DATABASE_ID = "69617e75000c6c010a75";
-
-const ADS_COLLECTION = "ads";
-
-
-function mapAd(doc: any): Ad {
-  return {
-    id: doc.$id,
-    name: doc.name,
-    smallImages: doc.smallImages || [],
-    mediumImages: doc.mediumImages || [],
-    largeImages: doc.largeImages || [],
-    videos: doc.videos || [],
-    views: doc.views ?? 0,
-    clicks: doc.clicks ?? 0,
-    uniqueUsers: doc.uniqueUsers || [],
-    isExpired: doc.isExpired,
-    endTime: doc.endTime,
-    user: doc.user,
-    type: doc.type,
-    link: doc?.link
-  };
-}
-
 
 export async function uploadAdImage(file: File): Promise<string> {
   return uploadToServer(file, "ads/images", "video");
@@ -53,88 +33,45 @@ export async function uploadAdVideo(file: File): Promise<string> {
   return uploadToServer(file, "ads/videos", "video");
 }
 
-
 export async function createAd(data: {
   name: string;
-  smallImages: string[],
-  mediumImages: string[],
-  largeImages: string[],
+  smallImages: string[];
+  mediumImages: string[];
+  largeImages: string[];
   videos: string[];
   endTime: string;
   user: string;
   type: string;
   link?: string;
 }) {
-  return databases.createDocument(
-    DATABASE_ID,
-    ADS_COLLECTION,
-    ID.unique(),
-    {
-      name: data.name,
-      smallImages: data.smallImages,
-      mediumImages: data.mediumImages,
-      largeImages: data.largeImages,
-      videos: data.videos,
-      views: 0,
-      clicks: 0,
-      uniqueUsers: [],
-      isExpired: false,
-      endTime: data.endTime,
-      user: data.user,
-      type: data.type,
-      link: data.link,
-    }
-  );
+  return createAdService(data);
 }
-
 
 interface FetchAdsOptions {
   limit?: number;
-  cursor?: string; // last document ID for pagination
+  cursor?: string;
   filter?: Partial<{ name: string; type: string; isExpired: boolean }>;
 }
 
-export async function fetchAds({
-  limit = 10,
-  cursor,
-  filter,
-}: FetchAdsOptions = {}): Promise<{ ads: Ad[]; nextCursor?: string }> {
-  const queries: any[] = [Query.orderDesc("$createdAt"), Query.limit(limit)];
-
-  // Pagination cursor
-  if (cursor) {
-    queries.push(Query.cursorAfter(cursor));
+export async function fetchAds(options: FetchAdsOptions = {}): Promise<{ ads: Ad[]; nextCursor?: string }> {
+  try {
+    const res = await fetch("/api/ads/list");
+    const data = await res.json();
+    return {
+      ads: data.ads || data.documents || [],
+      nextCursor: undefined,
+    };
+  } catch (err) {
+    console.error("fetchAds error:", err);
+    return { ads: [] };
   }
-
-  // Filtering
-  if (filter) {
-    if (filter.name) {
-      queries.push(Query.contains("name", filter.name));
-    }
-    if (filter.type) {
-      queries.push(Query.equal("type", filter.type));
-    }
-    if (filter.isExpired !== undefined) {
-      queries.push(Query.equal("isExpired", filter.isExpired));
-    }
-  }
-
-  const res = await databases.listDocuments(DATABASE_ID, ADS_COLLECTION, queries);
-
-  const ads = res.documents.map(mapAd);
-
-  // Use last document as next cursor if there are more
-  const nextCursor = res.documents.length === limit ? res.documents[res.documents.length - 1].$id : undefined;
-
-  return { ads, nextCursor };
 }
-
 
 export type AdItem = {
   id: string;
   fileUrl: string;
   fileType: "image" | "video";
-  link?: string,
+  link?: string;
 };
 
 function shuffle<T>(array: T[]): T[] {
@@ -146,6 +83,10 @@ function shuffle<T>(array: T[]): T[] {
   return result;
 }
 
+export async function fetchActiveAds(): Promise<Ad[]> {
+  const ads = await fetchActiveAdsService();
+  return ads as Ad[];
+}
 
 export async function fetchSmallAds(): Promise<{
   searchAds: AdItem[];
@@ -154,12 +95,10 @@ export async function fetchSmallAds(): Promise<{
 }> {
   const activeAds = await fetchActiveAds();
 
-  // Step 1: flatten all rectangular creatives
   const formatted: AdItem[] = [];
 
   for (const ad of activeAds) {
-    // Rectangular images
-    for (const imageUrl of ad.smallImages) {
+    for (const imageUrl of ad.smallImages || []) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -168,8 +107,7 @@ export async function fetchSmallAds(): Promise<{
       });
     }
 
-    // Videos can also be used in rectangular slots
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of ad.videos || []) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
@@ -179,7 +117,6 @@ export async function fetchSmallAds(): Promise<{
     }
   }
 
-  // Nothing to work with? Return emptiness honestly.
   if (formatted.length === 0) {
     return {
       searchAds: [],
@@ -188,12 +125,8 @@ export async function fetchSmallAds(): Promise<{
     };
   }
 
-  // Step 2: shuffle once
   const shuffled = shuffle(formatted);
-
-  // Step 3: slice safely
-  const pick = (items: AdItem[]) =>
-    items.slice(0, Math.min(6, items.length));
+  const pick = (items: AdItem[]) => items.slice(0, Math.min(6, items.length));
 
   return {
     searchAds: pick(shuffled),
@@ -202,7 +135,6 @@ export async function fetchSmallAds(): Promise<{
   };
 }
 
-
 export async function fetchMediumAds(): Promise<{
   oneAds: AdItem[];
   twoAds: AdItem[];
@@ -210,12 +142,10 @@ export async function fetchMediumAds(): Promise<{
 }> {
   const activeAds = await fetchActiveAds();
 
-  // Step 1: flatten all rectangular creatives
   const formatted: AdItem[] = [];
 
   for (const ad of activeAds) {
-    // Rectangular images
-    for (const imageUrl of ad.mediumImages) {
+    for (const imageUrl of ad.mediumImages || []) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
@@ -224,8 +154,7 @@ export async function fetchMediumAds(): Promise<{
       });
     }
 
-    // Videos can also be used in rectangular slots
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of ad.videos || []) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
@@ -235,7 +164,6 @@ export async function fetchMediumAds(): Promise<{
     }
   }
 
-  // Nothing to work with? Return emptiness honestly.
   if (formatted.length === 0) {
     return {
       oneAds: [],
@@ -244,12 +172,8 @@ export async function fetchMediumAds(): Promise<{
     };
   }
 
-  // Step 2: shuffle once
   const shuffled = shuffle(formatted);
-
-  // Step 3: slice safely
-  const pick = (items: AdItem[]) =>
-    items.slice(0, Math.min(6, items.length));
+  const pick = (items: AdItem[]) => items.slice(0, Math.min(6, items.length));
 
   return {
     oneAds: pick(shuffled),
@@ -258,12 +182,11 @@ export async function fetchMediumAds(): Promise<{
   };
 }
 
-
 export type BannerOrSquareAdItem = {
   id: string;
   fileUrl: string;
   fileType: "image" | "video";
-  link: string; // we'll use ad type/link if needed, otherwise can be '#'
+  link: string;
 };
 
 export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
@@ -272,21 +195,21 @@ export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
   const formatted: BannerOrSquareAdItem[] = [];
 
   for (const ad of activeAds) {
-    for (const imageUrl of ad.largeImages) {
+    for (const imageUrl of ad.largeImages || []) {
       formatted.push({
         id: ad.id,
         fileUrl: imageUrl,
         fileType: "image",
-        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+        link: ad?.link || "#",
       });
     }
 
-    for (const videoUrl of ad.videos) {
+    for (const videoUrl of ad.videos || []) {
       formatted.push({
         id: ad.id,
         fileUrl: videoUrl,
         fileType: "video",
-        link: ad?.link || "#", // replace with a real link if you have one in the ad object
+        link: ad?.link || "#",
       });
     }
   }
@@ -296,22 +219,12 @@ export async function fetchSquareAds(): Promise<BannerOrSquareAdItem[]> {
 
 export async function recordAdView(adId: string, userId?: string) {
   try {
-    // Fetch the ad first
     const ad = await fetchAdById(adId);
+    if (!ad) return;
 
-    // Prepare updated uniqueUsers array
-    const uniqueUsers = new Set(ad.uniqueUsers); // use Set to avoid duplicates
-
-    if (userId && !uniqueUsers.has(userId)) {
-      uniqueUsers.add(userId);
-    }
-
-    // Update the ad
-    await editAd(adId, {
-      uniqueUsers: Array.from(uniqueUsers),
-      views: ad.views + 1,
+    await updateAdService(adId, {
+      views: (ad.views || 0) + 1,
     });
-
   } catch (err) {
     console.error("Failed to record ad view", err);
   }
@@ -320,53 +233,19 @@ export async function recordAdView(adId: string, userId?: string) {
 export async function recordAdClick(adId: string) {
   try {
     const ad = await fetchAdById(adId);
-    await editAd(adId, {
-      clicks: ad.clicks + 1,
+    if (!ad) return;
+    await updateAdService(adId, {
+      clicks: (ad.clicks || 0) + 1,
     });
   } catch (err) {
     console.error("Failed to record ad click", err);
   }
 }
 
-export async function fetchActiveAds(): Promise<Ad[]> {
-  const cacheKey = `ads:active:10`;
-  const cached = await safeRedisOp(async (client) => {
-    const data = await client.get(cacheKey);
-    return data ? JSON.parse(data) : null;
-  }, null);
-
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    ADS_COLLECTION,
-    [
-      Query.equal("isExpired", false),
-      Query.orderDesc("$createdAt"),
-      Query.limit(10),
-    ]
-  );
-
-  const mapped = res.documents.map(mapAd);
-
-  await safeRedisOp(async (client) => {
-    await client.setex(cacheKey, 300, JSON.stringify(mapped));
-  }, null);
-
-  return mapped;
+export async function fetchAdById(adId: string): Promise<Ad | null> {
+  const ad = await fetchAdByIdService(adId);
+  return ad as Ad | null;
 }
-
-
-export async function fetchAdById(adId: string): Promise<Ad> {
-  const doc = await databases.getDocument(
-    DATABASE_ID,
-    ADS_COLLECTION,
-    adId
-  );
-
-  return mapAd(doc);
-}
-
 
 export async function editAd(
   adId: string,
@@ -380,34 +259,13 @@ export async function editAd(
     isExpired: boolean;
     type: string;
     link?: string;
-    uniqueUsers?: string[];
     views?: number;
     clicks?: number;
   }>
 ) {
-  try {
-    return await databases.updateDocument(
-      DATABASE_ID,
-      ADS_COLLECTION,
-      adId,
-      data
-    );
-  } catch (err) {
-    console.error("Failed to update ad", err);
-    throw err;
-  }
+  return updateAdService(adId, data);
 }
 
-
 export async function deleteAd(adId: string) {
-  try {
-    return await databases.deleteDocument(
-      DATABASE_ID,
-      ADS_COLLECTION,
-      adId
-    );
-  } catch (err) {
-    console.error("Failed to delete ad", err);
-    throw err;
-  }
+  return deleteAdService(adId);
 }

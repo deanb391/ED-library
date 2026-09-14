@@ -1,14 +1,6 @@
-import { Client, Databases, ID, Query } from "node-appwrite";
+import prisma from "@/lib/prisma";
 import { getLfuCache, setLfuCache, invalidateLfuCache } from "@/lib/lfu-cache";
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || "")
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || "")
-  .setKey(process.env.APPWRITE_API_KEY || "");
-
-const databases = new Databases(client);
-const DATABASE_ID = "69617e75000c6c010a75";
-const DOCUMENT_REVIEWS_COLLECTION = process.env.NEXT_PUBLIC_APPWRITE_DOCUMENT_REVIEWS_COLLECTION || "document_reviews";
-const DOCUMENTS_COLLECTION = process.env.NEXT_PUBLIC_APPWRITE_DOCUMENTS_COLLECTION || "documents";
+import { randomUUID } from "crypto";
 
 export type DocumentReviewStatus = "pending" | "approved" | "rejected";
 
@@ -24,63 +16,61 @@ export type DocumentReviewRequest = {
 };
 
 export async function createDocumentReviewRequestService(data: { documents: string, courses: string, contributors: string, complaint: string }) {
-  const req = await databases.createDocument(
-    DATABASE_ID,
-    DOCUMENT_REVIEWS_COLLECTION,
-    ID.unique(),
-    {
-      ...data,
+  const id = randomUUID();
+  const req = await prisma.documentReview.create({
+    data: {
+      id,
+      documentId: data.documents,
+      courseId: data.courses,
+      contributorId: data.contributors,
+      complaint: data.complaint,
       status: "pending",
-    }
-  );
+      adminReason: "",
+    },
+  });
   await invalidateLfuCache("admin:document_reviews", "all");
-  return req;
+  return {
+    ...req,
+    documents: req.documentId || "",
+    courses: req.courseId || "",
+    contributors: req.contributorId || "",
+    $id: req.id,
+    $createdAt: req.createdAt.toISOString(),
+    $updatedAt: req.updatedAt.toISOString(),
+  };
 }
-
-const USER_COLLECTION = "user";
-const COURSE_COLLECTION = "courses";
 
 export async function fetchDocumentReviewRequestsService() {
   const cached = await getLfuCache<any>("admin:document_reviews", "all");
   if (cached) return cached;
 
-  const response = await databases.listDocuments(
-    DATABASE_ID,
-    DOCUMENT_REVIEWS_COLLECTION,
-    [Query.orderDesc("$createdAt")]
-  );
+  const docs = await prisma.documentReview.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
 
-  const populated = await Promise.all(response.documents.map(async (doc) => {
-    const getPopulated = (val: any) => {
-      if (!val) return null;
-      if (Array.isArray(val)) return val.length > 0 && typeof val[0] === 'object' ? val[0] : null;
-      if (typeof val === 'object' && val.$id) return val;
-      return null;
-    };
+  const populated = await Promise.all(docs.map(async (doc) => {
+    let documentDetails = null;
+    let courseDetails = null;
+    let userDetails = null;
 
-    const getIdStr = (val: any) => {
-      if (!val) return null;
-      if (Array.isArray(val)) return typeof val[0] === 'string' ? val[0] : val[0]?.$id;
-      if (typeof val === 'object') return val.$id;
-      return val;
-    };
-
-    let documentDetails = getPopulated(doc.documents);
-    let courseDetails = getPopulated(doc.courses);
-    let userDetails = getPopulated(doc.contributors);
-
-    if (!documentDetails && getIdStr(doc.documents)) {
-      try { documentDetails = await databases.getDocument(DATABASE_ID, DOCUMENTS_COLLECTION, getIdStr(doc.documents)); } catch (e) { }
+    if (doc.documentId) {
+      try { documentDetails = await prisma.document.findUnique({ where: { id: doc.documentId } }); } catch (e) { }
     }
-    if (!courseDetails && getIdStr(doc.courses)) {
-      try { courseDetails = await databases.getDocument(DATABASE_ID, COURSE_COLLECTION, getIdStr(doc.courses)); } catch (e) { }
+    if (doc.courseId) {
+      try { courseDetails = await prisma.course.findUnique({ where: { id: doc.courseId } }); } catch (e) { }
     }
-    if (!userDetails && getIdStr(doc.contributors)) {
-      try { userDetails = await databases.getDocument(DATABASE_ID, USER_COLLECTION, getIdStr(doc.contributors)); } catch (e) { }
+    if (doc.contributorId) {
+      try { userDetails = await prisma.user.findUnique({ where: { id: doc.contributorId } }); } catch (e) { }
     }
 
     return {
       ...doc,
+      documents: doc.documentId,
+      courses: doc.courseId,
+      contributors: doc.contributorId,
+      $id: doc.id,
+      $createdAt: doc.createdAt.toISOString(),
+      $updatedAt: doc.updatedAt.toISOString(),
       documentDetails,
       courseDetails,
       userDetails
@@ -93,59 +83,57 @@ export async function fetchDocumentReviewRequestsService() {
 }
 
 export async function resolveDocumentReviewRequestService(requestId: string, status: "approved" | "rejected", adminReason: string, documentId: any) {
-  // Helper to extract string ID from potentially populated object/array
   const getRelId = (val: any) => {
     if (!val) return null;
-    if (Array.isArray(val)) return val[0]?.$id || val[0] || null;
-    if (typeof val === 'object') return val.$id;
+    if (Array.isArray(val)) return val[0]?.id || val[0]?.$id || val[0] || null;
+    if (typeof val === 'object') return val.id || val.$id;
     return val;
   };
 
   const docIdStr = getRelId(documentId);
 
-  // Fetch existing request to extract all string relationship IDs
-  const existing = await databases.getDocument(DATABASE_ID, DOCUMENT_REVIEWS_COLLECTION, requestId);
-  const existingDocId = getRelId(existing.documents);
-  const existingCourseId = getRelId(existing.courses);
-  const existingContributorId = getRelId(existing.contributors);
+  const existing = await prisma.documentReview.findUnique({ where: { id: requestId } });
+  if (!existing) throw new Error("Document review request not found");
 
-  const payload: any = { status, adminReason };
+  const reviewReq = await prisma.documentReview.update({
+    where: { id: requestId },
+    data: {
+      status,
+      adminReason,
+    },
+  });
 
-  // Explicitly set relationship fields as strings in the update to bypass Appwrite's merge validation bug
-  if (existingDocId) payload.documents = existingDocId;
-  if (existingCourseId) payload.courses = existingCourseId;
-  if (existingContributorId) payload.contributors = existingContributorId;
+  const finalDocIdStr = docIdStr || existing.documentId;
 
-  // Update the review request
-  const reviewReq = await databases.updateDocument(
-    DATABASE_ID,
-    DOCUMENT_REVIEWS_COLLECTION,
-    requestId,
-    payload
-  );
-
-  const finalDocIdStr = docIdStr || existingDocId;
-
-  // If approved, update the document status to approved
   if (finalDocIdStr) {
     if (status === "approved") {
-      await databases.updateDocument(
-        DATABASE_ID,
-        DOCUMENTS_COLLECTION,
-        finalDocIdStr,
-        { status: "approved", reviewReason: "Approved by Admin: " + adminReason }
-      );
+      await prisma.document.update({
+        where: { id: finalDocIdStr },
+        data: {
+          status: "approved",
+          reviewReason: "Approved by Admin: " + adminReason,
+        },
+      });
     } else if (status === "rejected") {
-      await databases.updateDocument(
-        DATABASE_ID,
-        DOCUMENTS_COLLECTION,
-        finalDocIdStr,
-        { reviewReason: "Rejected by Admin: " + adminReason, status: "rejected" }
-      );
+      await prisma.document.update({
+        where: { id: finalDocIdStr },
+        data: {
+          status: "rejected",
+          reviewReason: "Rejected by Admin: " + adminReason,
+        },
+      });
     }
   }
 
   await invalidateLfuCache("admin:document_reviews", "all");
 
-  return reviewReq;
+  return {
+    ...reviewReq,
+    documents: reviewReq.documentId,
+    courses: reviewReq.courseId,
+    contributors: reviewReq.contributorId,
+    $id: reviewReq.id,
+    $createdAt: reviewReq.createdAt.toISOString(),
+    $updatedAt: reviewReq.updatedAt.toISOString(),
+  };
 }

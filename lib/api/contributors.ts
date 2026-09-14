@@ -59,31 +59,41 @@ export async function deleteContributor(contributorId: string): Promise<void> {
 }
 
 export async function getMyContributor(userId: string): Promise<Contributor | null> {
-  const res = await fetch(`/api/contributors/me?userId=${encodeURIComponent(userId)}`, {
-    method: "GET",
-    headers: jsonHeaders,
-  });
+  try {
+    const res = await fetch(`/api/contributors/me?userId=${encodeURIComponent(userId)}`, {
+      method: "GET",
+      headers: jsonHeaders,
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch contributor status");
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    return data.contributor ?? null;
+  } catch (err) {
+    console.error("getMyContributor error:", err);
+    return null;
   }
-
-  const data = await res.json();
-  return data.contributor;
 }
 
 export async function getContributor(contributorId: string): Promise<Contributor | null> {
-  const res = await fetch(`/api/contributors/fetch_contributor?contributorId=${encodeURIComponent(contributorId)}`, {
-    method: "GET",
-    headers: jsonHeaders,
-  });
+  try {
+    const res = await fetch(`/api/contributors/fetch_contributor?contributorId=${encodeURIComponent(contributorId)}`, {
+      method: "GET",
+      headers: jsonHeaders,
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch contributor status");
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    return data.contributor ?? null;
+  } catch (err) {
+    console.error("getContributor error:", err);
+    return null;
   }
-
-  const data = await res.json();
-  return data.contributor;
 }
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -110,41 +120,49 @@ export async function searchContributors(q: string) {
 }
 
 export async function getTopContributors(limit = 10, offset = 0): Promise<Contributor[] | []> {
+  try {
+    const query = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+    const res = await fetch(`/api/contributors/top-contributor?${query}`, {
+      method: "GET",
+      headers: jsonHeaders,
+    });
 
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  const res = await fetch(`/api/contributors/top-contributor?${query}`, {
-    method: "GET",
-    headers: jsonHeaders,
-  });
+    if (!res.ok) {
+      return [];
+    }
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch contributor status");
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.contributors || []);
+  } catch (err) {
+    console.error("getTopContributors error:", err);
+    return [];
   }
-
-  const data = await res.json();
-  return data;
 }
 
 export async function getNewContributors(limit = 10, offset = 0): Promise<Contributor[] | []> {
+  try {
+    const query = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+    const res = await fetch(`/api/contributors/new-contributor?${query}`, {
+      method: "GET",
+      headers: jsonHeaders,
+    });
 
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-  const res = await fetch(`/api/contributors/new-contributor?${query}`, {
-    method: "GET",
-    headers: jsonHeaders,
-  });
+    if (!res.ok) {
+      return [];
+    }
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch contributor status");
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.contributors || []);
+  } catch (err) {
+    console.error("getNewContributors error:", err);
+    return [];
   }
-
-  const data = await res.json();
-  return data;
 }
 
 export async function hasContributorAccount(userId: string): Promise<boolean> {
@@ -197,7 +215,11 @@ export async function fetchContributors(
 }
 
 export async function getContributorByUserId(userId: string) {
-  const res = await fetch(`/api/contributors/fetch_contributor_by_user?userId=${userId}`);
-  if (!res.ok) throw new Error("Failed to fetch contributor");
-  return res.json();
+  try {
+    const res = await fetch(`/api/contributors/fetch_contributor_by_user?userId=${encodeURIComponent(userId)}`);
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
 }

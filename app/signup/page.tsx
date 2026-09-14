@@ -146,19 +146,19 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
-      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+    <div className="min-h-screen bg-[#F4F6F8] dark:bg-gray-950 flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
 
         {/* Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center shadow-sm">
             <GraduationCap size={28} />
           </div>
         </div>
 
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">Create Account</h1>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Create Account</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
             Create your account to access course materials.
           </p>
@@ -187,7 +187,6 @@ export default function SignUpPage() {
           />
 
           {/* Level */}
-          {/* Level */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
               Level
@@ -196,19 +195,18 @@ export default function SignUpPage() {
               required
               value={level}
               onChange={(e) => setLevel(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
             >
-              <option value="" disabled>
+              <option value="" disabled className="bg-white dark:bg-gray-900 text-gray-500">
                 Select level
               </option>
               {LEVELS.map((lvl) => (
-                <option key={lvl} value={lvl}>
+                <option key={lvl} value={lvl} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   {lvl}
                 </option>
               ))}
             </select>
           </div>
-
 
           {/* Department */}
           <Input
@@ -231,7 +229,7 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
               />
               <button
                 type="button"
@@ -242,7 +240,6 @@ export default function SignUpPage() {
               </button>
             </div>
           </div>
-
 
           {/* Confirm Password */}
           <div className="space-y-1.5">
@@ -256,7 +253,7 @@ export default function SignUpPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+                className="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
               />
               <button
                 type="button"
@@ -278,11 +275,11 @@ export default function SignUpPage() {
               type="button"
               onClick={() => setIsContributorSignUp(v => !v)}
               className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${
-                isContributorSignUp ? "bg-blue-600" : "bg-gray-300"
+                isContributorSignUp ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
               <div
-                className={`w-4 h-4 bg-white dark:bg-gray-900 rounded-full shadow-sm transform transition-transform ${
+                className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${
                   isContributorSignUp ? "translate-x-5" : "translate-x-0"
                 }`}
               />
@@ -293,8 +290,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70
-            active:scale-[0.98]"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 active:scale-[0.98]"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -321,11 +317,10 @@ export default function SignUpPage() {
               await googleSignIn();
             } catch (err) {
               console.error(err);
-              // alert("Google sign-in failed");
             }
           }}
           type="button"
-          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900 transition-all active:scale-[0.98] mb-4"
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-gray-900 transition-all active:scale-[0.98] mb-4"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -340,7 +335,7 @@ export default function SignUpPage() {
         <button
           onClick={() => { router.push("/signin") }}
           type="button"
-          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-900 transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-gray-900 transition-all active:scale-[0.98]"
         >
           Sign In
         </button>
@@ -380,7 +375,7 @@ function Input({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${mono ? "font-mono tracking-widest" : ""
+          className={`w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm group-hover:border-gray-400 ${mono ? "font-mono tracking-widest" : ""
             }`}
         />
       </div>
