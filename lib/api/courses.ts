@@ -244,61 +244,92 @@ export async function fetchAllPosts(courseId: string): Promise<PaginatedPosts> {
 }
 
 export async function fetchRecentCourses(): Promise<Course[]> {
-  const res = await fetch("/api/courses/recent");
-  return res.json();
+  try {
+    const res = await fetch("/api/courses/recent");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
-export async function fetchCoursesForUser(user: any): Promise<
-  Course[]
-> {
-  const res = await fetch("/api/courses/for-user", {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({ user }),
-  });
-
-  return res.json();
+export async function fetchCoursesForUser(user: any): Promise<Course[]> {
+  try {
+    const res = await fetch("/api/courses/for-user", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ user }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
+export async function fetchPopularCourses(limit = 10, offset = 0): Promise<Course[]> {
+  try {
+    const query = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
 
-export async function fetchPopularCourses(limit = 10, offset = 0) {
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
-
-  const res = await fetch(`/api/courses/popular?${query}`);
-  return res.json();
+    const res = await fetch(`/api/courses/popular?${query}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
-export async function fetchNewCourses(limit = 10, offset = 0) {
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
+export async function fetchNewCourses(limit = 10, offset = 0): Promise<Course[]> {
+  try {
+    const query = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
 
-  const res = await fetch(`/api/courses/new?${query}`);
-  return res.json();
+    const res = await fetch(`/api/courses/new?${query}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
-export async function fetchFreeCourses(limit = 10, offset = 0) {
-  const query = new URLSearchParams({
-    limit: String(limit),
-    offset: String(offset),
-  });
+export async function fetchFreeCourses(limit = 10, offset = 0): Promise<Course[]> {
+  try {
+    const query = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
 
-  const res = await fetch(`/api/courses/free?${query}`);
-  return res.json();
+    const res = await fetch(`/api/courses/free?${query}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchRelatedCourse(user: any): Promise<Course[]> {
-  const res = await fetch("/api/courses/for-user", {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({ user }),
-  });
-
-  return res.json();
+  try {
+    const res = await fetch("/api/courses/for-user", {
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ user }),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : (data?.courses || []);
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteFileFromPost(postId: string, fileUrl: string) {

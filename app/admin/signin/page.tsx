@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { GraduationCap, ArrowRight, Lock, Mail } from 'lucide-react';
 import { useRouter } from "@/components/useRouter";
-import { signIn } from '@/lib/appwrite';
+import { signIn } from '@/lib/services/auth.service';
 import { useUser } from '@/context/UserContext';
 
 export default function AdminLoginPage() {
@@ -26,14 +26,14 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-[#F4F6F8] dark:bg-gray-950 flex flex-col items-center justify-center p-6 font-sans text-gray-900 dark:text-white">
       
       {/* --- Main Card --- */}
-      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
+      <div className="w-full max-w-[440px] bg-white dark:bg-gray-900 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-gray-800 p-8 md:p-10 animate-in fade-in zoom-in duration-300">
         
         {/* Header Icon */}
         <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center shadow-sm">
             <GraduationCap size={28} />
           </div>
         </div>

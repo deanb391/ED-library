@@ -1,20 +1,13 @@
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
-import { createCommunityService } from './communities.service';
+import prisma from "@/lib/prisma";
+import { createCommunityService } from "./communities.service";
 import { fetchCoursesByAdminService, updateCourseService } from "./course.service";
 import { sendContributorUnderReviewEmail, sendContributorApprovedEmail, sendNewFollowerEmail } from "@/lib/email/events";
-// try {
-//   await createCommunityService(doc.$id);
-// } catch (err) {
-//   console.error("Failed to create community", err);
-// }
 import { trackContributorApplication } from "@/lib/analytics/trackers";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { createContestPerformanceService, getContestPerformanceByContributorService } from "./contest_performance.service";
 import { safeRedisOp } from "@/lib/redis";
 import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
-const DATABASE_ID = "69617e75000c6c010a75";
-const CONTRIBUTORS_COLLECTION = "contributors";
+import { randomUUID } from "crypto";
 
 export type ContributorDraft = {
   username: string;
@@ -51,31 +44,45 @@ export type Contributor = ContributorDraft & {
   joinedContestAt?: string;
 };
 
-function mapContributor(doc: any): Contributor {
+function parseJsonArray(val: any): string[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export function mapContributor(doc: any): Contributor {
+  if (!doc) return null as any;
   return {
-    $id: doc.$id,
-    username: doc.username,
-    institution: doc.institution,
-    phone: doc.phone,
-    bio: doc.bio,
-    category: doc.category || [],
-    reviewImages: doc.reviewImages || [],
+    $id: doc.id || doc.$id,
+    username: doc.username || "",
+    institution: doc.institution || "",
+    phone: doc.phone || "",
+    bio: doc.bio || "",
+    category: parseJsonArray(doc.category),
+    reviewImages: parseJsonArray(doc.reviewImages),
     profileImage: doc.profileImage || "",
-    status: doc.status,
-    user: doc.user,
-    $createdAt: doc.$createdAt,
-    $updatedAt: doc.$updatedAt,
+    status: doc.status || "pending",
+    user: doc.userId || (typeof doc.user === 'string' ? doc.user : doc.user?.id) || "",
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
     approvalNotes: doc.approvalNotes || "",
     followers: doc.followers || 0,
-    followersIds: doc.followersIds,
-    hasSeenCelebration: doc.hasSeenCelebration || false,
-    agreed: doc.agreed || false,
+    followersIds: doc.followersIds || "[]",
+    hasSeenCelebration: Boolean(doc.hasSeenCelebration),
+    agreed: Boolean(doc.agreed),
     uploadCount: doc.uploadCount || 0,
     weeklyUploadCount: doc.weeklyUploadCount || 0,
-    isTopContributor: doc.isTopContributor || false,
+    isTopContributor: Boolean(doc.isTopContributor),
     topContributorWeek: doc.topContributorWeek || "",
-    joinedContest: doc.joinedContest || false,
-    joinedContestAt: doc.joinedContestAt || "",
+    joinedContest: Boolean(doc.joinedContest),
+    joinedContestAt: doc.joinedContestAt ? (doc.joinedContestAt instanceof Date ? doc.joinedContestAt.toISOString() : String(doc.joinedContestAt)) : "",
   };
 }
 
@@ -83,28 +90,36 @@ export async function createContributorService(
   draft: ContributorDraft,
   user: string
 ): Promise<Contributor> {
-  const now = new Date().toISOString();
+  const id = randomUUID();
+  const doc = await prisma.contributor.create({
+    data: {
+      id,
+      userId: user,
+      username: draft.username,
+      institution: draft.institution,
+      phone: draft.phone,
+      bio: draft.bio,
+      category: draft.category || [],
+      reviewImages: draft.reviewImages || [],
+      profileImage: draft.profileImage || "",
+      status: "pending",
+      approvalNotes: "",
+      followers: 0,
+      followersIds: "[]",
+      hasSeenCelebration: draft.hasSeenCelebration || false,
+      agreed: draft.agreed || false,
+      uploadCount: 0,
+      weeklyUploadCount: 0,
+      isTopContributor: false,
+      topContributorWeek: "",
+      joinedContest: draft.joinedContest || false,
+      joinedContestAt: draft.joinedContestAt || null,
+    },
+  });
 
-  const payload = {
-    ...draft,
-    user,
-    status: "pending",
-    $createdAt: now,
-    $updatedAt: now,
-    approvalNotes: "",
-  };
-
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    ID.unique(),
-    payload
-  );
-
-  // Fetch user to get email for notification
   try {
-    const userDoc = await databases.getDocument(DATABASE_ID, "user", user);
-    if (userDoc.email) {
+    const userDoc = await prisma.user.findUnique({ where: { id: user } });
+    if (userDoc?.email) {
       sendContributorUnderReviewEmail(userDoc.email, draft.username);
     }
   } catch (err) {
@@ -112,7 +127,6 @@ export async function createContributorService(
   }
 
   trackContributorApplication(user, { username: draft.username, institution: draft.institution });
-
   await clearLfuCacheNamespace("contributor:lists");
 
   return mapContributor(doc);
@@ -124,21 +138,11 @@ export async function editContributorService(
   type?: string,
   editingUserId?: string,
 ): Promise<Contributor> {
-  const now = new Date().toISOString();
-
-  const payload: any = {
-    $updatedAt: now,
-  };
-
   let isAdmin = false;
   if (editingUserId) {
     try {
-      const userDoc = await databases.getDocument(
-        DATABASE_ID,
-        "user",
-        editingUserId
-      );
-      if (userDoc.isAdmin) {
+      const userDoc = await prisma.user.findUnique({ where: { id: editingUserId } });
+      if (userDoc?.isAdmin) {
         isAdmin = true;
       }
     } catch (e) {
@@ -146,29 +150,36 @@ export async function editContributorService(
     }
   }
 
+  const dataToUpdate: any = {};
+
   if (isAdmin) {
-    // If admin, allow all fields from updates
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
-        payload[key] = value;
+        if (key === "joinedContestAt") {
+          dataToUpdate[key] = value ? String(value) : null;
+        } else {
+          dataToUpdate[key] = value;
+        }
       }
     }
   } else {
-    // Only allow client modification of these safe fields
     const safeFields = ['username', 'institution', 'phone', 'bio', 'category', 'reviewImages', 'profileImage', 'hasSeenCelebration', 'agreed', 'joinedContest', 'joinedContestAt'];
     for (const field of safeFields) {
-      if (updates[field as keyof ContributorDraft] !== undefined) {
-        payload[field] = updates[field as keyof ContributorDraft];
+      const val = updates[field as keyof ContributorDraft];
+      if (val !== undefined) {
+        if (field === "joinedContestAt") {
+          dataToUpdate[field] = val ? String(val) : null;
+        } else {
+          dataToUpdate[field] = val;
+        }
       }
     }
   }
-  console.log("payload: ", payload)
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    contributorId,
-    payload
-  );
+
+  const doc = await prisma.contributor.update({
+    where: { id: contributorId },
+    data: dataToUpdate,
+  });
 
   if (updates.joinedContest === true) {
     try {
@@ -180,36 +191,39 @@ export async function editContributorService(
       console.error("Failed to init contest performance doc", e);
     }
   }
-  console.log(doc)
 
   if (type) {
     let status = "";
     if (type === "approval") status = "live";
-    else if (type === "reject") status = "not-live"
-    console.log("DOC USER: ", doc.user.$id || doc.user)
-    const courses = await fetchCoursesByAdminService(doc.user.$id || doc.user);
-    courses.map(async (course) => {
-      await updateCourseService(course.id, {
-        status: status
-      })
-    })
+    else if (type === "reject") status = "not-live";
 
-    if (type === "approval") {
-      try {
-        const userId = typeof doc.user === 'string' ? doc.user : doc.user.$id;
-        const userDoc = await databases.getDocument(DATABASE_ID, "user", userId);
-        if (userDoc.email) {
-          sendContributorApprovedEmail(userDoc.email, doc.username || "Contributor");
+    const userId = doc.userId;
+    if (userId) {
+      const courses = await fetchCoursesByAdminService(userId);
+      await Promise.all(
+        courses.filter(Boolean).map((course) =>
+          updateCourseService(course!.id, {
+            status: status,
+          })
+        )
+      );
+
+      if (type === "approval") {
+        try {
+          const userDoc = await prisma.user.findUnique({ where: { id: userId } });
+          if (userDoc?.email) {
+            sendContributorApprovedEmail(userDoc.email, doc.username || "Contributor");
+          }
+        } catch (err) {
+          console.error("Failed to fetch user for approval email notification", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch user for approval email notification", err);
       }
-    }
 
-    trackEvent(type === "approval" ? "CONTRIBUTOR_APPROVED" : "CONTRIBUTOR_REJECTED", {
-      distinctId: typeof doc.user === 'string' ? doc.user : doc.user.$id,
-      metadata: { contributorId, username: doc.username }
-    });
+      trackEvent(type === "approval" ? "CONTRIBUTOR_APPROVED" : "CONTRIBUTOR_REJECTED", {
+        distinctId: userId,
+        metadata: { contributorId, username: doc.username }
+      });
+    }
   }
 
   await invalidateLfuCache("contributor:details", contributorId);
@@ -218,28 +232,24 @@ export async function editContributorService(
   return mapContributor(doc);
 }
 
-export async function deleteContributorService(
-  contributorId: string
-): Promise<void> {
+export async function deleteContributorService(contributorId: string): Promise<void> {
   await clearLfuCacheNamespace("contributor:lists");
-  await databases.deleteDocument(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    contributorId
-  );
+  await prisma.contributor.delete({
+    where: { id: contributorId },
+  });
 }
 
-export async function fetchContributorService(
-  contributorId: string
-): Promise<Contributor> {
+export async function fetchContributorService(contributorId: string): Promise<Contributor> {
   const cached = await getLfuCache<Contributor>("contributor:details", contributorId);
   if (cached) return cached;
 
-  const doc = await databases.getDocument(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    contributorId
-  );
+  const doc = await prisma.contributor.findUnique({
+    where: { id: contributorId },
+  });
+
+  if (!doc) {
+    throw new Error(`Contributor ${contributorId} not found`);
+  }
 
   const mapped = mapContributor(doc);
   await setLfuCache("contributor:details", contributorId, mapped, 100);
@@ -247,23 +257,17 @@ export async function fetchContributorService(
   return mapped;
 }
 
-export async function getContributorByUserIdService(
-  userId: string
-): Promise<Contributor | null> {
+export async function getContributorByUserIdService(userId: string): Promise<Contributor | null> {
   try {
+    const doc = await prisma.contributor.findFirst({
+      where: { userId },
+    });
 
-    console.log("User ID: ", userId)
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      [Query.equal("user", userId)]
-    );
-
-    if (res.documents.length === 0) {
+    if (!doc) {
       return null;
     }
 
-    return mapContributor(res.documents[0]);
+    return mapContributor(doc);
   } catch (err) {
     console.error("Error fetching contributor by userId:", err);
     return null;
@@ -276,8 +280,7 @@ export async function toggleFollowContributorService(
 ): Promise<boolean> {
   try {
     const contributor = await fetchContributorService(contributorId);
-    // Fetch the follower doc early so we can update it
-    const followerDoc = await databases.getDocument(DATABASE_ID, "user", userId);
+    const followerDoc = await prisma.user.findUnique({ where: { id: userId } });
 
     const raw = contributor.followersIds;
     let followersIds: string[] = [];
@@ -292,20 +295,20 @@ export async function toggleFollowContributorService(
     }
 
     let followingContributors: string[] = [];
-    if (followerDoc.followingContributors) {
+    if (followerDoc?.followingContributors) {
       try {
-        followingContributors = typeof followerDoc.followingContributors === 'string' ? JSON.parse(followerDoc.followingContributors) : followerDoc.followingContributors;
-      } catch(e) {}
+        followingContributors = typeof followerDoc.followingContributors === 'string'
+          ? JSON.parse(followerDoc.followingContributors)
+          : followerDoc.followingContributors;
+      } catch (e) {}
     }
 
     const isFollowing = followersIds.includes(userId);
 
     if (isFollowing) {
-      // Unfollow
       followersIds = followersIds.filter((id) => id !== userId);
       followingContributors = followingContributors.filter((id) => id !== contributorId);
     } else {
-      // Follow
       followersIds.push(userId);
       if (!followingContributors.includes(contributorId)) {
         followingContributors.push(contributorId);
@@ -314,39 +317,32 @@ export async function toggleFollowContributorService(
 
     const updatedFollowersCount = followersIds.length;
 
-    // Update the contributor's followers
-    await databases.updateDocument(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      contributorId,
-      {
+    await prisma.contributor.update({
+      where: { id: contributorId },
+      data: {
         followers: updatedFollowersCount,
         followersIds: JSON.stringify(followersIds),
-      }
-    );
+      },
+    });
 
-    // Update the user's following list
-    await databases.updateDocument(
-      DATABASE_ID,
-      "user",
-      userId,
-      {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
         followingContributors: JSON.stringify(followingContributors),
-      }
-    );
+      },
+    });
 
     await invalidateLfuCache("contributor:details", contributorId);
     await clearLfuCacheNamespace("contributor:lists");
 
-    // Send email only when it is a new follow, not an unfollow
     if (!isFollowing) {
       try {
-        const contributorUserDoc = await databases.getDocument(DATABASE_ID, "user", contributor.user);
+        const contributorUserDoc = await prisma.user.findUnique({ where: { id: contributor.user } });
         if (contributorUserDoc?.email) {
           sendNewFollowerEmail(
             contributorUserDoc.email,
             contributor.username || "Contributor",
-            followerDoc?.username || "A user"
+            followerDoc?.name || followerDoc?.email || "A user"
           );
         }
       } catch (err) {
@@ -367,24 +363,18 @@ export async function toggleFollowContributorService(
   }
 }
 
-
 export async function fetchTopContributorsCoursesService(limit = 50, offset = 0) {
   const cacheKey = `top:${limit}:${offset}`;
   const cached = await getLfuCache<Contributor[]>("contributor:lists", cacheKey);
   if (cached) return cached;
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    [
-      Query.orderDesc("followers"),
-      Query.limit(limit),
-      Query.offset(offset),
-    ]
-  );
+  const docs = await prisma.contributor.findMany({
+    orderBy: { followers: 'desc' },
+    take: limit,
+    skip: offset,
+  });
 
-  const mapped = res.documents.map(mapContributor);
-
+  const mapped = docs.map(mapContributor);
   await setLfuCache("contributor:lists", cacheKey, mapped, 50);
 
   return mapped;
@@ -395,67 +385,42 @@ export async function fetchNewContributorsCoursesService(limit = 50, offset = 0)
   const cached = await getLfuCache<Contributor[]>("contributor:lists", cacheKey);
   if (cached) return cached;
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    [
-      Query.equal("status", "live"),
-      Query.orderDesc("$createdAt"),
-      Query.limit(limit),
-      Query.offset(offset),
-    ]
-  );
+  const docs = await prisma.contributor.findMany({
+    where: { status: "live" },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    skip: offset,
+  });
 
-  console.log("New Contributors: ", res.documents.map(mapContributor))
-
-  const mapped = res.documents.map(mapContributor);
-
+  const mapped = docs.map(mapContributor);
   await setLfuCache("contributor:lists", cacheKey, mapped, 50);
 
   return mapped;
 }
 
 export async function fetchContestContributorsService(): Promise<Contributor[]> {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    [
-      Query.equal("joinedContest", true),
-      Query.limit(100),
-    ]
-  );
-
-  return res.documents.map(mapContributor);
-}
-
-
-export async function searchContributorsService(query: string) {
-  const base = [
-    Query.orderDesc("$updatedAt"),
-    Query.limit(30),
-  ];
-
-  const [title, code,] = await Promise.all([
-    databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
-      Query.search("username", query),
-      ...base,
-    ]),
-    databases.listDocuments(DATABASE_ID, CONTRIBUTORS_COLLECTION, [
-      Query.search("institution", query),
-      ...base,
-    ]),
-  ]);
-
-  const map = new Map();
-
-
-  [...title.documents, ...code.documents].forEach((doc: any) => {
-    map.set(doc.$id, doc);
+  const docs = await prisma.contributor.findMany({
+    where: { joinedContest: true },
+    take: 100,
   });
 
-  return Array.from(map.values()).map(mapContributor);
+  return docs.map(mapContributor);
 }
 
+export async function searchContributorsService(query: string) {
+  const docs = await prisma.contributor.findMany({
+    where: {
+      OR: [
+        { username: { contains: query, mode: "insensitive" } },
+        { institution: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 30,
+  });
+
+  return docs.map(mapContributor);
+}
 
 export async function fetchContributorsService(
   type?: string,
@@ -471,32 +436,30 @@ export async function fetchContributorsService(
   const cached = await getLfuCache<any>("contributor:lists", cacheKey);
   if (cached) return cached;
 
-  const queries: any[] = [
-    Query.orderDesc("$createdAt"),
-    Query.limit(limit),
-  ];
-
+  const where: any = {};
   if (type) {
-    queries.push(Query.equal("status", type))
-  }
-
-  if (cursor) {
-    queries.push(Query.cursorAfter(cursor));
+    where.status = type;
   }
   if (search) {
-    queries.push(Query.contains("username", search))
+    where.username = { contains: search, mode: "insensitive" };
   }
 
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    CONTRIBUTORS_COLLECTION,
-    queries
-  );
+  const findOptions: any = {
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  };
 
-  const contributors = res.documents.map(mapContributor);
+  if (cursor) {
+    findOptions.cursor = { id: cursor };
+    findOptions.skip = 1;
+  }
+
+  const docs = await prisma.contributor.findMany(findOptions);
+  const contributors = docs.map(mapContributor);
   const nextCursor =
-    res.documents.length === limit
-      ? res.documents[res.documents.length - 1].$id
+    docs.length === limit
+      ? docs[docs.length - 1].id
       : undefined;
 
   const result = {

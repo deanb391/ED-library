@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchWalletHistoryByUserService } from "@/lib/services/wallet.service";
-import { getAuthenticatedUser } from "@/lib/appwrite/auth";
+import { AuthService } from "@/services/auth.service";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -10,8 +10,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
-  const user = await getAuthenticatedUser(req);
-  if (!user || user.$id !== userId) {
+  const user = await AuthService.getUserFromRequest(req);
+  if (!user || user.userId !== userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPostsService } from "@/lib/services/course.service";
-import { Query } from "appwrite";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -16,15 +15,7 @@ export async function GET(req: NextRequest) {
   const order = searchParams.get("order") || "desc";
   const limit = limitStr ? parseInt(limitStr, 10) : (order === "asc" ? 10 : 5);
 
-  const queries: any[] = [
-    Query.equal("courses", courseId),
-    order === "asc" ? Query.orderAsc("$createdAt") : Query.orderDesc("$createdAt"),
-    Query.limit(limit),
-  ];
-
-  if (cursor) queries.push(Query.cursorAfter(cursor));
-
-  const res = await fetchPostsService(courseId, queries);
+  const res = await fetchPostsService(courseId, { cursor, limit, order });
 
   return NextResponse.json(res);
 }

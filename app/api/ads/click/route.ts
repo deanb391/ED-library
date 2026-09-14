@@ -9,9 +9,12 @@ export async function POST(req: NextRequest) {
     const { adId } = await req.json();
 
     const ad = await fetchAdByIdRawService(adId);
+    if (!ad) {
+      return NextResponse.json({ error: "Ad not found" }, { status: 404 });
+    }
 
     await updateAdService(adId, {
-      clicks: ad.clicks + 1,
+      clicks: (ad.clicks || 0) + 1,
     });
 
     return NextResponse.json({ success: true });

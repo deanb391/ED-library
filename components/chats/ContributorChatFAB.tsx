@@ -5,11 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import ContributorChatModal from "./ContributorChatModal";
-import { getChatForContributorService } from "@/lib/services/chats.service";
-import { client } from "@/lib/appwrite";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const CHAT_COLLECTION = "chats";
+import { getChatForContributor, updateMessagesStatus } from "@/lib/api/chats";
 
 export default function ContributorChatFAB() {
   const pathname = usePathname();
@@ -25,12 +21,10 @@ export default function ContributorChatFAB() {
   useEffect(() => {
     if (!user) return;
 
-    let unsubscribe: () => void;
-
     const loadUnreadCount = async () => {
       try {
-        const chat = await getChatForContributorService(user.$id);
-        if (chat) {
+        const chat = await getChatForContributor(user.$id);
+        if (chat && chat.unreadCounts) {
           setUnreadCount(chat.unreadCounts[user.$id] || 0);
         }
       } catch (err) {
@@ -39,54 +33,6 @@ export default function ContributorChatFAB() {
     };
 
     loadUnreadCount();
-
-    unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${CHAT_COLLECTION}.documents`,
-      (response) => {
-        if (
-          response.events.includes("databases.*.collections.*.documents.*.update") ||
-          response.events.includes("databases.*.collections.*.documents.*.create")
-        ) {
-          const updatedChat = response.payload as any;
-          if (updatedChat.participants?.includes(user.$id)) {
-            let counts = {};
-            if (typeof updatedChat.unreadCounts === "string") {
-              try { counts = JSON.parse(updatedChat.unreadCounts); } catch {}
-            } else if (typeof updatedChat.unreadCounts === "object") {
-              counts = updatedChat.unreadCounts || {};
-            }
-            setUnreadCount((counts as any)[user.$id] || 0);
-          }
-        }
-      }
-    );
-
-    const unsubscribeMessages = client.subscribe(
-      `databases.${DATABASE_ID}.collections.messages.documents`,
-      (response) => {
-        if (response.events.includes("databases.*.collections.*.documents.*.create")) {
-          const newMsg = response.payload as any;
-          if (newMsg.senderId !== user.$id) {
-            // Ensure this message is actually for this contributor's chat
-            getChatForContributorService(user.$id).then(chat => {
-              if (chat && chat.$id === newMsg.chatId) {
-                if (!isOpenRef.current) {
-                  // Mark as delivered since it was received but not opened
-                  import("@/lib/services/messages.service").then((mod) => {
-                    mod.updateMessagesStatusService([newMsg.$id], "delivered").catch(() => null);
-                  });
-                }
-              }
-            });
-          }
-        }
-      }
-    );
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-      if (unsubscribeMessages) unsubscribeMessages();
-    };
   }, [user]);
 
   // When modal opens, unread counts are cleared by the modal itself.

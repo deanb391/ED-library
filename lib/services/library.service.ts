@@ -1,20 +1,28 @@
-import { databases } from "@/lib/appwrite/server";
-import { ID, Query } from "appwrite";
+import prisma from "@/lib/prisma";
 import { fetchUserLibraryCoursesService } from "./course.service";
-
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const COLLECTION_ID = "library";
+import { randomUUID } from "crypto";
 
 type AccessType = "one-time" | "subscription";
 
 export type Library = {
-  $id: string,
-  user: string,
-  oneTime: string,
-  subscription: string,
-  $createdAt: string,
-  $updatedAt: string,
+  $id: string;
+  user: string;
+  oneTime: string;
+  subscription: string;
+  $createdAt: string;
+  $updatedAt: string;
+};
+
+export function mapLibrary(doc: any): Library {
+  if (!doc) return null as any;
+  return {
+    $id: doc.id || doc.$id,
+    user: doc.userId || doc.user || "",
+    oneTime: doc.oneTime || "[]",
+    subscription: doc.subscription || "[]",
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
+  };
 }
 
 export async function addCourseToLibraryService(
@@ -23,33 +31,24 @@ export async function addCourseToLibraryService(
   type: AccessType
 ) {
   try {
+    let library = await prisma.library.findFirst({
+      where: { userId },
+    });
 
-    // 1. Find existing library
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      COLLECTION_ID,
-      [Query.equal("user", userId)]
-    );
-
-    let library = res.documents[0];
-
-    // 2. If no library → create one
     if (!library) {
-      const newDoc = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          user: userId,
+      const id = randomUUID();
+      const newDoc = await prisma.library.create({
+        data: {
+          id,
+          userId,
           oneTime: JSON.stringify(type === "one-time" ? [courseId] : []),
           subscription: JSON.stringify(type === "subscription" ? [courseId] : []),
-        }
-      );
+        },
+      });
 
-      return newDoc;
+      return mapLibrary(newDoc);
     }
 
-    // 3. Parse existing fields safely
     let oneTime: string[] = [];
     let subscription: string[] = [];
 
@@ -69,7 +68,6 @@ export async function addCourseToLibraryService(
       subscription = [];
     }
 
-    // 4. Add course (no duplicates, please)
     if (type === "one-time") {
       if (!oneTime.includes(courseId)) {
         oneTime.push(courseId);
@@ -80,18 +78,15 @@ export async function addCourseToLibraryService(
       }
     }
 
-    // 5. Update document
-    const updated = await databases.updateDocument(
-      DATABASE_ID,
-      COLLECTION_ID,
-      library.$id,
-      {
+    const updated = await prisma.library.update({
+      where: { id: library.id },
+      data: {
         oneTime: JSON.stringify(oneTime),
         subscription: JSON.stringify(subscription),
-      }
-    );
+      },
+    });
 
-    return updated;
+    return mapLibrary(updated);
   } catch (error) {
     console.error("ADD COURSE TO LIBRARY ERROR:", error);
     throw error;
@@ -107,9 +102,7 @@ export async function addSubscriptionsCoursesToLibraryService(
   try {
     const results = [];
     for (const id of courseIds) {
-      // 1. Add to library
       await addCourseToLibraryService(id, userId, "subscription");
-      // 2. Handle subscription record (start/end dates)
       const sub = await handleSubscriptionService(userId, id);
       results.push(sub);
     }
@@ -121,25 +114,23 @@ export async function addSubscriptionsCoursesToLibraryService(
 }
 
 export async function fetchLibraryByUserService(userId: string) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COLLECTION_ID,
-    [Query.equal("user", userId)]
-  );
+  const doc = await prisma.library.findFirst({
+    where: { userId },
+  });
 
-  if (res.documents.length === 0) return null;
+  if (!doc) return null;
 
-  return res.documents[0];
+  return mapLibrary(doc);
 }
 
 export async function fetchLibraryCoursesService(user_id: string) {
   const library = await fetchLibraryByUserService(user_id);
 
-  if(!library) return;
+  if (!library) return [];
 
-  const course_ids = [...(JSON.parse(library?.oneTime || "[]")), ...(JSON.parse(library?.subscription || "[]"))]
+  const course_ids = [...(JSON.parse(library?.oneTime || "[]")), ...(JSON.parse(library?.subscription || "[]"))];
 
-  const response = await fetchUserLibraryCoursesService(course_ids)
+  const response = await fetchUserLibraryCoursesService(course_ids);
 
   return response;
 }

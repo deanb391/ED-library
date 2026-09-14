@@ -1,19 +1,13 @@
-import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import { fetchAllContestPerformancesService, updateContestPerformanceService } from "@/lib/services/contest_performance.service";
-import { getContributorByUserIdService } from "@/lib/services/contributors.service";
-import { databases } from "@/lib/appwrite/server";
-import { sendContestDailySummaryEmail } from "@/lib/email/events";
-import { Query } from "node-appwrite";
-
-const DATABASE_ID = "69617e75000c6c010a75";
 
 export async function runContestCalculate(performanceId?: string) {
   try {
     let performances: any[] = [];
     if (performanceId) {
       try {
-        const doc = await databases.getDocument(DATABASE_ID, "contest_performance", performanceId);
-        performances = [doc];
+        const doc = await prisma.contestPerformance.findUnique({ where: { id: performanceId } });
+        if (doc) performances = [doc];
       } catch (err) {
         console.error("Failed to fetch specific performance", err);
         return;
@@ -45,13 +39,10 @@ export async function runContestCalculate(performanceId?: string) {
 
     // 1. Calculate and assign points for each contributor
     for (const perf of performances) {
-      console.log("Processing performance", perf);
-      const contributorId = typeof perf.contributors === 'object' && perf.contributors !== null
-        ? (Array.isArray(perf.contributors) ? (perf.contributors as any)[0]?.$id || (perf.contributors as any)[0] : (perf.contributors as any).$id)
-        : perf.contributors;
+      const contributorId = perf.contributorId || perf.contributors;
 
       if (!contributorId) {
-        console.log("No valid contributorId found for performance", perf.$id);
+        console.log("No valid contributorId found for performance", perf.id || perf.$id);
         continue;
       }
 
@@ -74,33 +65,33 @@ export async function runContestCalculate(performanceId?: string) {
         totalActiveMins += engagementActivity[k].activeMinutes || 0;
         if (k !== dayKey) previousActiveMins += engagementActivity[k].activeMinutes || 0;
       }
-      // 1 point per 3 minutes, max 40 points
       const engagementScore = Math.min(40, Math.floor(totalActiveMins / 3));
       const previousEngagementScore = Math.min(40, Math.floor(previousActiveMins / 3));
       const todaysEngagementScore = engagementScore - previousEngagementScore;
 
       // -- C (Content Quality) --
-      // Fetch all courses owned by this contributor
       let contentScore = 0;
       let totalRatingSum = 0;
       let ratedCoursesCount = 0;
       try {
-        const contDoc = await databases.getDocument(DATABASE_ID, "contributors", contributorId);
-        const coursesRes = await databases.listDocuments(DATABASE_ID, "courses", [
-          Query.equal("user", contDoc.user)
-        ]);
+        const contDoc = await prisma.contributor.findUnique({ where: { id: contributorId } });
+        if (contDoc) {
+          const userId = contDoc.userId || (contDoc as any).user;
+          const courses = userId ? await prisma.course.findMany({
+            where: { userId },
+          }) : [];
 
-        for (const course of coursesRes.documents) {
-          // Fetch reviews for this course
-          const reviewsRes = await databases.listDocuments(DATABASE_ID, "course_review_and_rating", [
-            Query.equal("courses", course.$id)
-          ]);
+          for (const course of courses) {
+            const reviews = await prisma.courseReviewAndRating.findMany({
+              where: { courseId: course.id },
+            });
 
-          if (reviewsRes.documents.length > 0) {
-            const sum = reviewsRes.documents.reduce((acc, curr) => acc + (curr.rating || 0), 0);
-            const avg = sum / reviewsRes.documents.length;
-            totalRatingSum += avg;
-            ratedCoursesCount++;
+            if (reviews.length > 0) {
+              const sum = reviews.reduce((acc, curr) => acc + (curr.rating || 0), 0);
+              const avg = sum / reviews.length;
+              totalRatingSum += avg;
+              ratedCoursesCount++;
+            }
           }
         }
       } catch (err) {
@@ -109,20 +100,17 @@ export async function runContestCalculate(performanceId?: string) {
 
       if (ratedCoursesCount > 0) {
         const overallAverage = totalRatingSum / ratedCoursesCount;
-        // Normalize 0-5 scale to 0-10 points: (avg / 5) * 10 = avg * 2
         contentScore = Math.min(10, overallAverage * 2);
       }
 
-      // Calculate today's points, letting contentScore act as a daily compounding boost
       const todaysPoints = todaysAcquisitionScore + todaysEngagementScore + contentScore;
 
-      // Update daily points and recalculate total
       const dailyPoints = JSON.parse(perf.dailyPoints || "{}");
       dailyPoints[dayKey] = todaysPoints;
 
       const totalPoints = Object.values(dailyPoints).reduce((acc: number, curr: any) => acc + curr, 0) as number;
 
-      await updateContestPerformanceService(perf.$id!, {
+      await updateContestPerformanceService(perf.id || perf.$id!, {
         dailyPoints: JSON.stringify(dailyPoints),
         totalPoints: totalPoints,
         acquisitionScore: acquisitionScore,

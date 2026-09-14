@@ -4,15 +4,16 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import NProgress from "nprogress";
 import { ArrowLeft, Send, Clock, Check, CheckCheck } from "lucide-react";
-import type { Chat } from "@/lib/services/chats.service";
-import type { Message } from "@/lib/services/messages.service";
-import { createMessageService, getMessagesByChatService, updateMessagesStatusService } from "@/lib/services/messages.service";
-import { clearChatUnreadCountService } from "@/lib/services/chats.service";
-import { client } from "@/lib/appwrite";
+import {
+  type Chat,
+  type Message,
+  createMessage,
+  getMessagesByChat,
+  updateMessagesStatus,
+  clearChatUnreadCount,
+} from "@/lib/api/chats";
 import type { Contributor } from "@/lib/services/contributors.service";
 const BRAND_BLUE = "#2563eb";
-const DATABASE_ID = "69617e75000c6c010a75";
-const MESSAGE_COLLECTION = "messages";
 
 interface DetailsProps {
   chat: Chat | null;
@@ -39,25 +40,24 @@ export function AdminChatDetails({ chat, onBack, loading: pageLoading, contribut
   useEffect(() => {
     if (pageLoading || !chatId) return;
 
-    let unsubscribe: () => void;
     const loadMessages = async () => {
       setLoading(true);
       try {
         const currentUnread = chat?.unreadCounts?.["admin"] || 0;
         setInitialUnreadCount(currentUnread);
 
-        const res = await getMessagesByChatService(chatId, 15);
+        const res = await getMessagesByChat(chatId, 15);
         setMessages(res.messages);
         setNextCursor(res.nextCursor);
         setHasMore(res.hasMore);
 
         if (currentUnread > 0) {
-          await clearChatUnreadCountService(chatId, "admin");
+          await clearChatUnreadCount(chatId, "admin");
           const unseenMsgIds = res.messages
             .filter((m) => m.senderId !== "admin" && m.status !== "seen")
             .map((m) => m.$id);
           if (unseenMsgIds.length > 0) {
-            updateMessagesStatusService(unseenMsgIds, "seen").catch(() => null);
+            updateMessagesStatus(unseenMsgIds, "seen").catch(() => null);
           }
         }
       } catch (err) {
@@ -69,48 +69,6 @@ export function AdminChatDetails({ chat, onBack, loading: pageLoading, contribut
     };
 
     loadMessages();
-
-    unsubscribe = client.subscribe(
-      `databases.${DATABASE_ID}.collections.${MESSAGE_COLLECTION}.documents`,
-      (response) => {
-        if (
-          response.events.includes("databases.*.collections.*.documents.*.create")
-        ) {
-          const newMsg = response.payload as any as Message;
-          if (newMsg.chatId === chatId) {
-            setMessages((prev) => {
-              if (prev.some(m => m.$id === newMsg.$id)) return prev;
-
-              const tempIndex = prev.findIndex(
-                (m) =>
-                  m.$id.startsWith("temp-") &&
-                  m.senderId === newMsg.senderId &&
-                  m.text === newMsg.text
-              );
-
-              if (tempIndex !== -1) {
-                const next = [...prev];
-                next[tempIndex] = newMsg;
-                return next.sort((a, b) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
-              }
-
-              return [...prev, newMsg].sort((a, b) =>
-                new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
-              );
-            });
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-
-            if (newMsg.senderId !== "admin") {
-              clearChatUnreadCountService(chatId, "admin");
-            }
-          }
-        }
-      }
-    );
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId, pageLoading]);
 
@@ -136,12 +94,14 @@ export function AdminChatDetails({ chat, onBack, loading: pageLoading, contribut
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
 
     try {
-      await createMessageService({
+      const sent = await createMessage({
         chatId: chat.$id,
         senderId: "admin",
         text: payloadText,
       });
-      // The appwrite subscription will replace the temp message
+      setMessages((prev) =>
+        prev.map((m) => (m.$id === tempId ? sent : m))
+      );
     } catch (err) {
       console.error("Failed to send message", err);
       setMessages((prev) => prev.filter(m => m.$id !== tempId));
@@ -156,7 +116,7 @@ export function AdminChatDetails({ chat, onBack, loading: pageLoading, contribut
     if (!chatId || loadingMore || !hasMore || !nextCursor) return;
     setLoadingMore(true);
     try {
-      const res = await getMessagesByChatService(chatId, 15, nextCursor);
+      const res = await getMessagesByChat(chatId, 15, nextCursor);
 
       const scrollContainer = messagesEndRef.current?.parentElement;
       const previousScrollHeight = scrollContainer?.scrollHeight || 0;

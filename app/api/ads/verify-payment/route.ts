@@ -121,12 +121,14 @@ export async function GET(req: NextRequest) {
               endTime,
             });
 
-            adIdToReturn = newAd.$id;
+            if (newAd) {
+              adIdToReturn = newAd.$id;
 
-            // Update payment document to save the created ad ID to prevent recreating on reload
-            await updatePaymentService(paymentId, {
-              courses: JSON.stringify([newAd.$id]),
-            });
+              // Update payment document to save the created ad ID to prevent recreating on reload
+              await updatePaymentService(paymentId, {
+                courses: JSON.stringify([newAd.$id]),
+              });
+            }
           }
         } catch (e: any) {
           console.error("Failed to parse courses field in payment verification:", e);

@@ -3,7 +3,7 @@ import {
   createContributorService,
   ContributorDraft,
 } from "@/lib/services/contributors.service";
-import { updateUserServer } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +37,10 @@ export async function POST(req: NextRequest) {
     const contributor = await createContributorService(draft as ContributorDraft, userId);
 
     // Update user document to mark as contributor
-    await updateUserServer(userId, { isContributor: true });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isContributor: true },
+    });
 
     return NextResponse.json(
       { success: true, data: contributor },

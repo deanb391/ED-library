@@ -1,13 +1,9 @@
 // lib/services/weekly-awards.service.ts — Top Contributor of the Week logic
 
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 import { safeRedisOp } from "@/lib/redis";
 import { invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const CONTRIBUTORS_COLLECTION = "contributors";
-const WEEKLY_AWARDS_COLLECTION = "weekly_awards";
+import { randomUUID } from "crypto";
 
 export type WeeklyAward = {
   id: string;
@@ -21,9 +17,6 @@ export type WeeklyAward = {
   awardedAt: string;
 };
 
-/**
- * Get the ISO week string (e.g. "2026-W21") for a date.
- */
 function getWeekString(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -32,14 +25,11 @@ function getWeekString(date: Date): string {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-/**
- * Get Monday & Sunday of the current week.
- */
 function getCurrentWeekBounds(): { weekStart: string; weekEnd: string } {
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
+  const dayOfWeek = now.getDay();
   const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7)); // go back to Monday
+  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
 
@@ -49,106 +39,68 @@ function getCurrentWeekBounds(): { weekStart: string; weekEnd: string } {
   };
 }
 
-/**
- * Calculate and award the top contributor for this week.
- * Called by the Saturday cron job.
- */
 export async function calculateTopContributor(): Promise<WeeklyAward | null> {
   const { weekStart, weekEnd } = getCurrentWeekBounds();
   const weekString = getWeekString(new Date());
 
-  // Check if already awarded this week
   try {
-    const existing = await databases.listDocuments(
-      DATABASE_ID,
-      WEEKLY_AWARDS_COLLECTION,
-      [Query.equal("weekStart", weekStart), Query.limit(1)]
-    );
-    if (existing.documents.length > 0) {
-      console.log("[WeeklyAwards] Already awarded for this week:", weekStart);
-      return mapAward(existing.documents[0]);
+    const existing = await prisma.weeklyAward.findFirst({
+      where: { weekStart },
+    });
+    if (existing) {
+      return mapAward(existing);
     }
   } catch (err) {
     console.error("[WeeklyAwards] Error checking existing award:", err);
   }
 
-  // Find the contributor with highest weeklyUploadCount
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      [
-        Query.orderDesc("weeklyUploadCount"),
-        Query.greaterThan("weeklyUploadCount", 0),
-        Query.limit(1),
-      ]
-    );
+    const winner = await prisma.contributor.findFirst({
+      where: { weeklyUploadCount: { gt: 0 } },
+      orderBy: { weeklyUploadCount: 'desc' },
+    });
 
-    if (res.documents.length === 0) {
-      console.log("[WeeklyAwards] No uploads this week, no award.");
+    if (!winner) {
       return null;
     }
 
-    const winner = res.documents[0];
-
-    // Clear previous top contributor flag
     try {
-      const previousTop = await databases.listDocuments(
-        DATABASE_ID,
-        CONTRIBUTORS_COLLECTION,
-        [Query.equal("isTopContributor", true), Query.limit(5)]
-      );
-      for (const prev of previousTop.documents) {
-        await databases.updateDocument(
-          DATABASE_ID,
-          CONTRIBUTORS_COLLECTION,
-          prev.$id,
-          { isTopContributor: false }
-        );
-        await invalidateLfuCache("contributor:details", prev.$id);
-      }
+      await prisma.contributor.updateMany({
+        where: { isTopContributor: true },
+        data: { isTopContributor: false },
+      });
     } catch {
       // Non-critical
     }
 
-    // Mark the winner
-    await databases.updateDocument(
-      DATABASE_ID,
-      CONTRIBUTORS_COLLECTION,
-      winner.$id,
-      {
+    await prisma.contributor.update({
+      where: { id: winner.id },
+      data: {
         isTopContributor: true,
         topContributorWeek: weekString,
-      }
-    );
+      },
+    });
 
-    await invalidateLfuCache("contributor:details", winner.$id);
+    await invalidateLfuCache("contributor:details", winner.id);
 
-    // Create award document
-    const awardData = {
-      contributors: winner.$id,
-      contributorName: winner.username || "Unknown",
-      contributorImage: winner.profileImage || "",
-      weekStart,
-      weekEnd,
-      weeklyUploads: winner.weeklyUploadCount || 0,
-      totalUploads: winner.uploadCount || 0,
-      awardedAt: new Date().toISOString(),
-    };
+    const id = randomUUID();
+    const awardDoc = await prisma.weeklyAward.create({
+      data: {
+        id,
+        contributorId: winner.id,
+        contributorName: winner.username || "Unknown",
+        contributorImage: winner.profileImage || "",
+        weekStart,
+        weekEnd,
+        weeklyUploads: winner.weeklyUploadCount || 0,
+        totalUploads: winner.uploadCount || 0,
+        awardedAt: new Date().toISOString(),
+      },
+    });
 
-    const awardDoc = await databases.createDocument(
-      DATABASE_ID,
-      WEEKLY_AWARDS_COLLECTION,
-      ID.unique(),
-      awardData
-    );
-
-    // Reset ALL contributors' weeklyUploadCount to 0
     await resetWeeklyUploads();
-
     await clearLfuCacheNamespace("contributor:lists");
 
-    // Cache in Redis
     const award = mapAward(awardDoc);
     await cacheTopContributor(award);
 
@@ -159,11 +111,7 @@ export async function calculateTopContributor(): Promise<WeeklyAward | null> {
   }
 }
 
-/**
- * Get the current top contributor (for display).
- */
 export async function getCurrentTopContributor(): Promise<WeeklyAward | null> {
-  // Try Redis
   const cached = await safeRedisOp(async (client) => {
     const data = await client.get("top_contributor:current");
     return data ? JSON.parse(data) : null;
@@ -171,16 +119,13 @@ export async function getCurrentTopContributor(): Promise<WeeklyAward | null> {
 
   if (cached) return cached;
 
-  // Fallback to Appwrite — get the most recent award
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      WEEKLY_AWARDS_COLLECTION,
-      [Query.orderDesc("awardedAt"), Query.limit(1)]
-    );
+    const doc = await prisma.weeklyAward.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
 
-    if (res.documents.length > 0) {
-      const award = mapAward(res.documents[0]);
+    if (doc) {
+      const award = mapAward(doc);
       await cacheTopContributor(award);
       return award;
     }
@@ -191,19 +136,17 @@ export async function getCurrentTopContributor(): Promise<WeeklyAward | null> {
   return null;
 }
 
-// --- Helpers ---
-
 function mapAward(doc: any): WeeklyAward {
   return {
-    id: doc.$id,
-    contributorId: doc.contributors?.$id || doc.contributors || "",
+    id: doc.id || doc.$id,
+    contributorId: doc.contributorId || "",
     contributorName: doc.contributorName || "Unknown",
     contributorImage: doc.contributorImage || "",
-    weekStart: doc.weekStart,
-    weekEnd: doc.weekEnd,
+    weekStart: doc.weekStart || "",
+    weekEnd: doc.weekEnd || "",
     weeklyUploads: doc.weeklyUploads || 0,
     totalUploads: doc.totalUploads || 0,
-    awardedAt: doc.awardedAt,
+    awardedAt: doc.awardedAt || (doc.createdAt ? doc.createdAt.toISOString() : new Date().toISOString()),
   };
 }
 
@@ -213,40 +156,17 @@ async function cacheTopContributor(award: WeeklyAward) {
       "top_contributor:current",
       JSON.stringify(award),
       "EX",
-      604800 // 7 days
+      604800
     );
   }, undefined);
 }
 
 async function resetWeeklyUploads() {
   try {
-    let offset = 0;
-    const batchSize = 100;
-
-    while (true) {
-      const res = await databases.listDocuments(
-        DATABASE_ID,
-        CONTRIBUTORS_COLLECTION,
-        [
-          Query.greaterThan("weeklyUploadCount", 0),
-          Query.limit(batchSize),
-          Query.offset(offset),
-        ]
-      );
-
-      for (const doc of res.documents) {
-        await databases.updateDocument(
-          DATABASE_ID,
-          CONTRIBUTORS_COLLECTION,
-          doc.$id,
-          { weeklyUploadCount: 0 }
-        );
-        await invalidateLfuCache("contributor:details", doc.$id);
-      }
-
-      if (res.documents.length < batchSize) break;
-      offset += batchSize;
-    }
+    await prisma.contributor.updateMany({
+      where: { weeklyUploadCount: { gt: 0 } },
+      data: { weeklyUploadCount: 0 },
+    });
   } catch (err) {
     console.error("[WeeklyAwards] Failed to reset weekly uploads:", err);
   }

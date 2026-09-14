@@ -125,8 +125,8 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         getTopContributors(),
       ]);
 
-      setPopular(p);
-      setNewCourses(n);
+      setPopular(Array.isArray(p) ? p : []);
+      setNewCourses(Array.isArray(n) ? n : []);
 
       if (user) {
         const [fy, lib, rel] = await Promise.all([
@@ -135,9 +135,9 @@ export function HomeProvider({ children }: { children: ReactNode }) {
           fetchRelatedCourse(user),
         ]);
 
-        setForYou(fy);
-        setLibrary(lib);
-        setRelated(rel);
+        setForYou(Array.isArray(fy) ? fy : []);
+        setLibrary(Array.isArray(lib) ? lib : []);
+        setRelated(Array.isArray(rel) ? rel : []);
       } else {
         setForYou([]);
         setLibrary([]);
@@ -158,8 +158,8 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         };
       };
 
-      setContributors(t.map(mapContributors));
-      setNewContributors(nc.map(mapContributors));
+      setContributors((Array.isArray(t) ? t : []).map(mapContributors));
+      setNewContributors((Array.isArray(nc) ? nc : []).map(mapContributors));
       
       setLastUserId(user?.$id);
       setHasLoaded(true);

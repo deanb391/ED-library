@@ -17,7 +17,6 @@ import {
 import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/api/courses';
 import { useRouter } from "@/components/useRouter";
 import Link from 'next/link';
-import { getCurrentUser } from '@/lib/appwrite';
 import { useUser } from '@/context/UserContext';
 import NativeBanner from '@/components/ads/NativeBanner';
 

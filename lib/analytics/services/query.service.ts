@@ -1,7 +1,6 @@
 // lib/analytics/services/query.service.ts
 // READ-side analytics service. Fetches and shapes data for the dashboard.
-import { Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 import { getLfuCache, setLfuCache } from "@/lib/lfu-cache";
 import {
   getDateRange,
@@ -19,10 +18,6 @@ import type {
   AnalyticsMetricName,
 } from "../types/index";
 
-const DATABASE_ID = "69617e75000c6c010a75";
-const METRICS_COLLECTION = "analytics_daily_metrics";
-const DAILY_USERS_COLLECTION = "daily_users";
-
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 async function fetchMetricSeries(
@@ -33,23 +28,24 @@ async function fetchMetricSeries(
   dimension?: string
 ): Promise<ChartDataPoint[]> {
   try {
-    const queries: string[] = [
-      Query.equal("metric", metric),
-      Query.greaterThanEqual("date", startDate),
-      Query.lessThanEqual("date", endDate),
-      Query.orderAsc("date"),
-      Query.limit(800),
-    ];
+    const where: any = {
+      metric,
+      date: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
 
-    const res = await databases.listDocuments(DATABASE_ID, METRICS_COLLECTION, queries);
+    if (category !== undefined) where.category = category;
+    if (dimension !== undefined) where.dimension = dimension;
 
-    const docs = res.documents.filter((d) => {
-      const catMatch = category !== undefined ? (d.category || null) === category : true;
-      const dimMatch = dimension !== undefined ? (d.dimension || null) === dimension : true;
-      return catMatch && dimMatch;
+    const docs = await prisma.analyticsDailyMetric.findMany({
+      where,
+      orderBy: { date: 'asc' },
+      take: 800,
     });
 
-    return docs.map((d) => ({ date: d.date as string, value: d.value as number }));
+    return docs.map((d) => ({ date: d.date, value: d.value }));
   } catch (err) {
     console.error(`[AnalyticsQuery] fetchMetricSeries failed for ${metric}:`, err);
     return [];
@@ -67,22 +63,25 @@ async function fetchMetricSum(
 
 /**
  * Fetch daily active user counts from the dedicated `daily_users` table.
- * Each row has: date (YYYY-MM-DD), count (integer), day (string).
  */
 async function fetchDailyUsersSeries(
   startDate: string,
   endDate: string
 ): Promise<ChartDataPoint[]> {
   try {
-    const res = await databases.listDocuments(DATABASE_ID, DAILY_USERS_COLLECTION, [
-      Query.greaterThanEqual("date", startDate),
-      Query.lessThanEqual("date", endDate),
-      Query.orderAsc("date"),
-      Query.limit(800),
-    ]);
-    return res.documents.map((d) => ({
-      date: d.date as string,
-      value: d.count as number,
+    const docs = await prisma.dailyUser.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+      take: 800,
+    });
+    return docs.map((d) => ({
+      date: d.date,
+      value: d.count,
     }));
   } catch (err) {
     console.error("[AnalyticsQuery] fetchDailyUsersSeries failed:", err);
@@ -95,15 +94,19 @@ async function fetchWeeklyUsersSeries(
   endDate: string
 ): Promise<ChartDataPoint[]> {
   try {
-    const res = await databases.listDocuments(DATABASE_ID, "weekly_users", [
-      Query.greaterThanEqual("date", startDate),
-      Query.lessThanEqual("date", endDate),
-      Query.orderAsc("date"),
-      Query.limit(800),
-    ]);
-    return res.documents.map((d) => ({
-      date: d.date as string,
-      value: d.count as number,
+    const docs = await prisma.weeklyUser.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+      take: 800,
+    });
+    return docs.map((d) => ({
+      date: d.date || "",
+      value: d.count || 0,
     }));
   } catch (err) {
     console.error("[AnalyticsQuery] fetchWeeklyUsersSeries failed:", err);
@@ -116,15 +119,19 @@ async function fetchMonthlyUsersSeries(
   endDate: string
 ): Promise<ChartDataPoint[]> {
   try {
-    const res = await databases.listDocuments(DATABASE_ID, "monthly_users", [
-      Query.greaterThanEqual("date", startDate),
-      Query.lessThanEqual("date", endDate),
-      Query.orderAsc("date"),
-      Query.limit(800),
-    ]);
-    return res.documents.map((d) => ({
-      date: d.month as string, // Using month string for display
-      value: d.count as number,
+    const docs = await prisma.monthlyUser.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+      take: 800,
+    });
+    return docs.map((d) => ({
+      date: d.month || d.date || "",
+      value: d.count || 0,
     }));
   } catch (err) {
     console.error("[AnalyticsQuery] fetchMonthlyUsersSeries failed:", err);
@@ -141,7 +148,6 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
 
   const { startDate, endDate } = getDateRange(timeframe);
 
-  // Previous period for trend calculation
   const prevEnd = new Date(startDate);
   prevEnd.setDate(prevEnd.getDate() - 1);
   const prevStart = new Date(prevEnd);
@@ -162,21 +168,22 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     deptRaw,
   ] = await Promise.all([
     fetchMetricSeries("DAILY_SIGNUPS", startDate, endDate),
-    // ← sourced from the daily_users table (end-of-day snapshot job)
     fetchDailyUsersSeries(startDate, endDate),
     fetchWeeklyUsersSeries(startDate, endDate),
     fetchMonthlyUsersSeries(startDate, endDate),
     fetchMetricSeries("TOTAL_USERS", "2000-01-01", endDate),
     fetchMetricSum("DAILY_SIGNUPS", prevStartStr, prevEndStr),
-    // previous period also comes from daily_users
     fetchDailyUsersSeries(prevStartStr, prevEndStr),
-    // Fetch by dimension grouping for dept breakdown
-    databases.listDocuments(DATABASE_ID, METRICS_COLLECTION, [
-      Query.equal("metric", "DAILY_SIGNUPS_BY_DEPT"),
-      Query.greaterThanEqual("date", startDate),
-      Query.lessThanEqual("date", endDate),
-      Query.limit(500),
-    ]).catch(() => ({ documents: [] })),
+    prisma.analyticsDailyMetric.findMany({
+      where: {
+        metric: "DAILY_SIGNUPS_BY_DEPT",
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      take: 500,
+    }).catch(() => []),
   ]);
 
   const prevActive = prevActiveSeries.reduce((a, b) => a + b.value, 0);
@@ -185,11 +192,10 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
   const activeUsersThisPeriod = activeUserSeries.reduce((a, b) => a + b.value, 0);
   const totalUsers = totalUsersData.reduce((a, b) => a + b.value, 0);
 
-  // Dept aggregation
   const deptMap = new Map<string, number>();
-  for (const doc of deptRaw.documents) {
-    const dim = (doc.dimension as string) || "Unknown";
-    deptMap.set(dim, (deptMap.get(dim) ?? 0) + (doc.value as number));
+  for (const doc of deptRaw) {
+    const dim = doc.dimension || "Unknown";
+    deptMap.set(dim, (deptMap.get(dim) ?? 0) + doc.value);
   }
   const signupsByDept: PieDataPoint[] = Array.from(deptMap.entries()).map(([name, value]) => ({ name, value }));
 
@@ -199,8 +205,8 @@ export async function getAcquisitionSummary(timeframe: Timeframe): Promise<Acqui
     activeUsersThisPeriod,
     signupSeries: aggregateSeries(fillDateSeries(signupSeries, startDate, endDate), timeframe),
     activeUserSeries: aggregateSeries(fillDateSeries(activeUserSeries, startDate, endDate), timeframe),
-    weeklyActiveUserSeries: weeklyActiveUserSeries, // No aggregation since it's pre-computed weekly
-    monthlyActiveUserSeries: monthlyActiveUserSeries, // No aggregation since it's pre-computed monthly
+    weeklyActiveUserSeries: weeklyActiveUserSeries,
+    monthlyActiveUserSeries: monthlyActiveUserSeries,
     signupsByDept,
   };
 

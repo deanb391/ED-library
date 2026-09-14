@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSuggestedCommunitiesService } from "@/lib/services/communities.service";
-import { getUserById } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
@@ -9,8 +9,14 @@ export async function GET(req: Request) {
 
     let following: string[] = [];
     if (userId) {
-      const userDoc = await getUserById(userId);
-      following = userDoc?.followingContributors || [];
+      const userDoc = await prisma.user.findUnique({ where: { id: userId } });
+      if (userDoc?.followingContributors) {
+        try {
+          following = typeof userDoc.followingContributors === 'string'
+            ? JSON.parse(userDoc.followingContributors)
+            : userDoc.followingContributors;
+        } catch (e) {}
+      }
     }
 
     const communities = await getSuggestedCommunitiesService(following);

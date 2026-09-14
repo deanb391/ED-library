@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
     }
 
     const ad = await fetchAdByIdRawService(id);
+    if (!ad) {
+      return NextResponse.json({ error: "Ad not found" }, { status: 404 });
+    }
     const count = ad.uniqueUsers?.length || 0;
 
     return NextResponse.json({ count });

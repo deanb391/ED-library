@@ -1,23 +1,12 @@
-import { databases } from "@/lib/appwrite/server";
-import { ID, Query } from "appwrite";
-import { fetchCourseByIdService } from "@/lib/services/course.service";
+import prisma from "@/lib/prisma";
 import { creditWalletService, debitWalletService, fetchWalletByUserService } from "@/lib/services/wallet.service";
-import { initFlutterwavePayment, initiateWithdrawal } from "./flutterwave.service";
-import { verifyFlutterwaveTransaction } from "./flutterwave.service";
-import { createEarningService } from "./earnings.service";
-import { addCourseToLibraryService } from "./library.service";
-import { fetchContributorService } from "./contributors.service";
+import { initiateWithdrawal } from "./flutterwave.service";
 import { createTransactionService } from "./transactions.service";
 import { trackEvent } from "@/lib/analytics/trackEvent";
-import { use } from "react";
-import { error } from "console";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const WITHDRAWAL_SERVICE = "withdrawals";
+import { randomUUID } from "crypto";
 
 export type WithdrawalStatus = "pending" | "successful" | "failed";
 export type WithdrawalType = "subscription" | "one-time" | "wallet_topup" | "withdrawal" | "debit";
-
 
 const bankCodes: Record<string, string> = {
   "Access Bank": "044",
@@ -82,59 +71,65 @@ export interface WithdrawalPayload {
   description?: string;
 }
 
+function mapWithdrawal(doc: any) {
+  if (!doc) return null;
+  return {
+    ...doc,
+    $id: doc.id || doc.$id,
+    user: doc.userId || doc.user || "",
+    amount: Number(doc.amount),
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
+  };
+}
+
 export async function createWIthdrawalService(payload: WithdrawalPayload) {
-  const now = new Date().toISOString();
+  const id = randomUUID();
+  const doc = await prisma.withdrawal.create({
+    data: {
+      id,
+      userId: payload.user,
+      amount: payload.amount,
+      status: payload.status,
+      description: payload.description || "",
+    },
+  });
 
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    WITHDRAWAL_SERVICE,
-    ID.unique(),
-    {
-      ...payload,
-      $createdAt: now,
-      $updatedAt: now,
-    }
-  );
-
-  return doc;
+  return mapWithdrawal(doc);
 }
 
 export async function updateWithdrawalService(
   withdrawalId: string,
   updates: Partial<WithdrawalPayload & { status: WithdrawalStatus }>
 ) {
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    WITHDRAWAL_SERVICE,
-    withdrawalId,
-    {
-      ...updates,
-      $updatedAt: new Date().toISOString(),
-    }
-  );
+  const doc = await prisma.withdrawal.update({
+    where: { id: withdrawalId },
+    data: {
+      ...(updates.amount !== undefined && { amount: updates.amount }),
+      ...(updates.status !== undefined && { status: updates.status }),
+      ...(updates.user !== undefined && { userId: updates.user }),
+      ...(updates.description !== undefined && { description: updates.description }),
+    },
+  });
 
-  return doc;
+  return mapWithdrawal(doc);
 }
 
 export async function getWithdrawalById(withdrawalId: string) {
   try {
-    const doc = await databases.getDocument(
-      DATABASE_ID,
-      WITHDRAWAL_SERVICE,
-      withdrawalId
-    );
-    return doc;
+    const doc = await prisma.withdrawal.findUnique({
+      where: { id: withdrawalId },
+    });
+    return mapWithdrawal(doc);
   } catch (error) {
-    console.error(`Failed to fetch payment with ID ${withdrawalId}:`, error);
+    console.error(`Failed to fetch withdrawal with ID ${withdrawalId}:`, error);
     return null;
   }
 }
 
-
 export async function updateWithdrawalStatus(withdrawalId: string, status: WithdrawalStatus) {
   return await updateWithdrawalService(withdrawalId, { status });
 }
-
 
 export async function processWithdrawal({
   userId,
@@ -154,7 +149,6 @@ export async function processWithdrawal({
     return { success: false, error: "Bad Request: Balance Insufficient" };
   }
 
-  // 1. Create withdrawal record (Pending)
   let withdrawal = await createWIthdrawalService({
     amount,
     status: "pending",
@@ -184,7 +178,6 @@ export async function processWithdrawal({
 
     const bankCode = getBankCode(account_bank) || account_bank;
 
-    // 2. Debit wallet first (Pessimistic approach to prevent double-debits)
     await debitWalletService(userId, amount, "Withdrawal");
     await createTransactionService({ user: userId, type: "withdrawal", direction: "debit", amount: amount, reference: "Withdrawal" });
     
@@ -193,7 +186,6 @@ export async function processWithdrawal({
     }
     await createTransactionService({ user: "admin", type: "withdrawal_processing_fee", direction: "debit", amount: flutter_charge, reference: "FlutterWave Charge" });
 
-    // 3. Call Flutterwave
     const flw = await initiateWithdrawal({
       amount: balance,
       account_number,
@@ -207,11 +199,9 @@ export async function processWithdrawal({
     }
 
     if (flw.status === "error") {
-      // Synchronous definitive failure from Flutterwave
       throw new Error(`Flutterwave error: ${flw.message}`);
     }
 
-    // Queued or Successful. Leave as pending for webhook to mark successful.
     trackEvent("WALLET_WITHDRAWAL_SUCCESS", {
       distinctId: userId,
       userId: userId,
@@ -223,11 +213,9 @@ export async function processWithdrawal({
     const errorMessage = (err as Error).message || "";
     console.error("processWithdrawal Error:", errorMessage);
 
-    // Determine if it was a network error/timeout (fetch failed) vs an API rejection
     const isNetworkError = errorMessage === "network_error" || errorMessage.includes("fetch failed") || (err as Error).name === "TypeError";
 
     if (!isNetworkError) {
-      // Explicit failure: Safe to refund immediately
       await refundUser(userId, amount);
       const receipt = await updateWithdrawalStatus(withdrawal.$id, "failed");
       trackEvent("WALLET_WITHDRAWAL_FAILED", {
@@ -238,14 +226,12 @@ export async function processWithdrawal({
       return { success: false, receipt, error: errorMessage };
     }
 
-    // Network timeout: Do NOT refund. Leave as pending.
     return { success: true, receipt: withdrawal, message: "Transfer is taking longer than expected. Status is pending." };
   }
 }
 
-
 export async function refundUser(userId: string, amount: number) {
-  await creditWalletService(userId, amount, "refund")
+  await creditWalletService(userId, amount, "refund");
   trackEvent("WALLET_WITHDRAWAL_REFUNDED", {
     distinctId: userId,
     userId: userId,
@@ -253,16 +239,15 @@ export async function refundUser(userId: string, amount: number) {
   });
 }
 
-
 export async function fetchWithdrawalHistoryByUserService(userId: string) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    WITHDRAWAL_SERVICE,
-    [Query.equal("user", userId), Query.orderDesc("$createdAt"), Query.limit(10)]
-  );
-  return res.documents;
-}
+  const docs = await prisma.withdrawal.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+  });
 
+  return docs.map(mapWithdrawal);
+}
 
 interface VerifyAccountParams {
   account_number: string;
@@ -291,7 +276,6 @@ export async function verifyAccount(params: VerifyAccountParams): Promise<Verify
     });
 
     const data = await response.json();
-    console.log("Data: ", data)
 
     if (data.status === "success") {
       return {
@@ -314,10 +298,9 @@ export async function verifyAccount(params: VerifyAccountParams): Promise<Verify
 }
 
 export async function fetchPendingWithdrawalsService() {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    WITHDRAWAL_SERVICE,
-    [Query.equal("status", "pending"), Query.limit(50)]
-  );
-  return res.documents;
+  const docs = await prisma.withdrawal.findMany({
+    where: { status: "pending" },
+    take: 50,
+  });
+  return docs.map(mapWithdrawal);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { debitWalletService, updateCashoutAccountService } from "@/lib/services/wallet.service";
-import { getAuthenticatedUser } from "@/lib/appwrite/auth";
+import { updateCashoutAccountService } from "@/lib/services/wallet.service";
+import { AuthService } from "@/services/auth.service";
 
 export async function POST(req: Request) {
   const { userId, number, bank, name } = await req.json();
@@ -9,8 +9,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, message: "Payload Incomplete!!" });
   }
 
-  const user = await getAuthenticatedUser(req);
-  if (!user || user.$id !== userId) {
+  const user = await AuthService.getUserFromRequest(req);
+  if (!user || user.userId !== userId) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 

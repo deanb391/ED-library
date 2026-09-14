@@ -1,12 +1,8 @@
-"use server";
-import { ID, Query } from "node-appwrite";
-import { databases } from "@/lib/appwrite/server";
-import { updateChatLastMessageService, getChatsForAdminService, getChatForContributorService } from "./chats.service";
+import prisma from "@/lib/prisma";
+import { updateChatLastMessageService, getChatForContributorService } from "./chats.service";
 import { sendChatMessageDigestEmail } from "@/lib/email/events";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const MESSAGE_COLLECTION = "messages";
-const USER_COLLECTION = "user";
+import { getLfuCache, setLfuCache } from "@/lib/lfu-cache";
+import { randomUUID } from "crypto";
 
 export type Message = {
   $id: string;
@@ -25,38 +21,33 @@ export type MessageDraft = {
   status?: "sent" | "delivered" | "seen";
 };
 
-function mapMessageDoc(doc: any): Message {
+export function mapMessageDoc(doc: any): Message {
+  if (!doc) return null as any;
   return {
-    $id: doc.$id,
+    $id: doc.id || doc.$id,
     chatId: doc.chatId || "",
     senderId: doc.senderId || "",
     text: doc.text || "",
-    status: doc.status || "sent",
-    $createdAt: doc.$createdAt,
-    $updatedAt: doc.$updatedAt,
+    status: (doc.status as any) || "sent",
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
   };
 }
 
 export async function createMessageService(draft: MessageDraft): Promise<Message> {
-  const now = new Date().toISOString();
   const text = draft.text || "";
   const status = draft.status || "sent";
 
-  const payload = {
-    chatId: draft.chatId,
-    senderId: draft.senderId,
-    text,
-    status,
-    $createdAt: now,
-    $updatedAt: now,
-  };
-
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    MESSAGE_COLLECTION,
-    ID.unique(),
-    payload
-  );
+  const id = randomUUID();
+  const doc = await prisma.message.create({
+    data: {
+      id,
+      chatId: draft.chatId,
+      senderId: draft.senderId,
+      text,
+      status,
+    },
+  });
 
   const message = mapMessageDoc(doc);
 
@@ -64,7 +55,9 @@ export async function createMessageService(draft: MessageDraft): Promise<Message
   updateChatLastMessageService(draft.chatId, text, draft.senderId)
     .then(async () => {
       try {
-        const chatDoc = await databases.getDocument(DATABASE_ID, "chats", draft.chatId);
+        const chatDoc = await prisma.chat.findUnique({ where: { id: draft.chatId } });
+        if (!chatDoc) return;
+
         const participants = Array.isArray(chatDoc.participants)
           ? chatDoc.participants
           : JSON.parse(chatDoc.participants || "[]");
@@ -73,15 +66,15 @@ export async function createMessageService(draft: MessageDraft): Promise<Message
         if (!recipientId || recipientId === "admin") return;
 
         // If recipient is a contributor, check if they are offline
-        const recipientDoc = await databases.getDocument(DATABASE_ID, USER_COLLECTION, recipientId);
+        const recipientDoc = await prisma.user.findUnique({ where: { id: recipientId } });
+        if (!recipientDoc) return;
+
         const lastTime = recipientDoc.lastTime;
         const isOffline = !lastTime || (new Date().getTime() - new Date(lastTime).getTime() > 5 * 60 * 1000);
 
         if (isOffline && recipientDoc.email) {
-          const lastEmailAt = recipientDoc.lastMessageEmailAt;
-          const nowMs = new Date().getTime();
-          // Rate limit emails to 15 mins
-          const isThrottled = lastEmailAt && (nowMs - new Date(lastEmailAt).getTime() < 15 * 60 * 1000); 
+          const cacheKey = `msg_email_throttle:${recipientId}`;
+          const isThrottled = await getLfuCache<boolean>("chat:throttle", cacheKey);
 
           if (!isThrottled) {
             // Unread check
@@ -91,16 +84,14 @@ export async function createMessageService(draft: MessageDraft): Promise<Message
             const chatUnread = chat.unreadCounts[recipientId] || 0;
             
             if (chatUnread === 1) {
-              await databases.updateDocument(DATABASE_ID, USER_COLLECTION, recipientId, {
-                lastMessageEmailAt: new Date().toISOString(),
-              });
+              await setLfuCache("chat:throttle", cacheKey, true, 15 * 60);
 
               const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.ed-library.app";
 
               await sendChatMessageDigestEmail(
                 recipientDoc.email, 
                 {
-                  recipientName: recipientDoc.username || "Contributor",
+                  recipientName: recipientDoc.name || "Contributor",
                   senders: ["Administrator"],
                   lastMessageSnippet: text,
                   chatLink: `${baseUrl}/contributor/dashboard`,
@@ -126,28 +117,28 @@ export async function getMessagesByChatService(
   cursor?: string
 ): Promise<{ messages: Message[]; nextCursor?: string; hasMore: boolean }> {
   try {
-    const queries = [
-      Query.equal("chatId", chatId),
-      Query.orderDesc("$createdAt"),
-      Query.limit(limit),
-    ];
+    const findOptions: any = {
+      where: { chatId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    };
 
     if (cursor) {
-      queries.push(Query.cursorAfter(cursor));
+      findOptions.cursor = { id: cursor };
+      findOptions.skip = 1;
     }
 
-    const res = await databases.listDocuments(DATABASE_ID, MESSAGE_COLLECTION, queries);
-    
-    const messages = res.documents.map(mapMessageDoc).reverse();
+    const docs = await prisma.message.findMany(findOptions);
+    const messages = docs.map(mapMessageDoc).reverse();
     const nextCursor =
-      res.documents.length === limit
-        ? res.documents[res.documents.length - 1].$id
+      docs.length === limit
+        ? docs[docs.length - 1].id
         : undefined;
 
     return {
       messages,
       nextCursor,
-      hasMore: res.documents.length === limit,
+      hasMore: docs.length === limit,
     };
   } catch (error) {
     console.error("getMessagesByChatService error:", error);
@@ -160,13 +151,10 @@ export async function updateMessagesStatusService(
   status: "delivered" | "seen",
 ): Promise<boolean> {
   try {
-    await Promise.all(
-      messageIds.map((id) =>
-        databases.updateDocument(DATABASE_ID, MESSAGE_COLLECTION, id, {
-          status,
-        })
-      )
-    );
+    await prisma.message.updateMany({
+      where: { id: { in: messageIds } },
+      data: { status },
+    });
     return true;
   } catch (err) {
     console.error("Failed to update message statuses:", err);

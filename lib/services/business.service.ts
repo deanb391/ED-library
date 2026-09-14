@@ -1,10 +1,7 @@
 // lib/services/business.service.ts
 
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const BUSINESSES_COLLECTION = "businesses";
+import prisma from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export type Business = {
   $id: string;
@@ -17,16 +14,17 @@ export type Business = {
   $updatedAt: string;
 };
 
-function mapBusiness(doc: any): Business {
+export function mapBusiness(doc: any): Business {
+  if (!doc) return null as any;
   return {
-    $id: doc.$id,
+    $id: doc.id || doc.$id,
     name: doc.name || "",
     phone: doc.phone || "",
     bannerImage: doc.bannerImage || "",
-    user: doc.user || "",
+    user: doc.userId || (typeof doc.user === 'string' ? doc.user : doc.user?.id) || "",
     status: doc.status || "live",
-    $createdAt: doc.$createdAt,
-    $updatedAt: doc.$updatedAt,
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
   };
 }
 
@@ -36,37 +34,32 @@ export async function createBusinessService(data: {
   bannerImage: string;
   user: string;
 }): Promise<Business> {
-  const now = new Date().toISOString();
-  const payload = {
-    ...data,
-    status: "live",
-    $createdAt: now,
-    $updatedAt: now,
-  };
-
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    BUSINESSES_COLLECTION,
-    ID.unique(),
-    payload
-  );
+  const id = randomUUID();
+  const doc = await prisma.business.create({
+    data: {
+      id,
+      name: data.name,
+      phone: data.phone,
+      bannerImage: data.bannerImage,
+      userId: data.user,
+      status: "live",
+    },
+  });
 
   return mapBusiness(doc);
 }
 
 export async function fetchBusinessByUserIdService(userId: string): Promise<Business | null> {
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      BUSINESSES_COLLECTION,
-      [Query.equal("user", userId)]
-    );
+    const doc = await prisma.business.findFirst({
+      where: { userId },
+    });
 
-    if (res.documents.length === 0) {
+    if (!doc) {
       return null;
     }
 
-    return mapBusiness(res.documents[0]);
+    return mapBusiness(doc);
   } catch (err) {
     console.error("Error fetching business by userId:", err);
     return null;
@@ -77,18 +70,10 @@ export async function updateBusinessService(
   businessId: string,
   updates: Partial<{ name: string; phone: string; bannerImage: string }>
 ): Promise<Business> {
-  const now = new Date().toISOString();
-  const payload = {
-    ...updates,
-    $updatedAt: now,
-  };
-
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    BUSINESSES_COLLECTION,
-    businessId,
-    payload
-  );
+  const doc = await prisma.business.update({
+    where: { id: businessId },
+    data: updates,
+  });
 
   return mapBusiness(doc);
 }

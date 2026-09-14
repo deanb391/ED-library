@@ -1,8 +1,5 @@
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const EARNINGS_COLLECTION = "earnings";
+import prisma from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export async function createEarningService(data: {
   amount: number;
@@ -11,29 +8,38 @@ export async function createEarningService(data: {
   type: string;
   contributorId: string;
 }) {
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    EARNINGS_COLLECTION,
-    ID.unique(),
-    {
+  const id = randomUUID();
+  const doc = await prisma.earning.create({
+    data: {
+      id,
       amount: data.amount,
       description: data.description,
       courses: data.courses || "",
       type: data.type,
-      contributors: data.contributorId,
-    }
-  );
+      contributorId: data.contributorId,
+    },
+  });
 
-  return doc;
+  return {
+    ...doc,
+    contributors: doc.contributorId || "",
+    $id: doc.id,
+    $createdAt: doc.createdAt.toISOString(),
+    $updatedAt: doc.updatedAt.toISOString(),
+  };
 }
 
-
 export async function fetchContributorEarningsService(contributorId: string) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    EARNINGS_COLLECTION,
-    [Query.equal("contributors", contributorId), Query.orderDesc("$createdAt")]
-  );
+  const docs = await prisma.earning.findMany({
+    where: { contributorId },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  return res.documents;
+  return docs.map((doc) => ({
+    ...doc,
+    contributors: doc.contributorId || "",
+    $id: doc.id,
+    $createdAt: doc.createdAt.toISOString(),
+    $updatedAt: doc.updatedAt.toISOString(),
+  }));
 }

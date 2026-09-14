@@ -1,9 +1,6 @@
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 import { trackEvent } from "@/lib/analytics/trackEvent";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const SUBSCRIPTION_COLLECTION = "subscriptions";
+import { randomUUID } from "crypto";
 
 export type Subscription = {
   $id: string;
@@ -16,16 +13,17 @@ export type Subscription = {
   $updatedAt: string;
 };
 
-function mapSubscription(doc: Record<string, unknown>): Subscription {
+export function mapSubscription(doc: any): Subscription {
+  if (!doc) return null as any;
   return {
-    $id: doc.$id as string,
-    userId: doc.user as string,
-    courseId: doc.courses as string,
-    startDate: doc.startDate as string,
-    endDate: doc.endDate as string,
-    status: doc.status as "active" | "expired",
-    $createdAt: doc.$createdAt as string,
-    $updatedAt: doc.$updatedAt as string,
+    $id: doc.id || doc.$id,
+    userId: doc.userId || doc.user || "",
+    courseId: doc.courseId || doc.courses || "",
+    startDate: doc.startDate instanceof Date ? doc.startDate.toISOString() : (doc.startDate || ""),
+    endDate: doc.endDate instanceof Date ? doc.endDate.toISOString() : (doc.endDate || ""),
+    status: (doc.status as "active" | "expired") || "active",
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
   };
 }
 
@@ -37,25 +35,20 @@ export async function handleSubscriptionService(
   const endDate = new Date();
   endDate.setDate(now.getDate() + 30);
 
-  const existing = await databases.listDocuments(
-    DATABASE_ID,
-    SUBSCRIPTION_COLLECTION,
-    [Query.equal("user", userId), Query.equal("courses", courseId)]
-  );
+  const existing = await prisma.subscription.findFirst({
+    where: { userId, courseId },
+  });
 
-  if (existing.documents.length > 0) {
-    const docId = existing.documents[0].$id;
-    const updated = await databases.updateDocument(
-      DATABASE_ID,
-      SUBSCRIPTION_COLLECTION,
-      docId,
-      {
-        startDate: now.toISOString(),
-        endDate: endDate.toISOString(),
+  if (existing) {
+    const updated = await prisma.subscription.update({
+      where: { id: existing.id },
+      data: {
+        startDate: now,
+        endDate: endDate,
         status: "active",
-      }
-    );
-    const sub = mapSubscription(updated as unknown as Record<string, unknown>);
+      },
+    });
+    const sub = mapSubscription(updated);
     trackEvent("SUBSCRIPTION_RENEWED", {
       distinctId: userId,
       userId,
@@ -64,19 +57,18 @@ export async function handleSubscriptionService(
     return sub;
   }
 
-  const created = await databases.createDocument(
-    DATABASE_ID,
-    SUBSCRIPTION_COLLECTION,
-    ID.unique(),
-    {
-      user: userId,
-      courses: courseId,
-      startDate: now.toISOString(),
-      endDate: endDate.toISOString(),
+  const id = randomUUID();
+  const created = await prisma.subscription.create({
+    data: {
+      id,
+      userId,
+      courseId,
+      startDate: now,
+      endDate: endDate,
       status: "active",
-    }
-  );
-  const sub = mapSubscription(created as unknown as Record<string, unknown>);
+    },
+  });
+  const sub = mapSubscription(created);
   trackEvent("SUBSCRIPTION_CREATED", {
     distinctId: userId,
     userId,
@@ -89,14 +81,12 @@ export async function fetchSubscriptionService(
   userId: string,
   courseId: string
 ): Promise<Subscription | null> {
-  const existing = await databases.listDocuments(
-    DATABASE_ID,
-    SUBSCRIPTION_COLLECTION,
-    [Query.equal("user", userId), Query.equal("courses", courseId)]
-  );
+  const doc = await prisma.subscription.findFirst({
+    where: { userId, courseId },
+  });
 
-  if (existing.documents.length > 0) {
-    return mapSubscription(existing.documents[0] as unknown as Record<string, unknown>);
+  if (doc) {
+    return mapSubscription(doc);
   }
   return null;
 }
@@ -114,41 +104,34 @@ export async function checkSubscriptionAccessService(
 export async function fetchUserSubscriptionsService(
   userId: string
 ): Promise<Subscription[]> {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    SUBSCRIPTION_COLLECTION,
-    [Query.equal("user", userId), Query.orderDesc("$createdAt")]
-  );
-  return res.documents.map((doc) =>
-    mapSubscription(doc as unknown as Record<string, unknown>)
-  );
+  const docs = await prisma.subscription.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
+  return docs.map(mapSubscription);
 }
 
 export async function expireSubscriptionsCronService(): Promise<number> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
-  const activeSubs = await databases.listDocuments(
-    DATABASE_ID,
-    SUBSCRIPTION_COLLECTION,
-    [
-      Query.equal("status", "active"),
-      Query.lessThanEqual("endDate", now),
-      Query.limit(100),
-    ]
-  );
+  const activeSubs = await prisma.subscription.findMany({
+    where: {
+      status: "active",
+      endDate: { lte: now },
+    },
+    take: 100,
+  });
 
   let expiredCount = 0;
-  for (const doc of activeSubs.documents) {
-    await databases.updateDocument(
-      DATABASE_ID,
-      SUBSCRIPTION_COLLECTION,
-      doc.$id,
-      { status: "expired" }
-    );
+  for (const doc of activeSubs) {
+    await prisma.subscription.update({
+      where: { id: doc.id },
+      data: { status: "expired" },
+    });
     trackEvent("SUBSCRIPTION_EXPIRED", {
-      distinctId: doc.user as string,
-      userId: doc.user as string,
-      metadata: { subscriptionId: doc.$id, courseId: doc.courses as string }
+      distinctId: doc.userId || "",
+      userId: doc.userId || "",
+      metadata: { subscriptionId: doc.id, courseId: doc.courseId || "" }
     });
     expiredCount++;
   }

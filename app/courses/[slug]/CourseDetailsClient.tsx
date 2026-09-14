@@ -19,7 +19,7 @@ import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
 import { Course, deleteCourse, deleteFileFromPost, deletePost, editCourse, editPost, fetchAllPosts, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit } from '@/lib/api/courses';
 import Image from 'next/image';
-import { getCurrentUser, updateUser } from '@/lib/appwrite';
+import { getCurrentUser, updateUser } from '@/lib/services/auth.service';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
 import { useRouter } from "@/components/useRouter";
 import ConfirmFileDelete from '@/components/ConfirmFileDelete';

@@ -1,12 +1,10 @@
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
+import prisma from "@/lib/prisma";
 import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const CONTEST_PERFORMANCE_COLLECTION = "contest_performance";
+import { randomUUID } from "crypto";
 
 export type ContestPerformance = {
   $id?: string;
+  id?: string;
   contributors: string;
   totalPoints: number;
   dailyPoints: string;
@@ -27,30 +25,45 @@ export type ContestPerformance = {
   isTop3Contributor?: boolean;
 };
 
-export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {
-  const payload = {
-    contributors: contributorId,
-    totalPoints: 0,
-    dailyPoints: "{}",
-    uniqueUsersReached: "{}",
-    newUsers: "{}",
-    usersReachedIds: "{}",
-    returningUsers: "{}",
-    acquisitionScore: 0,
-    engagementScore: 0,
-    contentScore: 0,
-    engagementActivity: "{}",
-    dailyCourseRatings: "{}",
+export function mapContestPerformance(doc: any): ContestPerformance {
+  if (!doc) return null as any;
+  return {
+    ...doc,
+    $id: doc.id || doc.$id,
+    id: doc.id || doc.$id,
+    contributors: doc.contributorId || doc.contributors || "",
+    totalPoints: Number(doc.totalPoints) || 0,
+    acquisitionScore: Number(doc.acquisitionScore) || 0,
+    engagementScore: Number(doc.engagementScore) || 0,
+    contentScore: Number(doc.contentScore) || 0,
+    Prize: doc.Prize ? Number(doc.Prize) : 0,
+    isTop3Contributor: Boolean(doc.isTop3Contributor),
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
   };
+}
 
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    CONTEST_PERFORMANCE_COLLECTION,
-    ID.unique(),
-    payload
-  );
+export async function createContestPerformanceService(contributorId: string): Promise<ContestPerformance> {
+  const id = randomUUID();
+  const doc = await prisma.contestPerformance.create({
+    data: {
+      id,
+      contributorId,
+      totalPoints: 0,
+      dailyPoints: "{}",
+      uniqueUsersReached: "{}",
+      newUsers: "{}",
+      usersReachedIds: "{}",
+      returningUsers: "{}",
+      acquisitionScore: 0,
+      engagementScore: 0,
+      contentScore: 0,
+      engagementActivity: "{}",
+      dailyCourseRatings: "{}",
+    },
+  });
 
-  return doc as unknown as ContestPerformance;
+  return mapContestPerformance(doc);
 }
 
 export async function getContestPerformanceByContributorService(contributorId: string): Promise<ContestPerformance | null> {
@@ -58,21 +71,16 @@ export async function getContestPerformanceByContributorService(contributorId: s
   if (cached) return cached;
 
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      CONTEST_PERFORMANCE_COLLECTION,
-      [Query.equal("contributors", contributorId)]
-    );
+    const doc = await prisma.contestPerformance.findFirst({
+      where: { contributorId },
+    });
 
-    if (res.documents.length === 0) {
-      // Create it if it doesn't exist
+    if (!doc) {
       const newPerformance = await createContestPerformanceService(contributorId);
       return newPerformance;
     }
 
-
-
-    const performance = res.documents[0] as unknown as ContestPerformance;
+    const performance = mapContestPerformance(doc);
     await setLfuCache("performance:details", contributorId, performance, 100);
     return performance;
   } catch (err) {
@@ -85,25 +93,23 @@ export async function updateContestPerformanceService(
   performanceId: string,
   updates: Partial<ContestPerformance>
 ): Promise<ContestPerformance> {
-  try {
-    const current = await databases.getDocument(DATABASE_ID, CONTEST_PERFORMANCE_COLLECTION, performanceId);
-    if (current.contributors) {
-      updates.contributors = typeof current.contributors === 'object' 
-        ? (Array.isArray(current.contributors) ? current.contributors[0]?.$id : current.contributors.$id)
-        : current.contributors;
+  const dataToUpdate: any = {};
+  for (const [key, value] of Object.entries(updates)) {
+    if (value !== undefined && key !== "id" && key !== "$id" && key !== "$createdAt" && key !== "$updatedAt") {
+      if (key === "contributors") {
+        dataToUpdate.contributorId = value;
+      } else {
+        dataToUpdate[key] = value;
+      }
     }
-  } catch(e) {}
-  
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    CONTEST_PERFORMANCE_COLLECTION,
-    performanceId,
-    updates
-  );
+  }
 
-  const contributorId = typeof doc.contributors === 'object' 
-        ? (Array.isArray(doc.contributors) ? doc.contributors[0]?.$id : doc.contributors.$id)
-        : doc.contributors;
+  const doc = await prisma.contestPerformance.update({
+    where: { id: performanceId },
+    data: dataToUpdate,
+  });
+
+  const contributorId = doc.contributorId;
 
   if (contributorId) {
     await invalidateLfuCache("performance:details", contributorId as string);
@@ -112,7 +118,7 @@ export async function updateContestPerformanceService(
   await clearLfuCacheNamespace("performance:lists");
   await clearLfuCacheNamespace("leaderboard:hydrated_lists");
 
-  return doc as unknown as ContestPerformance;
+  return mapContestPerformance(doc);
 }
 
 export async function fetchAllContestPerformancesService(): Promise<ContestPerformance[]> {
@@ -120,12 +126,10 @@ export async function fetchAllContestPerformancesService(): Promise<ContestPerfo
   if (cached) return cached;
 
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      CONTEST_PERFORMANCE_COLLECTION,
-      [Query.limit(500)]
-    );
-    const performances = res.documents as unknown as ContestPerformance[];
+    const docs = await prisma.contestPerformance.findMany({
+      take: 500,
+    });
+    const performances = docs.map(mapContestPerformance);
     await setLfuCache("performance:lists", "all", performances, 20);
     return performances;
   } catch (err) {

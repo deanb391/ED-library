@@ -1,18 +1,14 @@
-import { databases } from "@/lib/appwrite/server";
-import { ID } from "appwrite";
+import prisma from "@/lib/prisma";
 import { fetchCourseByIdService } from "@/lib/services/course.service";
-import {  creditWalletService, debitWalletService } from "@/lib/services/wallet.service";
-import { initFlutterwavePayment } from "./flutterwave.service";
-import { verifyFlutterwaveTransaction } from "./flutterwave.service";
+import { creditWalletService, debitWalletService } from "@/lib/services/wallet.service";
+import { initFlutterwavePayment, verifyFlutterwaveTransaction } from "./flutterwave.service";
 import { createEarningService } from "./earnings.service";
 import { addCourseToLibraryService } from "./library.service";
 import { fetchContributorService } from "./contributors.service";
 import { createTransactionService } from "./transactions.service";
 import { trackEvent } from "@/lib/analytics/trackEvent";
 import { trackCoursePayment } from "@/lib/analytics/trackers";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const PAYMENTS_COLLECTION = "payments";
+import { randomUUID } from "crypto";
 
 export type PaymentStatus = "pending" | "successful" | "failed";
 export type PaymentType = "subscription" | "one-time" | "wallet_topup" | "withdrawal" | "debit";
@@ -28,54 +24,76 @@ export interface PaymentPayload {
   provider?: "flutterwave" | "wallet";
 }
 
+export function mapPayment(doc: any) {
+  if (!doc) return null;
+  return {
+    $id: doc.id || doc.$id,
+    id: doc.id || doc.$id,
+    type: doc.type,
+    amount: doc.amount,
+    status: doc.status,
+    user: doc.userId || (typeof doc.user === 'string' ? doc.user : doc.user?.id) || "",
+    userId: doc.userId,
+    description: doc.description,
+    transactionId: doc.transactionId,
+    courses: doc.courses,
+    provider: doc.provider,
+    $createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.$createdAt || new Date().toISOString()),
+    $updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : (doc.$updatedAt || new Date().toISOString()),
+  };
+}
+
 export async function createPaymentService(payload: PaymentPayload) {
-  const now = new Date().toISOString();
+  const id = randomUUID();
+  const doc = await prisma.payment.create({
+    data: {
+      id,
+      type: payload.type,
+      amount: payload.amount,
+      status: payload.status,
+      userId: payload.user,
+      description: payload.description || "",
+      transactionId: payload.transactionId || "",
+      courses: payload.courses || "",
+      provider: payload.provider || "flutterwave",
+    },
+  });
 
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    PAYMENTS_COLLECTION,
-    ID.unique(),
-    {
-      ...payload,
-      $createdAt: now,
-      $updatedAt: now,
-    }
-  );
-
-  return doc;
+  return mapPayment(doc)!;
 }
 
 export async function updatePaymentService(
   paymentId: string,
   updates: Partial<PaymentPayload & { status: PaymentStatus }>
 ) {
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    PAYMENTS_COLLECTION,
-    paymentId,
-    {
-      ...updates,
-      $updatedAt: new Date().toISOString(),
-    }
-  );
+  const doc = await prisma.payment.update({
+    where: { id: paymentId },
+    data: {
+      ...(updates.type !== undefined && { type: updates.type }),
+      ...(updates.amount !== undefined && { amount: updates.amount }),
+      ...(updates.status !== undefined && { status: updates.status }),
+      ...(updates.user !== undefined && { userId: updates.user }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.transactionId !== undefined && { transactionId: updates.transactionId }),
+      ...(updates.courses !== undefined && { courses: updates.courses }),
+      ...(updates.provider !== undefined && { provider: updates.provider }),
+    },
+  });
 
-  return doc;
+  return mapPayment(doc);
 }
 
 export async function getPaymentById(paymentId: string) {
   try {
-    const doc = await databases.getDocument(
-      DATABASE_ID,
-      PAYMENTS_COLLECTION,
-      paymentId
-    );
-    return doc;
+    const doc = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+    return mapPayment(doc);
   } catch (error) {
     console.error(`Failed to fetch payment with ID ${paymentId}:`, error);
-    return null; // Return null so the calling function can handle the "not found" state cleanly
+    return null;
   }
 }
-
 
 export async function updatePaymentStatus(paymentId: string, status: PaymentStatus) {
   return await updatePaymentService(paymentId, { status });
@@ -95,12 +113,11 @@ export async function payForCourseService(params: {
 
   for (const id of params.courseIds) {
     const course = await fetchCourseByIdService(id);
-
     const priceData = course?.price ? JSON.parse(course.price) : null;
     let amount = priceData?.isFree ? 0 : priceData?.amount || 0;
-    
-    if ( priceData.type === "one-time"){
-      amount = amount * course.pageCount;
+
+    if (priceData?.type === "one-time") {
+      amount = amount * (course.pageCount || 1);
     }
 
     total += amount;
@@ -112,7 +129,7 @@ export async function payForCourseService(params: {
     });
   }
 
-  // ⚠️ Create payment FIRST
+  // Create payment FIRST
   const payment = await createPaymentService({
     type: params.type,
     amount: total,
@@ -120,7 +137,7 @@ export async function payForCourseService(params: {
     user: params.userId,
     description: `Payment for ${courses.length} course(s)`,
     courses: JSON.stringify(params.courseIds),
-    provider: params?.paymentMethod as "wallet" || "flutterwave",
+    provider: (params?.paymentMethod as "wallet") || "flutterwave",
   });
 
   trackEvent("PAYMENT_INITIATED", {
@@ -141,7 +158,7 @@ export async function payForCourseService(params: {
   if (params.paymentMethod === "wallet") {
     await debitWalletService(params.userId, total, "updated");
 
-    await updatePaymentService( payment?.$id, {
+    await updatePaymentService(payment.$id, {
       type: params.type,
       amount: total,
       status: "successful",
@@ -150,35 +167,54 @@ export async function payForCourseService(params: {
       transactionId: "WALLET_" + payment.$id,
     });
 
-    
     const rev = 0.85 * payment.amount;
-    const cut = 0.15 * payment.amount
+    const cut = 0.15 * payment.amount;
 
-    const Contributor = await fetchContributorService(params.contributorId)
+    const Contributor = await fetchContributorService(params.contributorId);
 
-    
-    await creditWalletService(Contributor.user, rev)
+    await creditWalletService(Contributor.user, rev);
 
-    
+    await createEarningService({
+      amount: rev,
+      description: payment.description,
+      courses: payment.courses,
+      type: payment.type,
+      contributorId: params.contributorId,
+    });
 
-    await createEarningService({amount: rev, description: payment.description, courses: payment.courses, type: payment.type, contributorId: params.contributorId});
+    await createTransactionService({
+      user: params.userId,
+      type: "debit",
+      direction: "debit",
+      amount: payment.amount,
+      reference: payment.description,
+    });
 
-    await  createTransactionService({user: params.userId, type: "debit", direction: "debit", amount: payment.amount, reference: payment.description})
+    await createTransactionService({
+      user: "admin",
+      type: "platform_cut",
+      direction: "debit",
+      amount: cut,
+      reference: payment.description,
+    });
 
-    await  createTransactionService({user: "admin", type: 'platform_cut', direction: "debit", amount: cut, reference: payment.description})
+    await createTransactionService({
+      user: params.contributorId,
+      type: "earning",
+      direction: "credit",
+      amount: rev,
+      reference: payment.description,
+    });
 
-    await  createTransactionService({user: params.contributorId, type: 'earning', direction: "credit", amount: rev, reference: payment.description})
-    
+    const courseIds = JSON.parse(payment.courses);
 
-    const courseIds = JSON.parse(payment.courses)
-
-    // ✅ Fetch email prerequisites (non-blocking setup)
+    // Fetch email prerequisites
     let contributorUserDoc: any = null;
     let studentName = "A student";
     let sendPurchaseNotificationEmail: any, sendSubscriptionNotificationEmail: any;
 
     try {
-      const userDoc = await databases.getDocument(DATABASE_ID, "user", Contributor.user);
+      const userDoc = await prisma.user.findUnique({ where: { id: Contributor.user } });
       contributorUserDoc = userDoc;
 
       if (contributorUserDoc?.email) {
@@ -186,31 +222,31 @@ export async function payForCourseService(params: {
         sendPurchaseNotificationEmail = events.sendPurchaseNotificationEmail;
         sendSubscriptionNotificationEmail = events.sendSubscriptionNotificationEmail;
 
-        const studentDoc = await databases.getDocument(DATABASE_ID, "user", payment.user.$id).catch(() => null);
-        if (studentDoc?.username) studentName = studentDoc.username;
+        const studentDoc = await prisma.user.findUnique({ where: { id: params.userId } }).catch(() => null);
+        if (studentDoc?.username || studentDoc?.name) studentName = studentDoc.username || studentDoc.name || "A student";
       }
     } catch (err) {
       console.error("[Wallet] Failed to fetch email prerequisites:", err);
     }
 
     for (const courseId of courseIds) {
-      // ✅ Add to library
-      await addCourseToLibraryService(courseId, payment.user.$id, payment.type);
+      // Add to library
+      await addCourseToLibraryService(courseId, params.userId, payment.type as "subscription" | "one-time");
 
-      // ✅ If subscription-based, create/renew subscription document
+      // If subscription-based, create/renew subscription document
       if (payment.type === "subscription") {
         try {
           const { handleSubscriptionService } = await import("@/lib/services/subscriptions.service");
-          await handleSubscriptionService(payment.user.$id, courseId);
+          await handleSubscriptionService(params.userId, courseId);
         } catch (err) {
           console.error("[Wallet] Failed to handle subscription for course:", courseId, err);
         }
       }
 
-      // ✅ Send email notification
+      // Send email notification
       if (contributorUserDoc?.email && sendPurchaseNotificationEmail) {
         try {
-          const courseDoc = await databases.getDocument(DATABASE_ID, "courses", courseId).catch(() => null);
+          const courseDoc = await prisma.course.findUnique({ where: { id: courseId } }).catch(() => null);
           const courseTitle = courseDoc?.title || "A course";
 
           if (payment.type === "subscription") {
@@ -246,8 +282,7 @@ export async function payForCourseService(params: {
   // =========================
   // FLUTTERWAVE FLOW
   // =========================
-
-  const charge = 0.015 * total; // 1.5% charge (adjust later)
+  const charge = 0.015 * total;
   const finalAmount = total + charge;
 
   const flutter = await initFlutterwavePayment({
@@ -269,8 +304,6 @@ export async function payForCourseService(params: {
   };
 }
 
-
-
 export async function verifyPaymentService(paymentId: string) {
   const verification = await verifyFlutterwaveTransaction(paymentId);
 
@@ -283,7 +316,6 @@ export async function verifyPaymentService(paymentId: string) {
   }
 
   const tx = verification.data;
-
   const isValid = tx.status === "successful";
 
   if (!isValid) {

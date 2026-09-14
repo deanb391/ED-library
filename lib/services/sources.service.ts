@@ -1,26 +1,34 @@
-import { ID, Query } from "appwrite";
-import { databases } from "@/lib/appwrite/server";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const SOURCES_COLLECTION = "sources";
+import prisma from "@/lib/prisma";
+import { randomUUID } from "crypto";
 
 export type Source = {
   $id?: string;
+  id?: string;
   name: string;
   clickCount: number;
   signUpCount: number;
   contributorCount: number;
 };
 
+function mapSource(doc: any): Source {
+  if (!doc) return null as any;
+  return {
+    $id: doc.id,
+    id: doc.id,
+    name: doc.name || "",
+    clickCount: doc.clickCount || 0,
+    signUpCount: doc.signUpCount || 0,
+    contributorCount: doc.contributorCount || 0,
+  };
+}
+
 export async function getSourceByName(name: string): Promise<Source | null> {
   try {
-    const res = await databases.listDocuments(
-      DATABASE_ID,
-      SOURCES_COLLECTION,
-      [Query.equal("name", name)]
-    );
-    if (res.documents.length === 0) return null;
-    return res.documents[0] as unknown as Source;
+    const doc = await prisma.source.findFirst({
+      where: { name },
+    });
+    if (!doc) return null;
+    return mapSource(doc);
   } catch (err) {
     console.error("Error fetching source:", err);
     return null;
@@ -28,19 +36,17 @@ export async function getSourceByName(name: string): Promise<Source | null> {
 }
 
 export async function createSource(name: string): Promise<Source> {
-  const payload = {
-    name,
-    clickCount: 0,
-    signUpCount: 0,
-    contributorCount: 0,
-  };
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    SOURCES_COLLECTION,
-    ID.unique(),
-    payload
-  );
-  return doc as unknown as Source;
+  const id = randomUUID();
+  const doc = await prisma.source.create({
+    data: {
+      id,
+      name,
+      clickCount: 0,
+      signUpCount: 0,
+      contributorCount: 0,
+    },
+  });
+  return mapSource(doc);
 }
 
 export async function trackSourceClickService(name: string): Promise<Source> {
@@ -49,15 +55,13 @@ export async function trackSourceClickService(name: string): Promise<Source> {
     source = await createSource(name);
   }
   
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    SOURCES_COLLECTION,
-    source.$id!,
-    {
-      clickCount: source.clickCount + 1
-    }
-  );
-  return doc as unknown as Source;
+  const doc = await prisma.source.update({
+    where: { id: source.id || source.$id! },
+    data: {
+      clickCount: (source.clickCount || 0) + 1,
+    },
+  });
+  return mapSource(doc);
 }
 
 export async function trackSourceSignupService(name: string): Promise<Source | null> {
@@ -66,15 +70,13 @@ export async function trackSourceSignupService(name: string): Promise<Source | n
     source = await createSource(name);
   }
   
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    SOURCES_COLLECTION,
-    source.$id!,
-    {
-      signUpCount: source.signUpCount + 1
-    }
-  );
-  return doc as unknown as Source;
+  const doc = await prisma.source.update({
+    where: { id: source.id || source.$id! },
+    data: {
+      signUpCount: (source.signUpCount || 0) + 1,
+    },
+  });
+  return mapSource(doc);
 }
 
 export async function trackSourceContributorService(name: string): Promise<Source | null> {
@@ -83,13 +85,11 @@ export async function trackSourceContributorService(name: string): Promise<Sourc
     source = await createSource(name);
   }
   
-  const doc = await databases.updateDocument(
-    DATABASE_ID,
-    SOURCES_COLLECTION,
-    source.$id!,
-    {
-      contributorCount: source.contributorCount + 1
-    }
-  );
-  return doc as unknown as Source;
+  const doc = await prisma.source.update({
+    where: { id: source.id || source.$id! },
+    data: {
+      contributorCount: (source.contributorCount || 0) + 1,
+    },
+  });
+  return mapSource(doc);
 }

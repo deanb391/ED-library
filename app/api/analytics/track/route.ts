@@ -3,7 +3,7 @@ import { trackServerEvent } from "@/lib/analytics/posthog-server";
 import type { AnalyticsEvent, EventPayload } from "@/lib/analytics/types";
 import {
   trackAnalyticsEvent,
-  type EventPayload as AppwriteEventPayload,
+  type EventPayload as DbEventPayload,
 } from "@/lib/analytics/services/analytics.service";
 
 export async function POST(req: NextRequest) {
@@ -25,15 +25,15 @@ export async function POST(req: NextRequest) {
     // 1. Fire PostHog (server-side)
     trackServerEvent(event, payload);
 
-    // 2. Write raw event + metric aggregates to Appwrite using the server admin SDK
-    const appwritePayload: AppwriteEventPayload = {
+    // 2. Write raw event + metric aggregates to Neon PostgreSQL via Prisma
+    const dbPayload: DbEventPayload = {
       eventName: event,
       distinctId: payload.distinctId,
       userId: payload.userId,
       metadata: payload.metadata as Record<string, any> | undefined,
     };
 
-    await trackAnalyticsEvent(appwritePayload, metricIncrements);
+    await trackAnalyticsEvent(dbPayload, metricIncrements);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

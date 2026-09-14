@@ -1,19 +1,12 @@
 // lib/services/course.service.ts
-
-import { ID, Query } from "appwrite";
-import { databases, storage } from "@/lib/appwrite/server";
-import { trackEvent } from "@/lib/analytics/trackEvent";
-import { safeRedisOp } from "@/lib/redis";
-import { getLfuCache, setLfuCache, invalidateLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
-
-const DATABASE_ID = "69617e75000c6c010a75";
-const COURSE_COLLECTION = "courses";
-const POST_COLLECTION = "posts";
-const BUCKET_ID = "69617f7300331ea02ff5";
+import prisma from "@/lib/prisma";
+import { getLfuCache, setLfuCache, clearLfuCacheNamespace } from "@/lib/lfu-cache";
 
 function mapCourse(doc: any) {
+  if (!doc) return null;
   return {
-    id: doc.$id,
+    id: doc.id,
+    $id: doc.id,
     title: doc.title,
     code: doc.code,
     description: doc.description,
@@ -27,54 +20,76 @@ function mapCourse(doc: any) {
     department: doc.department,
     level: doc.level,
     price: doc.price,
-    user: doc.user,
+    user: doc.user || doc.userId,
+    userId: doc.userId,
     analytics: typeof doc.analytics === "string" ? JSON.parse(doc.analytics) : doc.analytics,
-    pageCount: doc?.pageCount || 0,
+    pageCount: doc.pageCount || 0,
+    rating: doc.rating,
+    status: doc.status || "live",
+    isFree: doc.isFree,
+    $createdAt: doc.createdAt ? doc.createdAt.toISOString() : new Date().toISOString(),
+    $updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : new Date().toISOString(),
   };
 }
 
 /* ================= COURSES ================= */
 
 export async function createCourseService(data: any) {
-  const doc = await databases.createDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    ID.unique(),
-    data
-  );
+  const generatedId = `crs_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-  // --- Contest Performance Tracking ---
+  const doc = await prisma.course.create({
+    data: {
+      id: generatedId,
+      title: data.title,
+      code: data.code,
+      description: data.description || null,
+      lecturer: data.lecturer || null,
+      thumbnailId: data.thumbnailId || null,
+      thumbnailUrl: data.thumbnailUrl || null,
+      files: Array.isArray(data.files) ? data.files : [],
+      lastOperation: data.lastOperation || null,
+      userId: data.user || data.userId || null,
+      session: data.session || null,
+      department: data.department || null,
+      level: data.level ? parseInt(data.level, 10) : null,
+      isOnGoing: data.isOnGoing !== false,
+      price: data.price ? String(data.price) : null,
+      university: data.university || null,
+      analytics: typeof data.analytics === "object" ? JSON.stringify(data.analytics) : data.analytics || null,
+      pageCount: data.pageCount ? parseInt(data.pageCount, 10) : 0,
+      isFree: data.isFree !== undefined ? !!data.isFree : null,
+      rating: data.rating ? parseFloat(data.rating) : null,
+      status: data.status || "live",
+    },
+  });
+
+  // Contest points tracking
   try {
-    const courseAuthorUserId = data.user;
-    if (courseAuthorUserId) {
-      const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
-        Query.equal("user", courseAuthorUserId)
-      ]);
+    if (doc.userId) {
+      const contributor = await prisma.contributor.findUnique({
+        where: { userId: doc.userId },
+      });
 
-      if (contRes.documents.length > 0) {
-        const contributor = contRes.documents[0];
+      if (contributor && contributor.joinedContest) {
+        const perf = await prisma.contestPerformance.findFirst({
+          where: { contributorId: contributor.id },
+        });
 
-        if (contributor.joinedContest) {
-          const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
-            Query.equal("contributors", contributor.$id)
-          ]);
+        if (perf) {
+          const startDate = new Date("2026-06-29T12:00:00Z");
+          const now = new Date();
+          if (now >= startDate) {
+            const diffTime = Math.max(0, now.getTime() - startDate.getTime());
+            const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            const dayKey = `day ${dayNumber}`;
 
-          if (perfRes.documents.length > 0) {
-            const perf = perfRes.documents[0];
+            const points = perf.coursesPoints ? JSON.parse(perf.coursesPoints) : {};
+            points[dayKey] = (points[dayKey] || 0) + 1;
 
-            const startDate = new Date("2026-06-29T12:00:00Z");
-            if (new Date() >= startDate) {
-              const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
-              const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-              const dayKey = `day ${dayNumber}`;
-
-              const coursesPoints = JSON.parse(perf.coursesPoints || "{}");
-              coursesPoints[dayKey] = (coursesPoints[dayKey] || 0) + 1;
-
-              await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
-                coursesPoints: JSON.stringify(coursesPoints)
-              });
-            }
+            await prisma.contestPerformance.update({
+              where: { id: perf.id },
+              data: { coursesPoints: JSON.stringify(points) },
+            });
           }
         }
       }
@@ -84,675 +99,389 @@ export async function createCourseService(data: any) {
   }
 
   await clearLfuCacheNamespace("course:lists");
-
-  return doc;
+  return mapCourse(doc)!;
 }
 
-export async function fetchCoursesService(queries: any[]) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    queries
-  );
+export async function fetchCoursesService(params?: any) {
+  const where: any = {};
+  if (params?.department) where.department = { equals: params.department, mode: "insensitive" };
+  if (params?.level) where.level = parseInt(params.level, 10);
+  if (params?.isOnGoing !== undefined && params?.isOnGoing !== null) {
+    where.isOnGoing = params.isOnGoing === true || params.isOnGoing === "true";
+  }
 
-  return res.documents.map(mapCourse);
+  const courses = await prisma.course.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    take: params?.limit ? parseInt(params.limit, 10) : 30,
+    skip: params?.offset ? parseInt(params.offset, 10) : 0,
+  });
+
+  return courses.map(mapCourse);
 }
 
 export async function fetchCoursesByAdminService(userId: string) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("user", userId),
-      Query.orderDesc("$updatedAt"),
-    ]
-  );
-
-  return res.documents.map(mapCourse);
+  const courses = await prisma.course.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+  });
+  return courses.map(mapCourse);
 }
 
 export async function fetchCourseByIdService(courseId: string) {
   const cached = await getLfuCache<any>("course:details", courseId);
   if (cached) return cached;
 
-  const doc = await databases.getDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId
-  );
+  const doc = await prisma.course.findUnique({
+    where: { id: courseId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          username: true,
+          avatar: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!doc) {
+    const error: any = new Error("Course not found");
+    error.code = 404;
+    throw error;
+  }
 
   const mapped = mapCourse(doc);
-
-  // max 200 courses stored in course details cache
   await setLfuCache("course:details", courseId, mapped, 200);
-
   return mapped;
 }
 
-export async function updateCourseService(courseId: string, data: any) {
-  const res = await databases.updateDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId,
-    data
-  );
+export async function fetchCoursesByDepartmentService(
+  departmentOrParams: string | { department: string; level?: number; limit?: number; offset?: number },
+  levelParam?: number
+) {
+  let department = "";
+  let level: number | undefined = undefined;
+  let limit = 30;
+  let offset = 0;
 
-  await invalidateLfuCache("course:details", courseId);
-  await clearLfuCacheNamespace("course:lists");
+  if (typeof departmentOrParams === "string") {
+    department = departmentOrParams;
+    level = levelParam;
+  } else if (departmentOrParams && typeof departmentOrParams === "object") {
+    department = departmentOrParams.department;
+    level = departmentOrParams.level;
+    if (departmentOrParams.limit) limit = departmentOrParams.limit;
+    if (departmentOrParams.offset) offset = departmentOrParams.offset;
+  }
 
-  return res;
+  const where: any = {
+    department: { equals: department, mode: "insensitive" },
+  };
+  if (level) where.level = level;
+
+  const courses = await prisma.course.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+    skip: offset,
+  });
+  return courses.map(mapCourse);
 }
 
-export async function deleteCourseService(courseId: string) {
-  await clearLfuCacheNamespace("course:lists");
-  return databases.deleteDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId
-  );
+export async function advancedSearchCoursesService(params: {
+  department?: string;
+  level?: string | number;
+  session?: string;
+}) {
+  const where: any = {};
+  if (params.department) where.department = { equals: params.department, mode: "insensitive" };
+  if (params.level) where.level = parseInt(String(params.level), 10);
+  if (params.session) where.session = { equals: params.session, mode: "insensitive" };
+
+  const courses = await prisma.course.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    take: 50,
+  });
+  return courses.map(mapCourse);
 }
 
-/* ================= ADVANCED ================= */
+export async function fetchForYouCoursesService(userId: string) {
+  try {
+    const userDoc = await prisma.user.findUnique({ where: { id: userId } });
+    const department = userDoc?.department;
+    const level = userDoc?.level;
 
-export async function advancedSearchCoursesService(filters: any) {
-  const queries: any[] = [
-    Query.orderDesc("$updatedAt"),
-    Query.limit(30),
-    Query.equal("status", "live"),
-  ];
+    const where: any = {};
+    if (department) where.department = { equals: department, mode: "insensitive" };
+    if (level) where.level = level;
 
-  if (filters.department) {
-    queries.push(Query.equal("department", filters.department));
+    const courses = await prisma.course.findMany({
+      where,
+      orderBy: [{ rating: "desc" }, { updatedAt: "desc" }],
+      take: 30,
+    });
+
+    if (courses.length === 0) {
+      return fetchPopularCoursesService(20);
+    }
+    return courses.map(mapCourse);
+  } catch (err) {
+    console.error("fetchForYouCoursesService error:", err);
+    return fetchPopularCoursesService(20);
   }
-
-  if (filters.level) {
-    queries.push(Query.equal("level", Number(filters.level)));
-  }
-
-  if (filters.session) {
-    queries.push(Query.equal("session", filters.session));
-  }
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    queries
-  );
-
-  return res.documents.map(mapCourse);
 }
 
 export async function searchCoursesService(query: string) {
-  const base = [
-    Query.orderDesc("$updatedAt"),
-    Query.limit(30),
-  ];
-
-  const [title, code, dept, university] = await Promise.all([
-    databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
-      Query.search("title", query),
-      Query.equal("status", "live"),
-      ...base,
-    ]),
-    databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
-      Query.search("code", query),
-      Query.equal("status", "live"),
-      ...base,
-    ]),
-    databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
-      Query.search("department", query),
-      Query.equal("status", "live"),
-      ...base,
-    ]),
-    databases.listDocuments(DATABASE_ID, COURSE_COLLECTION, [
-      Query.search("university", query),
-      Query.equal("status", "live"),
-      ...base,
-    ]),
-  ]);
-
-  const map = new Map();
-
-  [...title.documents, ...code.documents, ...dept.documents, ...university.documents].forEach((doc: any) => {
-    map.set(doc.$id, doc);
+  const courses = await prisma.course.findMany({
+    where: {
+      OR: [
+        { title: { contains: query, mode: "insensitive" } },
+        { code: { contains: query, mode: "insensitive" } },
+        { description: { contains: query, mode: "insensitive" } },
+        { lecturer: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 30,
   });
-
-  trackEvent("SEARCH_PERFORMED", {
-    distinctId: "anonymous",
-    metadata: { query, resultsCount: map.size }
-  });
-
-  return Array.from(map.values()).map(mapCourse);
+  return courses.map(mapCourse);
 }
 
-export async function fetchCoursesByDepartmentService({
-  department,
-  limit,
-  offset,
-}: any) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("department", department),
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.orderDesc("$createdAt"),
-      Query.equal("status", "live"),
-    ]
-  );
+export async function fetchRecentCoursesService(limit = 10) {
+  const courses = await prisma.course.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  return courses.map(mapCourse);
+}
 
-  return {
-    courses: res.documents.map(mapCourse),
-    total: res.total,
-  };
+export async function fetchNewCoursesService(limit = 10, offset = 0) {
+  const courses = await prisma.course.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    skip: offset,
+  });
+  return courses.map(mapCourse);
+}
+
+export async function fetchPopularCoursesService(limit = 10, offset = 0) {
+  const courses = await prisma.course.findMany({
+    orderBy: [{ rating: "desc" }, { updatedAt: "desc" }],
+    take: limit,
+    skip: offset,
+  });
+  return courses.map(mapCourse);
+}
+
+export async function fetchUserLibraryCoursesService(courseIds: string[]) {
+  if (!courseIds || courseIds.length === 0) return [];
+  const courses = await prisma.course.findMany({
+    where: { id: { in: courseIds } },
+  });
+  return courses.map(mapCourse);
+}
+
+export async function fetchFreeCoursesService(limit = 10, offset = 0) {
+  const courses = await prisma.course.findMany({
+    where: { isFree: true },
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+    skip: offset,
+  });
+  return courses.map(mapCourse);
+}
+
+export async function updateCourseService(courseId: string, data: any) {
+  const updated = await prisma.course.update({
+    where: { id: courseId },
+    data: {
+      title: data.title !== undefined ? data.title : undefined,
+      code: data.code !== undefined ? data.code : undefined,
+      description: data.description !== undefined ? data.description : undefined,
+      lecturer: data.lecturer !== undefined ? data.lecturer : undefined,
+      thumbnailId: data.thumbnailId !== undefined ? data.thumbnailId : undefined,
+      thumbnailUrl: data.thumbnailUrl !== undefined ? data.thumbnailUrl : undefined,
+      files: Array.isArray(data.files) ? data.files : undefined,
+      session: data.session !== undefined ? data.session : undefined,
+      department: data.department !== undefined ? data.department : undefined,
+      level: data.level ? parseInt(data.level, 10) : undefined,
+      isOnGoing: data.isOnGoing !== undefined ? !!data.isOnGoing : undefined,
+      price: data.price !== undefined ? String(data.price) : undefined,
+      university: data.university !== undefined ? data.university : undefined,
+      status: data.status !== undefined ? data.status : undefined,
+      rating: data.rating !== undefined ? parseFloat(data.rating) : undefined,
+      pageCount: data.pageCount !== undefined ? parseInt(data.pageCount, 10) : undefined,
+      analytics: typeof data.analytics === "object" ? JSON.stringify(data.analytics) : data.analytics,
+    },
+  });
+
+  await clearLfuCacheNamespace("course:lists");
+  return mapCourse(updated);
+}
+
+export async function deleteCourseService(courseId: string) {
+  await prisma.course.delete({
+    where: { id: courseId },
+  });
+  await clearLfuCacheNamespace("course:lists");
+  return { success: true };
+}
+
+export async function recordCourseVisitService(courseId: string, userId?: string) {
+  try {
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) return null;
+
+    let analytics: any = {};
+    try {
+      analytics = course.analytics ? JSON.parse(course.analytics) : {};
+    } catch {
+      analytics = {};
+    }
+
+    analytics.visits = (analytics.visits || 0) + 1;
+    if (userId) {
+      analytics.uniqueVisitors = analytics.uniqueVisitors || [];
+      if (!analytics.uniqueVisitors.includes(userId)) {
+        analytics.uniqueVisitors.push(userId);
+      }
+    }
+
+    const updated = await prisma.course.update({
+      where: { id: courseId },
+      data: { analytics: JSON.stringify(analytics) },
+    });
+
+    return mapCourse(updated);
+  } catch (error) {
+    console.error("Failed to record course visit:", error);
+    return null;
+  }
+}
+
+export async function appendFilesToCourseService(courseId: string, newFiles: string[]) {
+  const course = await prisma.course.findUnique({ where: { id: courseId } });
+  if (!course) throw new Error("Course not found");
+
+  const existingFiles = course.files || [];
+  const updatedFiles = [...existingFiles, ...newFiles];
+
+  const updated = await prisma.course.update({
+    where: { id: courseId },
+    data: { files: updatedFiles },
+  });
+
+  return mapCourse(updated);
 }
 
 /* ================= POSTS ================= */
 
-export async function fetchPostsService(courseId: string, queries: any[]) {
-  const namespace = `course:posts:${courseId}`;
-  const cacheKey = `list:${JSON.stringify(queries)}`;
-  const cached = await getLfuCache<any>(namespace, cacheKey);
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    POST_COLLECTION,
-    queries
-  );
-
-  const result = {
-    posts: res.documents.map((doc: any) => ({
-      id: doc.$id,
-      images: doc.images ?? [],
-      description: doc.description ?? "",
-    })),
-    lastId:
-      res.documents.length > 0
-        ? res.documents[res.documents.length - 1].$id
-        : null,
-  };
-
-  await setLfuCache(namespace, cacheKey, result, 50);
-  return result;
+export async function fetchPostsByCourseService(courseId: string) {
+  const posts = await prisma.post.findMany({
+    where: { courseId },
+    orderBy: { createdAt: "desc" },
+  });
+  return posts.map(p => ({
+    id: p.id,
+    $id: p.id,
+    description: p.description,
+    images: p.images,
+    courseId: p.courseId,
+    $createdAt: p.createdAt.toISOString(),
+    $updatedAt: p.updatedAt.toISOString(),
+  }));
 }
 
-export async function fetchAllPostsService(courseId: string, queries: any[]) {
-  const namespace = `course:posts:${courseId}`;
-  const cacheKey = `all:${JSON.stringify(queries)}`;
-  const cached = await getLfuCache<any>(namespace, cacheKey);
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    POST_COLLECTION,
-    queries
-  );
-
-  const result = {
-    posts: res.documents.map((doc: any) => ({
-      id: doc.$id,
-      images: doc.images ?? [],
-      description: doc.description ?? "",
-    })),
-    lastId:
-      res.documents.length > 0
-        ? res.documents[res.documents.length - 1].$id
-        : null,
+export async function fetchPostsService(courseId: string, options?: any) {
+  const posts = await prisma.post.findMany({
+    where: { courseId },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  const mapped = posts.map(p => ({
+    id: p.id,
+    $id: p.id,
+    description: p.description,
+    images: p.images,
+    courseId: p.courseId,
+    $createdAt: p.createdAt.toISOString(),
+    $updatedAt: p.updatedAt.toISOString(),
+  }));
+  return {
+    documents: mapped,
+    posts: mapped,
+    total: mapped.length,
   };
-
-  await setLfuCache(namespace, cacheKey, result, 50);
-  return result;
 }
 
-export async function fetchPostsAscService(courseId: string, limit = 10, cursor?: string) {
-  const namespace = `course:posts:${courseId}`;
-  const cacheKey = `list:${limit}:${cursor || 'start'}`;
-  const cached = await getLfuCache<any>(namespace, cacheKey);
-  if (cached) return cached;
-
-  const queries = [
-    Query.equal("courses", courseId),
-    Query.orderAsc("$createdAt"),
-    Query.limit(limit),
-  ];
-
-  if (cursor) {
-    queries.push(Query.cursorAfter(cursor));
-  }
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    POST_COLLECTION,
-    queries
-  );
-
-  const result = {
-    posts: res.documents.map((doc: any) => ({
-      id: doc.$id,
-      images: doc.images ?? [],
-      description: doc.description ?? "",
-    })),
-    lastId:
-      res.documents.length > 0
-        ? res.documents[res.documents.length - 1].$id
-        : null,
-  };
-
-  await setLfuCache(namespace, cacheKey, result, 50);
-  return result;
+export async function fetchAllPostsService(courseId: string, options?: any) {
+  return fetchPostsService(courseId, options);
 }
 
-export async function createPostService(data: { courses: string; images: string[]; description: string }) {
-  const post = await databases.createDocument(
-    DATABASE_ID,
-    POST_COLLECTION,
-    ID.unique(),
-    data
-  );
+export async function createPostService(data: any) {
+  const generatedId = `pst_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-  const course = await fetchCourseByIdService(data.courses);
-
-  await updateCourseService(data.courses, {
-    pageCount: (course.pageCount || 0) + data.images.length,
-    lastOperation: "Now",
+  const post = await prisma.post.create({
+    data: {
+      id: generatedId,
+      description: data.description || null,
+      images: Array.isArray(data.images) ? data.images : [],
+      courseId: data.courses || data.courseId || null,
+    },
   });
 
-  await clearLfuCacheNamespace(`course:posts:${data.courses}`);
-
-  return post;
+  return {
+    id: post.id,
+    $id: post.id,
+    description: post.description,
+    images: post.images,
+    courseId: post.courseId,
+    $createdAt: post.createdAt.toISOString(),
+    $updatedAt: post.updatedAt.toISOString(),
+  };
 }
 
 export async function updatePostService(postId: string, data: any) {
-  const oldPost = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
-  const courseId = typeof oldPost.courses === 'string' ? oldPost.courses : (oldPost.courses?.$id || oldPost.courses);
+  const updated = await prisma.post.update({
+    where: { id: postId },
+    data: {
+      description: data.description !== undefined ? data.description : undefined,
+      images: Array.isArray(data.images) ? data.images : undefined,
+      courseId: data.courses || data.courseId !== undefined ? (data.courses || data.courseId) : undefined,
+    },
+  });
 
-  if (data.images) {
-    const oldImagesCount = (oldPost.images || []).length;
-    const newImagesCount = data.images.length;
-    const diff = newImagesCount - oldImagesCount;
-
-    if (diff !== 0 && courseId) {
-      const course = await fetchCourseByIdService(courseId);
-      await updateCourseService(courseId, {
-        pageCount: Math.max(0, (course.pageCount || 0) + diff)
-      });
-    }
-  }
-
-  const res = await databases.updateDocument(
-    DATABASE_ID,
-    POST_COLLECTION,
-    postId,
-    data
-  );
-
-  if (courseId) {
-    await clearLfuCacheNamespace(`course:posts:${courseId}`);
-  }
-
-  return res;
+  return {
+    id: updated.id,
+    $id: updated.id,
+    description: updated.description,
+    images: updated.images,
+    courseId: updated.courseId,
+    $createdAt: updated.createdAt.toISOString(),
+    $updatedAt: updated.updatedAt.toISOString(),
+  };
 }
 
 export async function deletePostService(postId: string) {
-  const post = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
-  const imagesCount = (post.images || []).length;
-  const courseId = typeof post.courses === 'string' ? post.courses : (post.courses?.$id || post.courses);
-
-  if (courseId) {
-    const course = await fetchCourseByIdService(courseId);
-    await updateCourseService(courseId, {
-      pageCount: Math.max(0, (course.pageCount || 0) - imagesCount)
-    });
-  }
-
-  const res = await databases.deleteDocument(
-    DATABASE_ID,
-    POST_COLLECTION,
-    postId
-  );
-
-  if (courseId) {
-    await clearLfuCacheNamespace(`course:posts:${courseId}`);
-  }
-
-  return res;
+  await prisma.post.delete({
+    where: { id: postId },
+  });
+  return { success: true };
 }
 
 export async function deleteFileFromPostService(postId: string, fileUrl: string) {
-  const post = await databases.getDocument(DATABASE_ID, POST_COLLECTION, postId);
-
-  // Extract file ID from URL
-  const match = fileUrl.match(/files\/([a-zA-Z0-9]+)\/view/);
-  if (match) {
-    const fileId = match[1];
-    try {
-      await storage.deleteFile(BUCKET_ID, fileId);
-    } catch (err) {
-      console.error("Storage deletion failed:", err);
-    }
-  }
-
-  const updatedFiles = (post.images || []).filter((url: string) => url !== fileUrl);
-
-  await databases.updateDocument(DATABASE_ID, POST_COLLECTION, postId, { images: updatedFiles });
-
-  const courseId = typeof post.courses === 'string' ? post.courses : (post.courses?.$id || post.courses);
-  if (courseId) {
-    const course = await fetchCourseByIdService(courseId);
-    await updateCourseService(courseId, {
-      pageCount: Math.max(0, (course.pageCount || 0) - 1)
-    });
-    await clearLfuCacheNamespace(`course:posts:${courseId}`);
-  }
-
-  return true;
-}
-
-/* ================= SPECIAL ================= */
-
-export async function appendFilesToCourseService(
-  courseId: string,
-  newUrls: string[]
-) {
-  const course = await databases.getDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId
-  );
-
-  const existing = course.files || [];
-
-  return databases.updateDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId,
-    {
-      files: [...existing, ...newUrls],
-    }
-  );
-}
-
-export async function fetchRecentCoursesService() {
-  const queries = [
-    Query.orderDesc("$updatedAt"),
-    Query.limit(15),
-  ];
-
-  return fetchCoursesService(queries);
-}
-
-export async function fetchForYouCoursesService(user: any, limit = 10, offset = 0) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("department", user.department),
-      Query.equal("level", user.level),
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.orderDesc("$updatedAt"),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  return res.documents.map(mapCourse);
-}
-
-/* ================= ANALYTICS ================= */
-
-export async function recordCourseVisitService(courseId: string, userId: string) {
-  // Fetch the course document
-  const courseDoc = await databases.getDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId
-  );
-
-  // analytics is stored as a JSON string in Appwrite — always parse it
-  const defaultAnalytics = {
-    avg_rating: 0,
-    reached: [] as string[],
-    visits_per_day: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 },
-  };
-
-  let analytics = defaultAnalytics;
-
-  if (courseDoc.analytics) {
-    try {
-      const parsed = typeof courseDoc.analytics === "string"
-        ? JSON.parse(courseDoc.analytics)
-        : courseDoc.analytics;
-
-      // Merge parsed value with defaults so missing keys are always present
-      analytics = {
-        avg_rating: parsed.avg_rating ?? 0,
-        reached: Array.isArray(parsed.reached) ? parsed.reached : [],
-        visits_per_day: {
-          ...defaultAnalytics.visits_per_day,
-          ...(parsed.visits_per_day ?? {}),
-        },
-      };
-    } catch {
-      // Corrupted analytics string — fall back to defaults
-      analytics = defaultAnalytics;
-    }
-  }
-
-  // Update reached: add userId if not already present
-  if (!analytics.reached.includes(userId)) {
-    analytics.reached.push(userId);
-  }
-
-  // Update visits_per_day: increment current day
-  const now = new Date();
-  const day = new Intl.DateTimeFormat("en-NG", { weekday: "short" })
-    .format(now)
-    .toLowerCase(); // 'mon', 'tue', etc.
-
-  if (day in analytics.visits_per_day) {
-    (analytics.visits_per_day as Record<string, number>)[day] += 1;
-
-    // Reset other days to 0 on Monday (weekly reset)
-    if (day === "mon") {
-      analytics.visits_per_day.tue = 0;
-      analytics.visits_per_day.wed = 0;
-      analytics.visits_per_day.thu = 0;
-      analytics.visits_per_day.fri = 0;
-      analytics.visits_per_day.sat = 0;
-      analytics.visits_per_day.sun = 0;
-    }
-  }
-
-  // Persist updated analytics back as a JSON string
-  await databases.updateDocument(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    courseId,
-    { analytics: JSON.stringify(analytics) }
-  );
-
-  trackEvent("COURSE_VIEWED", {
-    distinctId: userId,
-    userId: userId,
-    metadata: { courseId, title: courseDoc.title }
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
   });
+  if (!post) return false;
 
-  // --- Contest Performance Tracking ---
-  try {
-    const courseAuthorUserId = typeof courseDoc.user === "string" ? courseDoc.user : courseDoc.user?.$id;
-    if (courseAuthorUserId && courseAuthorUserId !== userId) {
-      // Fetch Contributor
-      const contRes = await databases.listDocuments(DATABASE_ID, "contributors", [
-        Query.equal("user", courseAuthorUserId)
-      ]);
-
-      if (contRes.documents.length > 0) {
-        const contributor = contRes.documents[0];
-
-        if (contributor.joinedContest) {
-          // Fetch ContestPerformance
-          const perfRes = await databases.listDocuments(DATABASE_ID, "contest_performance", [
-            Query.equal("contributors", contributor.$id)
-          ]);
-
-          if (perfRes.documents.length > 0) {
-            const perf = perfRes.documents[0];
-
-            const startDate = new Date("2026-06-29T12:00:00Z");
-            if (new Date() >= startDate) {
-              const diffTime = Math.max(0, new Date().getTime() - startDate.getTime());
-              const dayNumber = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-              const dayKey = `day ${dayNumber}`;
-
-              const usersReachedIds = JSON.parse(perf.usersReachedIds || "{}");
-              const uniqueUsersReached = JSON.parse(perf.uniqueUsersReached || "{}");
-              const returningUsers = JSON.parse(perf.returningUsers || "{}");
-
-              const todaysIds: string[] = usersReachedIds[dayKey] || [];
-
-              if (!todaysIds.includes(userId)) {
-                todaysIds.push(userId);
-                usersReachedIds[dayKey] = todaysIds;
-
-                // Check if user is returning (appeared in any previous day)
-                let isReturning = false;
-                for (const [key, ids] of Object.entries(usersReachedIds)) {
-                  if (key !== dayKey && (ids as string[]).includes(userId)) {
-                    isReturning = true;
-                    break;
-                  }
-                }
-
-                if (isReturning) {
-                  returningUsers[dayKey] = (returningUsers[dayKey] || 0) + 1;
-                }
-
-                uniqueUsersReached[dayKey] = todaysIds.length;
-
-                await databases.updateDocument(DATABASE_ID, "contest_performance", perf.$id, {
-                  usersReachedIds: JSON.stringify(usersReachedIds),
-                  uniqueUsersReached: JSON.stringify(uniqueUsersReached),
-                  returningUsers: JSON.stringify(returningUsers)
-                });
-              }
-            }
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Error updating contest performance on visit:", err);
-  }
-}
-
-
-
-export async function fetchNewCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `new:${limit}:${offset}`;
-  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.orderDesc("$createdAt"),
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  const mapped = res.documents.map(mapCourse);
-
-  // cache up to 50 paginated queries
-  await setLfuCache("course:lists", cacheKey, mapped, 50);
-
-  return mapped;
-}
-
-export async function fetchPopularCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `popular:${limit}:${offset}`;
-  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.orderDesc("rating"), // crude for now, we’ll refine later
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  const mapped = res.documents.map(mapCourse);
-
-  await setLfuCache("course:lists", cacheKey, mapped, 50);
-
-  return mapped;
-}
-
-export async function fetchFreeCoursesService(limit = 10, offset = 0) {
-  const cacheKey = `free:${limit}:${offset}`;
-  const cached = await getLfuCache<any[]>("course:lists", cacheKey);
-  if (cached) return cached;
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("isFree", true),
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.orderDesc("$createdAt"),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  const mapped = res.documents.map(mapCourse);
-
-  await setLfuCache("course:lists", cacheKey, mapped, 50);
-
-  return mapped;
-}
-
-export async function fetchRelatedCoursesService({
-  department,
-  level,
-  limit = 10,
-  offset = 0,
-}: any) {
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("department", department),
-      Query.equal("level", level),
-      Query.limit(limit),
-      Query.offset(offset),
-      Query.orderDesc("$updatedAt"),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  return res.documents.map(mapCourse);
-}
-
-export async function fetchUserLibraryCoursesService(courseIds: string[]) {
-  if (!courseIds.length) return [];
-
-  const res = await databases.listDocuments(
-    DATABASE_ID,
-    COURSE_COLLECTION,
-    [
-      Query.equal("$id", courseIds),
-      Query.equal("status", "live"),
-    ]
-  );
-
-  return res.documents.map(mapCourse);
+  const images = (post.images || []).filter(img => img !== fileUrl);
+  await prisma.post.update({
+    where: { id: postId },
+    data: { images },
+  });
+  return true;
 }

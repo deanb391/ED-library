@@ -1,0 +1,307 @@
+================================================================
+COMPLETE APPWRITE COLLECTIONS SCHEMA ANALYSIS
+================================================================
+
+### Collection: courses [ID: courses] (Total: 133)
+Attributes:
+  - title                     : string       (required: false, default: null, array: false)
+  - code                      : string       (required: false, default: null, array: false)
+  - description               : string       (required: false, default: null, array: false)
+  - lecturer                  : string       (required: false, default: null, array: false)
+  - thumbnailId               : string       (required: false, default: null, array: false)
+  - thumbnailUrl              : string       (required: false, default: null, array: false)
+  - files                     : string       (required: false, default: null, array: true)
+  - lastOperation             : string       (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 6965ea9e000a43bffab0, onDelete: setNull)
+  - session                   : string       (required: false, default: null, array: false)
+  - department                : string       (required: false, default: null, array: false)
+  - level                     : integer      (required: false, default: null, array: false)
+  - isOnGoing                 : boolean      (required: false, default: true, array: false)
+  - price                     : longtext     (required: false, default: null, array: false)
+  - university                : mediumtext   (required: false, default: null, array: false)
+  - analytics                 : longtext     (required: false, default: null, array: false)
+  - pageCount                 : integer      (required: false, default: 0, array: false)
+  - isFree                    : boolean      (required: false, default: null, array: false)
+  - rating                    : double       (required: false, default: null, array: false)
+  - status                    : string       (required: false, default: live, array: false)
+
+### Collection: posts [ID: posts] (Total: 647)
+Attributes:
+  - description               : string       (required: false, default: null, array: false)
+  - images                    : string       (required: false, default: null, array: true)
+  - courses                   : relationship -> Relation: manyToOne to 'courses' (twoWay: false, key: 6962473100064d8f56ab, onDelete: setNull)
+
+### Collection: user [ID: user] (Total: 2060)
+Attributes:
+  - username                  : string       (required: false, default: null, array: false)
+  - accountId                 : string       (required: false, default: null, array: false)
+  - avatar                    : string       (required: false, default: null, array: false)
+  - department                : string       (required: false, default: null, array: false)
+  - isAdmin                   : boolean      (required: false, default: false, array: false)
+  - level                     : integer      (required: false, default: null, array: false)
+  - email                     : string       (required: false, default: null, array: false)
+  - lastTime                  : datetime     (required: false, default: null, array: false)
+  - referredBy                : text         (required: false, default: null, array: false)
+  - university                : text         (required: false, default: null, array: false)
+  - isContributor             : boolean      (required: false, default: false, array: false)
+  - deactivatedAt             : datetime     (required: false, default: null, array: false)
+  - followingContributors     : mediumtext   (required: false, default: null, array: false)
+
+### Collection: ads [ID: ads] (Total: 11)
+Attributes:
+  - name                      : string       (required: false, default: null, array: false)
+  - videos                    : string       (required: false, default: null, array: true)
+  - uniqueUsers               : string       (required: false, default: null, array: true)
+  - isExpired                 : boolean      (required: false, default: false, array: false)
+  - endTime                   : datetime     (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69876db2003d54ef6e40, onDelete: restrict)
+  - views                     : integer      (required: false, default: 0, array: false)
+  - type                      : string       (required: false, default: null, array: false)
+  - link                      : string       (required: false, default: null, array: false)
+  - smallImages               : longtext     (required: false, default: null, array: true)
+  - mediumImages              : longtext     (required: false, default: null, array: true)
+  - largeImages               : longtext     (required: false, default: null, array: true)
+  - clicks                    : integer      (required: false, default: 0, array: false)
+
+### Collection: daily_users [ID: daily_users] (Total: 196)
+Attributes:
+  - date                      : text         (required: true, default: null, array: false)
+  - count                     : integer      (required: true, default: null, array: false)
+  - day                       : text         (required: true, default: null, array: false)
+
+### Collection: contributors [ID: contributors] (Total: 69)
+Attributes:
+  - username                  : text         (required: false, default: null, array: false)
+  - institution               : text         (required: false, default: null, array: false)
+  - country                   : text         (required: false, default: null, array: false)
+  - bio                       : text         (required: false, default: null, array: false)
+  - category                  : text         (required: false, default: null, array: true)
+  - reviewImages              : longtext     (required: false, default: null, array: true)
+  - profileImage              : mediumtext   (required: false, default: null, array: false)
+  - status                    : text         (required: false, default: null, array: false)
+  - userId                    : text         (required: false, default: null, array: false)
+  - approvalNotes             : longtext     (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: oneToOne to 'user' (twoWay: false, key: 69e2143d0037d92a5a34, onDelete: setNull)
+  - followers                 : integer      (required: false, default: 0, array: false)
+  - followersIds              : longtext     (required: false, default: null, array: false)
+  - total_earnings            : integer      (required: false, default: null, array: false)
+  - hasSeenCelebration        : boolean      (required: false, default: false, array: false)
+  - agreed                    : boolean      (required: false, default: false, array: false)
+  - uploadCount               : integer      (required: false, default: 0, array: false)
+  - weeklyUploadCount         : integer      (required: false, default: 0, array: false)
+  - isTopContributor          : boolean      (required: false, default: false, array: false)
+  - topContributorWeek        : text         (required: false, default: null, array: false)
+  - joinedContest             : boolean      (required: false, default: false, array: false)
+  - joinedContestAt           : text         (required: false, default: null, array: false)
+  - phone                     : text         (required: false, default: null, array: false)
+
+### Collection: course_review_and_rating [ID: course_review_and_rating] (Total: 338)
+Attributes:
+  - courses                   : relationship -> Relation: manyToOne to 'courses' (twoWay: false, key: 69e4785b003d3cdeb865, onDelete: setNull)
+  - rating                    : integer      (required: false, default: null, array: false)
+  - review                    : text         (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69e478b5000505683936, onDelete: setNull)
+
+### Collection: payments [ID: payments] (Total: 134)
+Attributes:
+  - type                      : text         (required: false, default: null, array: false)
+  - status                    : text         (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69e5eff7003a48ecca73, onDelete: setNull)
+  - description               : mediumtext   (required: false, default: null, array: false)
+  - transactionId             : text         (required: false, default: null, array: false)
+  - courses                   : mediumtext   (required: false, default: null, array: false)
+  - provider                  : text         (required: false, default: null, array: false)
+  - amount                    : double       (required: false, default: null, array: false)
+
+### Collection: earnings [ID: earnings] (Total: 15)
+Attributes:
+  - description               : mediumtext   (required: false, default: null, array: false)
+  - courses                   : longtext     (required: false, default: null, array: false)
+  - type                      : text         (required: false, default: null, array: false)
+  - contributors              : relationship -> Relation: manyToOne to 'contributors' (twoWay: false, key: 69e613d700397f0cb1d6, onDelete: setNull)
+  - amount                    : double       (required: false, default: null, array: false)
+
+### Collection: wallet [ID: wallet] (Total: 981)
+Attributes:
+  - user                      : relationship -> Relation: oneToOne to 'user' (twoWay: false, key: 69e614df001d4510c0ea, onDelete: setNull)
+  - cashout_account           : mediumtext   (required: false, default: null, array: false)
+  - balance                   : double       (required: false, default: null, array: false)
+
+### Collection: library [ID: library] (Total: 34)
+Attributes:
+  - user                      : relationship -> Relation: oneToOne to 'user' (twoWay: false, key: 69e68f03002f25cd4445, onDelete: setNull)
+  - oneTime                   : longtext     (required: false, default: null, array: false)
+  - subscription              : longtext     (required: false, default: null, array: false)
+
+### Collection: transactions [ID: transactions] (Total: 379)
+Attributes:
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69e733bf00074fa96f09, onDelete: setNull)
+  - type                      : string       (required: false, default: deposit, array: false)
+  - direction                 : string       (required: false, default: null, array: false)
+  - amount                    : double       (required: false, default: null, array: false)
+  - reference                 : text         (required: false, default: null, array: false)
+
+### Collection: wallet_history [ID: wallet_history] (Total: 187)
+Attributes:
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69ea58c0003029e8e8d3, onDelete: setNull)
+  - type                      : string       (required: false, default: null, array: false)
+  - description               : text         (required: false, default: null, array: false)
+  - amount                    : double       (required: false, default: null, array: false)
+
+### Collection: withdrawals [ID: withdrawals] (Total: 94)
+Attributes:
+  - amount                    : double       (required: false, default: null, array: false)
+  - status                    : string       (required: false, default: pending, array: false)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69eb11d60038474bbc56, onDelete: setNull)
+  - description               : text         (required: false, default: null, array: false)
+  - refund                    : double       (required: false, default: null, array: false)
+
+### Collection: withdrawal_requests [ID: withdrawal_requests] (Total: 0)
+Attributes:
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69eb64140002ff67a2ee, onDelete: setNull)
+  - amount                    : double       (required: false, default: null, array: false)
+
+### Collection: subscriptions [ID: subscriptions] (Total: 86)
+Attributes:
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 69f75fdd001bc0ddce55, onDelete: setNull)
+  - courses                   : relationship -> Relation: manyToOne to 'courses' (twoWay: false, key: 69f75ff90032891d58f0, onDelete: setNull)
+  - startDate                 : datetime     (required: false, default: null, array: false)
+  - endDate                   : datetime     (required: false, default: null, array: false)
+  - status                    : string       (required: false, default: null, array: false)
+
+### Collection: Analytics Events [ID: analytics_events] (Total: 4815)
+Attributes:
+  - eventName                 : string       (required: true, default: null, array: false)
+  - distinctId                : string       (required: true, default: null, array: false)
+  - userId                    : string       (required: false, default: null, array: false)
+  - metadata                  : string       (required: false, default: null, array: false)
+  - value                     : double       (required: false, default: null, array: false)
+
+### Collection: Analytics Daily Metrics [ID: analytics_daily_metrics] (Total: 1511)
+Attributes:
+  - date                      : string       (required: true, default: null, array: false)
+  - metric                    : string       (required: true, default: null, array: false)
+  - value                     : double       (required: true, default: null, array: false)
+  - category                  : string       (required: false, default: null, array: false)
+  - dimension                 : string       (required: false, default: null, array: false)
+
+### Collection: documents [ID: documents] (Total: 18)
+Attributes:
+  - courses                   : relationship -> Relation: manyToOne to 'courses' (twoWay: false, key: 6a12c091002a54d1c577, onDelete: setNull)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 6a12c0af002048c5be5b, onDelete: setNull)
+  - fileUrl                   : text         (required: false, default: null, array: false)
+  - fileName                  : text         (required: false, default: null, array: false)
+  - fileSize                  : double       (required: false, default: null, array: false)
+  - fileType                  : text         (required: false, default: null, array: false)
+  - description               : text         (required: false, default: null, array: false)
+  - status                    : string       (required: false, default: pending, array: false)
+  - reviewReason              : text         (required: false, default: null, array: false)
+
+### Collection: streaks [ID: streaks] (Total: 23)
+Attributes:
+  - contributors              : relationship -> Relation: manyToOne to 'contributors' (twoWay: false, key: 6a1174900028263f8850, onDelete: setNull)
+  - user                      : relationship -> Relation: manyToOne to 'user' (twoWay: false, key: 6a1174a5000d954b3fcb, onDelete: setNull)
+  - currentStreak             : integer      (required: false, default: null, array: false)
+  - longestStreak             : integer      (required: false, default: null, array: false)
+  - joinedDate                : text         (required: false, default: null, array: false)
+  - lastUploadDate            : text         (required: false, default: null, array: false)
+  - streakHistory             : longtext     (required: false, default: null, array: false)
+
+### Collection: weekly_awards [ID: weekly_awards] (Total: 0)
+Attributes:
+  - contributors              : relationship -> Relation: manyToOne to 'contributors' (twoWay: false, key: 6a117554000cebe23a07, onDelete: setNull)
+  - contributorName           : text         (required: false, default: null, array: false)
+  - contributorImage          : text         (required: false, default: null, array: false)
+  - weekStart                 : text         (required: false, default: null, array: false)
+  - weekEnd                   : text         (required: false, default: null, array: false)
+  - weeklyUploads             : integer      (required: false, default: null, array: false)
+  - totalUploads              : integer      (required: false, default: null, array: false)
+  - awardedAt                 : text         (required: false, default: null, array: false)
+
+### Collection: document_reviews [ID: document_reviews] (Total: 4)
+Attributes:
+  - documents                 : relationship -> Relation: manyToOne to 'documents' (twoWay: false, key: 6a12fbf700385e5e9bc9, onDelete: setNull)
+  - courses                   : relationship -> Relation: manyToOne to 'courses' (twoWay: false, key: 6a12fc0f002a76f04d46, onDelete: setNull)
+  - contributors              : relationship -> Relation: manyToOne to 'contributors' (twoWay: false, key: 6a12fc2a000074dfd007, onDelete: setNull)
+  - complaint                 : text         (required: false, default: null, array: false)
+  - status                    : string       (required: false, default: pending, array: false)
+  - adminReason               : text         (required: false, default: null, array: false)
+
+### Collection: monthly_users [ID: monthly_users] (Total: 3)
+Attributes:
+  - date                      : text         (required: false, default: null, array: false)
+  - month                     : text         (required: false, default: null, array: false)
+  - count                     : integer      (required: false, default: null, array: false)
+
+### Collection: weekly_users [ID: weekly_users] (Total: 14)
+Attributes:
+  - date                      : text         (required: false, default: null, array: false)
+  - count                     : integer      (required: false, default: null, array: false)
+
+### Collection: chats [ID: chats] (Total: 9)
+Attributes:
+  - participants              : text         (required: false, default: null, array: true)
+  - lastMessage               : text         (required: false, default: null, array: false)
+  - lastMessageSenderId       : text         (required: false, default: null, array: false)
+  - lastMessageAt             : datetime     (required: false, default: null, array: false)
+  - unreadCounts              : text         (required: false, default: null, array: false)
+
+### Collection: messages [ID: messages] (Total: 52)
+Attributes:
+  - chatId                    : text         (required: false, default: null, array: false)
+  - senderId                  : text         (required: false, default: null, array: false)
+  - text                      : text         (required: false, default: null, array: false)
+  - status                    : text         (required: false, default: null, array: false)
+
+### Collection: businesses [ID: businesses] (Total: 2)
+Attributes:
+  - name                      : text         (required: false, default: null, array: false)
+  - phone                     : text         (required: false, default: null, array: false)
+  - bannerImage               : text         (required: false, default: null, array: false)
+  - user                      : relationship -> Relation: oneToOne to 'user' (twoWay: false, key: 6a2e3e47000ce58919b3, onDelete: setNull)
+  - status                    : text         (required: false, default: null, array: false)
+
+### Collection: contest_performance [ID: contest_performance] (Total: 24)
+Attributes:
+  - contributors              : relationship -> Relation: manyToOne to 'contributors' (twoWay: false, key: 6a310194000749c4dd14, onDelete: setNull)
+  - totalPoints               : double       (required: false, default: null, array: false)
+  - dailyPoints               : longtext     (required: false, default: null, array: false)
+  - uniqueUsersReached        : longtext     (required: false, default: null, array: false)
+  - newUsers                  : longtext     (required: false, default: null, array: false)
+  - usersReachedIds           : longtext     (required: false, default: null, array: false)
+  - returningUsers            : longtext     (required: false, default: null, array: false)
+  - acquisitionScore          : double       (required: false, default: 0, array: false)
+  - engagementScore           : double       (required: false, default: 0, array: false)
+  - contentScore              : double       (required: false, default: 0, array: false)
+  - engagementActivity        : string       (required: false, default: {}, array: false)
+  - dailyCourseRatings        : string       (required: false, default: {}, array: false)
+  - coursesPoints             : string       (required: false, default: {}, array: false)
+  - uploadQuality             : string       (required: false, default: {}, array: false)
+  - referralClicks            : string       (required: false, default: {}, array: false)
+  - uploadsCreated            : string       (required: false, default: {}, array: false)
+  - Prize                     : double       (required: false, default: null, array: false)
+  - isTop3Contributor         : boolean      (required: false, default: false, array: false)
+
+### Collection: sources [ID: sources] (Total: 1)
+Attributes:
+  - name                      : text         (required: false, default: null, array: false)
+  - clickCount                : integer      (required: false, default: null, array: false)
+  - signUpCount               : integer      (required: false, default: null, array: false)
+  - contributorCount          : integer      (required: false, default: null, array: false)
+
+### Collection: Communities [ID: communities] (Total: 4)
+Attributes:
+  - contributors              : relationship -> Relation: oneToOne to 'contributors' (twoWay: false, key: 6a885b160028cafc0baf, onDelete: setNull)
+
+### Collection: Threads [ID: threads] (Total: 22)
+Attributes:
+  - communityId               : string       (required: true, default: null, array: false)
+  - posterId                  : string       (required: true, default: null, array: false)
+  - isPosterAContributor      : boolean      (required: true, default: null, array: false)
+  - content                   : string       (required: true, default: null, array: false)
+  - mediaUrl                  : string       (required: false, default: null, array: false)
+  - mediaType                 : string       (required: false, default: null, array: false)
+  - parentId                  : string       (required: false, default: null, array: false)
+  - likes                     : string       (required: false, default: null, array: false)
+  - commentCount              : integer      (required: false, default: 0, array: false)
+  - mediaData                 : string       (required: false, default: null, array: false)
