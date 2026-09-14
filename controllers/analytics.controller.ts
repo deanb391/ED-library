@@ -43,7 +43,7 @@ export class AnalyticsController {
         take: limit,
       });
 
-      return NextResponse.json({ metrics: metrics.map(m => ({ ...m, $id: m.id })) }, { status: 200 });
+      return NextResponse.json({ metrics: metrics.map((m: any) => ({ ...m, $id: m.id })) }, { status: 200 });
     } catch (error) {
       console.error('Get daily metrics error:', error);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

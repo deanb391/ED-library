@@ -22,7 +22,7 @@ export class ContestController {
         orderBy: { totalPoints: 'desc' },
       });
 
-      const formatted = performances.map((p, index) => ({
+      const formatted = performances.map((p: any, index: number) => ({
         ...p,
         rank: index + 1,
         $id: p.id,

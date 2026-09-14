@@ -112,7 +112,7 @@ export class ContributorController {
         },
       });
 
-      const formatted = topContributors.map(c => ({
+      const formatted = topContributors.map((c: any) => ({
         ...c,
         $id: c.id,
         $createdAt: c.createdAt.toISOString(),

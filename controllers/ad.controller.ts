@@ -16,7 +16,7 @@ export class AdController {
         orderBy: { createdAt: 'desc' },
       });
 
-      const formatted = ads.map(a => ({
+      const formatted = ads.map((a: any) => ({
         ...a,
         $id: a.id,
         $createdAt: a.createdAt.toISOString(),

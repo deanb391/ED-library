@@ -30,7 +30,7 @@ export class PostController {
         },
       });
 
-      const formatted = posts.map(p => ({
+      const formatted = posts.map((p: any) => ({
         ...p,
         $id: p.id,
         $createdAt: p.createdAt.toISOString(),
@@ -59,7 +59,7 @@ export class PostController {
         },
       });
 
-      const formatted = posts.map(p => ({
+      const formatted = posts.map((p: any) => ({
         ...p,
         $id: p.id,
         $createdAt: p.createdAt.toISOString(),

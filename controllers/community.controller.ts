@@ -74,7 +74,7 @@ export class CommunityController {
         orderBy: { createdAt: 'desc' },
       });
 
-      const formatted = threads.map(t => ({
+      const formatted = threads.map((t: any) => ({
         ...t,
         $id: t.id,
         $createdAt: t.createdAt.toISOString(),
