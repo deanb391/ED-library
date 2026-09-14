@@ -21,7 +21,7 @@ export class PaymentController {
         orderBy: { createdAt: 'desc' },
       });
 
-      const formatted = payments.map(p => ({
+      const formatted = payments.map((p: any) => ({
         ...p,
         $id: p.id,
         $createdAt: p.createdAt.toISOString(),

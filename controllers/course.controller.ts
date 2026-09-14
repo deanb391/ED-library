@@ -57,7 +57,7 @@ export class CourseController {
         }),
       ]);
 
-      const formatted = courses.map(c => ({
+      const formatted = courses.map((c: any) => ({
         ...c,
         $id: c.id,
         $createdAt: c.createdAt.toISOString(),
@@ -140,7 +140,7 @@ export class CourseController {
         orderBy: { updatedAt: 'desc' },
       });
 
-      const formatted = courses.map(c => ({
+      const formatted = courses.map((c: any) => ({
         ...c,
         $id: c.id,
         $createdAt: c.createdAt.toISOString(),

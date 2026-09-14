@@ -154,9 +154,9 @@ export class WalletController {
       ]);
 
       return NextResponse.json({
-        transactions: transactions.map(t => ({ ...t, $id: t.id })),
-        walletHistory: walletHistory.map(w => ({ ...w, $id: w.id })),
-        withdrawals: withdrawals.map(w => ({ ...w, $id: w.id })),
+        transactions: transactions.map((t: any) => ({ ...t, $id: t.id })),
+        walletHistory: walletHistory.map((w: any) => ({ ...w, $id: w.id })),
+        withdrawals: withdrawals.map((w: any) => ({ ...w, $id: w.id })),
       }, { status: 200 });
     } catch (error) {
       console.error('Get wallet history error:', error);

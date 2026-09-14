@@ -16,7 +16,7 @@ export class DocumentController {
         orderBy: { createdAt: 'desc' },
       });
 
-      const formatted = documents.map(d => ({
+      const formatted = documents.map((d: any) => ({
         ...d,
         $id: d.id,
         $createdAt: d.createdAt.toISOString(),

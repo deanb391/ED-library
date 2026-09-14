@@ -25,7 +25,7 @@ export class ChatController {
         orderBy: { lastMessageAt: 'desc' },
       });
 
-      const formatted = chats.map(c => ({
+      const formatted = chats.map((c: any) => ({
         ...c,
         $id: c.id,
         $createdAt: c.createdAt.toISOString(),
@@ -53,7 +53,7 @@ export class ChatController {
         orderBy: { createdAt: 'asc' },
       });
 
-      const formatted = messages.map(m => ({
+      const formatted = messages.map((m: any) => ({
         ...m,
         $id: m.id,
         $createdAt: m.createdAt.toISOString(),
