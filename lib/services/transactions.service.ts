@@ -10,7 +10,9 @@ export type TransactionType =
   | "withdrawal"
   | "withdrawal_fee"
   | "payment_processing_fee"
-  | "withdrawal_processing_fee";
+  | "withdrawal_processing_fee"
+  | "premium_subscription"
+  | "premium_revenue";
 
 export type TransactionDirection = "credit" | "debit";
 
