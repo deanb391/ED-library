@@ -14,6 +14,7 @@
     "@google/genai": "^2.6.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "@serwist/next": "^9.5.12",
     "appwrite": "^21.5.0",
     "aws-sdk": "^2.1693.0",
     "bcryptjs": "^3.0.3",
@@ -25,6 +26,7 @@
     "ioredis": "^5.10.1",
     "jose": "^6.2.12",
     "jsonwebtoken": "^9.0.3",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.12.0",
     "next": "16.1.1",
@@ -42,6 +44,7 @@
     "react-pdf": "^10.4.1",
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
+    "serwist": "^9.5.12",
     "sharp": "^0.34.5",
     "styled-components": "^6.4.3",
     "uuid": "^13.0.0"

@@ -8,12 +8,18 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
 
-  const course = await fetchCourseByIdService(slug);
+  let course = null;
+  try {
+    course = await fetchCourseByIdService(slug);
+  } catch {
+    // Expected when offline or DB is unreachable — fallback metadata returned below
+  }
+
 
   if (!course) {
     return {
-      title: "Course Not Found",
-      description: "This course does not exist.",
+      title: "Course Details | ED Library",
+      description: "View course details and content.",
     };
   }
 

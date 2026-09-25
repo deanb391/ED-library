@@ -43,7 +43,7 @@ export default function ReviewModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="w-full max-w-md bg-white dark:bg-black rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="p-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Leave a review
@@ -100,7 +100,7 @@ export default function ReviewModal({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="What did you think about this course?"
-                className="w-full min-h-[110px] resize-none rounded-xl border border-gray-300 dark:border-gray-700 p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full min-h-[110px] resize-none rounded-xl border border-gray-300 dark:border-gray-800 bg-transparent p-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
@@ -109,7 +109,7 @@ export default function ReviewModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800"
+                className="px-4 py-2 rounded-xl text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#111] hover:bg-gray-200 dark:hover:bg-gray-800 transition"
               >
                 Cancel
               </button>

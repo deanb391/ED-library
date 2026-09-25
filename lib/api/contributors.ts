@@ -193,6 +193,21 @@ export async function toggleFollowContributor(
   return data.success;
 }
 
+export async function checkFollowContributor(
+  userId: string,
+  contributorId: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/contributors/check-follow?userId=${encodeURIComponent(userId)}&contributorId=${encodeURIComponent(contributorId)}`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.isFollowing || false;
+  } catch (err) {
+    console.error("Error checking follow status:", err);
+    return false;
+  }
+}
+
 export async function fetchContributors(
   limit = 20,
   status?: string,

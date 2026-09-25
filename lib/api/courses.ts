@@ -131,7 +131,9 @@ export async function fetchCourseById(courseId: string): Promise<Course> {
   if (!res.ok) {
     throw new Error(`Failed to fetch course: ${res.statusText}`);
   }
-  return res.json();
+  const text = await res.text();
+  if (!text) throw new Error("Empty response");
+  return JSON.parse(text);
 }
 
 export async function editCourse(courseId: string, data: any) {
@@ -228,19 +230,25 @@ export async function appendFilesToCourse(courseId: string, urls: string[]) {
 export async function fetchPosts(courseId: string, limit: number | string = 5, cursor?: string): Promise<PaginatedPosts> {
   const query = new URLSearchParams({ courseId, cursor: cursor || "", order: "desc", limit: String(limit) });
   const res = await fetch(`/api/posts/list?${query}`);
-  return res.json();
+  const text = await res.text();
+  if (!text) throw new Error("Empty response");
+  return JSON.parse(text);
 }
 
 export async function fetchPostsAsc(courseId: string, limit: number | string = 10, cursor?: string): Promise<PaginatedPosts> {
   const query = new URLSearchParams({ courseId, cursor: cursor || "", order: "asc", limit: String(limit) });
   const res = await fetch(`/api/posts/list?${query}`);
-  return res.json();
+  const text = await res.text();
+  if (!text) throw new Error("Empty response");
+  return JSON.parse(text);
 }
 
 export async function fetchAllPosts(courseId: string): Promise<PaginatedPosts> {
   const query = new URLSearchParams({ courseId });
   const res = await fetch(`/api/posts/fetch-all?${query}`);
-  return res.json();
+  const text = await res.text();
+  if (!text) throw new Error("Empty response");
+  return JSON.parse(text);
 }
 
 export async function fetchRecentCourses(): Promise<Course[]> {

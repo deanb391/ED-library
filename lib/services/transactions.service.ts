@@ -33,7 +33,7 @@ export async function createTransactionService(
   const doc = await prisma.transaction.create({
     data: {
       id,
-      userId: payload.user,
+      userId: payload.user || null,
       type: payload.type,
       direction: payload.direction,
       amount: payload.amount,

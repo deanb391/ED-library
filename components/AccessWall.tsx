@@ -14,19 +14,17 @@ export default function AccessWall({ type }: AccessWallProps) {
   const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
+    if (countdown <= 0) {
+      router.replace("/signin");
+      return;
+    }
+    
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.replace("/signin");
-          return 0;
-        }
-        return prev - 1;
-      });
+      setCountdown((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [router]);
+  }, [countdown, router]);
 
   const config = {
     user: {

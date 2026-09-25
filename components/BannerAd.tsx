@@ -25,25 +25,32 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
   const [isMuted, setIsMuted] = useState(true);
   const { user } = useUser();
   const [viewRecorded, setViewRecorded] = useState(false);
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
     if (ad.fileType === "video" && videoRef.current) {
       const timer = setTimeout(() => {
         videoRef.current?.play().catch(() => {
-          // Ignore errors (like user interaction required)
+          // Ignore errors
         });
-      }, 1000); // play 1s after loaded
-
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [ad]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isOpen, countdown]);
 
-    const handleAdLoaded = () => {
+  if (!isOpen || user?.isPremium) return null;
+
+  const handleAdLoaded = () => {
     setLoading(false);
-
-    // record view once
     if (!viewRecorded) {
       recordAdView(ad.id, user?.$id);
       setViewRecorded(true);
@@ -60,44 +67,47 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
   const handleClick = () => {
     recordAdClick(ad.id);
     if (ad.link) window.open(ad.link, "_blank");
-    onClose();
+    // Do not close on click, they have to wait or press X when it appears.
   };
 
   return (
     <div
       className={clsx(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity",
+        "fixed inset-0 z-[999] flex items-center justify-center bg-black transition-opacity",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
-      
     >
-      <div className="relative w-full max-w-3xl mx-4 rounded-xl overflow-hidden shadow-lg" style={{alignItems:'center', alignSelf: 'center', maxHeight: "96%", maxWidth: '99%'}}>
-       
-<div className="absolute inset-0 z-10  pointer-events-none" />
+      <div className="relative w-screen h-screen flex items-center justify-center overflow-hidden bg-black">
+        {/* Countdown / Close Button */}
+        <div className="absolute top-6 right-6 z-20">
+          {countdown > 0 ? (
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white font-bold text-sm border border-white/30">
+              {countdown}
+            </div>
+          ) : (
+            <button
+              onClick={onClose}
+              className="p-3 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition border border-white/30 group"
+            >
+              <X size={24} className="text-white group-hover:scale-110 transition-transform" />
+            </button>
+          )}
+        </div>
 
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 left-3 z-20 p-2 rounded-full hover:bg-white dark:bg-gray-900 transition"
-        >
-          <X size={22} color="red" />
-        </button>
-
-          {/* Mute toggle */}
+        {/* Mute toggle */}
         {ad.fileType === "video" && (
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 z-20 p-5 rounded-full  hover:bg-white dark:bg-gray-900 transition"
+            className="absolute top-6 left-6 z-20 p-3 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition border border-white/30"
           >
-            {isMuted ? <VolumeX size={22} color="blue"/> : <Volume size={22} color="blue"/>}
+            {isMuted ? <VolumeX size={24} className="text-white" /> : <Volume size={24} className="text-white" />}
           </button>
         )}
 
         {/* Loading indicator */}
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10" style={{height: 130, alignItems: 'center', flex: 1, }}> 
-            <div className="h-10 w-10 border-4 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="h-12 w-12 border-4 border-gray-600 border-t-white rounded-full animate-spin" />
           </div>
         )}
 
@@ -105,9 +115,8 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
         {ad.fileType === "image" ? (
           <img
             src={ad.fileUrl}
-            alt="Banner Ad"
-            className="  cursor-pointer object-contain relative z-0"
-            style={{maxHeight: "90%", maxWidth: '100%', alignSelf: 'center', }}
+            alt="Advertisement"
+            className="w-full h-full object-contain cursor-pointer"
             onClick={handleClick}
             onLoad={handleAdLoaded}
           />
@@ -115,8 +124,7 @@ export default function BannerAd({ ad, isOpen, onClose }: BannerAdProps) {
           <video
             ref={videoRef}
             src={ad.fileUrl}
-            className="w-full  cursor-pointer object-contain relative z-0"
-            style={{maxHeight: "90%", maxWidth: '100%',}}
+            className="w-full h-full object-contain cursor-pointer"
             autoPlay
             muted
             loop

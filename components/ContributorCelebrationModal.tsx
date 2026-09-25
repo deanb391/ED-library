@@ -121,11 +121,11 @@ export default function ContributorCelebrationModal({
         The outer fixed container handles scrolling, while this flex container handles positioning. 
       */}
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md relative animate-in fade-in zoom-in duration-300 flex flex-col mb-auto shrink-0">
+        <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-md relative animate-in fade-in zoom-in duration-300 flex flex-col mb-auto shrink-0">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
+            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-black/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
             aria-label="Close"
           >
             <X size={20} />
@@ -138,7 +138,7 @@ export default function ContributorCelebrationModal({
                 <CheckCircle size={20} />
               </div>
             </div> */}
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white ">
+            <h2 className="text-xl md:text-2xl font-bold text-black dark:text-white ">
               Congratulations!
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: 10 }}>
@@ -152,12 +152,12 @@ export default function ContributorCelebrationModal({
             The node that gets converted to PNG.
             Using strict dimensions and shrink-0 ensures flexbox doesn't compress it.
           */}
-            <div className="relative rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-gray-900 shrink-0"
+            <div className="relative rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-black shrink-0"
               style={{ height: 400, width: 300 }}
             >
               <div
                 ref={cardRef}
-                className="absolute inset-0 w-full h-full bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden"
+                className="absolute inset-0 w-full h-full bg-white dark:bg-black flex items-center justify-center overflow-hidden"
 
               >
                 {/* Background Template */}
@@ -198,10 +198,10 @@ export default function ContributorCelebrationModal({
                 <div className="absolute top-[72%] left-0 w-full px-6 text-center z-10 flex flex-col items-center"
                   style={{ top: "84%" }}
                 >
-                  <h1 className="text-2xl md:text-2xl font-extrabold text-gray-900 dark:text-white truncate w-full" style={{ fontSize: 13 }}>
+                  <h1 className="text-2xl md:text-2xl font-extrabold text-black dark:text-white truncate w-full" style={{ fontSize: 13 }}>
                     {contributorName}
                   </h1>
-                  <div className="mt-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border border-blue-100"
+                  <div className="mt-1.5 px-3 py-1 bg-blue-50 text-black dark:text-white dark:text-black rounded-full text-xs font-bold uppercase tracking-wider shadow-sm border border-blue-100"
                     style={{ fontSize: 7 }}>
                     Official Contributor
                   </div>
@@ -218,7 +218,7 @@ export default function ContributorCelebrationModal({
             <button
               onClick={handleShare}
               disabled={!imageLoaded || isGenerating}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3.5 rounded-xl transition active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 bg-black dark:bg-white hover:opacity-80 disabled:bg-blue-400 text-white dark:text-black font-bold py-3.5 rounded-xl transition active:scale-[0.98]"
             >
               {isGenerating ? (
                 <>

@@ -396,10 +396,15 @@ export async function fetchPostsByCourseService(courseId: string) {
 }
 
 export async function fetchPostsService(courseId: string, options?: any) {
+  const order = options?.order === 'asc' ? 'asc' : 'desc';
+  const limit = options?.limit ? parseInt(String(options.limit), 10) : 50;
+  const skip = options?.offset ? parseInt(String(options.offset), 10) : (options?.cursor ? parseInt(String(options.cursor), 10) : 0);
+
   const posts = await prisma.post.findMany({
     where: { courseId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
+    orderBy: { createdAt: order },
+    take: limit,
+    skip: skip,
   });
   const mapped = posts.map(p => ({
     id: p.id,

@@ -82,7 +82,7 @@ export default function RectangularAd({
   return (
     <div
       className={clsx(
-        "relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50",
+        "relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black",
         className
       )}
       style={{
@@ -105,7 +105,7 @@ export default function RectangularAd({
               if (el) observedRefs.current.set(`${ad.id}-${index}`, el);
             }}
             data-ad-id={ad.id}
-            className="h-full w-full flex-shrink-0"
+            className="h-full w-full flex-shrink-0 cursor-pointer"
           >
             {ad.fileType === "image" && (
               <img
@@ -140,20 +140,20 @@ export default function RectangularAd({
       </div>
 
       {/* Dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
         {ads.map((_, index) => (
           <span
             key={index}
             className={clsx(
-              "h-2 w-2 rounded-full transition-colors",
-              index === activeIndex ? "bg-neutral-800" : "bg-blue-600"
+              "h-1.5 w-1.5 rounded-full transition-colors",
+              index === activeIndex ? "bg-white" : "bg-white/50"
             )}
           />
         ))}
       </div>
 
-      <span className="absolute bottom-2 right-2 text-[10px] text-neutral-500 bg-white dark:bg-gray-900/70 px-2 py-0.5 rounded">
-        Sponsored
+      <span className="absolute bottom-3 left-3 text-[10px] font-bold text-white bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded">
+        Ad
       </span>
     </div>
   );

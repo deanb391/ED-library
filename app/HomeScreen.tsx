@@ -1,8 +1,10 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import CourseCard from "@/components/CourseCard";
+import ContributorCard from "@/components/ContributorCard";
 
 import {
   Course,
@@ -10,8 +12,8 @@ import {
   fetchNewCourses,
   fetchPopularCourses,
   fetchRelatedCourse,
-  searchCourses,
 } from "@/lib/api/courses";
+import clsx from "clsx";
 
 import { useUser } from "@/context/UserContext";
 import { useHome } from "@/context/HomeContext";
@@ -43,159 +45,50 @@ export type HomeContributor = Contributor & {
 function ContributorSection({
   title,
   contributors,
-  setContributors,
 }: {
   title: string;
   contributors: HomeContributor[];
-  setContributors: React.Dispatch<React.SetStateAction<HomeContributor[]>>;
 }) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [follow, setFollow] = useState(false);
-
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-  const { user } = useUser();
-  const router = useRouter();
-
-  const handleFollow = async (contributorId: string) => {
-    if (!user) {
-      router.push("/signin");
-      return;
-    }
-
-    try {
-      setLoadingId(contributorId);
-
-      // optimistic update
-      setContributors((prev) =>
-        prev.map((c) =>
-          c.$id === contributorId
-            ? {
-              ...c,
-              isFollowing: !c.isFollowing,
-              followers: c.isFollowing
-                ? (c.followers || 0) - 1
-                : (c.followers || 0) + 1,
-            }
-            : c,
-        ),
-      );
-
-      const res = await toggleFollowContributor(user.$id, contributorId);
-
-      if (!res) {
-        // rollback if API fails
-        setContributors((prev) =>
-          prev.map((c) =>
-            c.$id === contributorId
-              ? {
-                ...c,
-                isFollowing: !c.isFollowing,
-                followers: c.isFollowing
-                  ? (c.followers || 0) - 1
-                  : (c.followers || 0) + 1,
-              }
-              : c,
-          ),
-        );
-      }
-    } catch (error) {
-      console.error("FOLLOW ERROR:", error);
-    } finally {
-      setLoadingId(null);
-    }
-  };
-
+  const [showAll, setShowAll] = useState(false);
+  
   if (!contributors.length) return null;
 
+  const displayContributors = showAll ? contributors : contributors.slice(0, 4);
+
   return (
-    <section className="mb-12">
-      <div className="mb-4 px-1">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
+    <section className="mb-10 w-full">
+      <div className="mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
           {title}
         </h2>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-      >
-        {contributors.map((contributor) => (
-          <Link
-            href={`/contributor/account/${contributor.$id}`}
-            key={contributor.$id}
-            className="min-w-55 max-w-55 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
-                       shrink-0 p-4 flex flex-col items-center text-center
-                       hover:shadow-md transition"
-            style={{
-              minWidth: 200,
-              maxWidth: 200,
-            }}
-          >
-            {/* Profile Image */}
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3">
-              <Image
-                src={contributor.profileImage}
-                alt={contributor.username}
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Username */}
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
-              {contributor.username}
-            </h3>
-
-            {/* Institution + Country */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-1">
-              {contributor.institution}
-            </p>
-
-            {/* Categories */}
-            <div className="flex flex-wrap justify-center gap-1 mb-3">
-              {contributor.category?.slice(0, 2).map((cat, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-
-            {/* Followers */}
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
-              {contributor.followers || 0} followers
-            </p>
-
-            {/* Action */}
-            <button
-              onClick={(e) => {
-                e.preventDefault(); // stops navigation
-                e.stopPropagation(); // stops bubbling to Link
-                handleFollow(contributor.$id);
-              }}
-              disabled={loadingId === contributor.$id}
-              className="w-full text-xs font-medium py-2 rounded-lg transition active:scale-[0.97] disabled:opacity-70 flex items-center justify-center"
-              style={{
-                backgroundColor: contributor.isFollowing
-                  ? "#16a34a"
-                  : "#2563eb",
-                color: "#fff",
-              }}
-            >
-              {loadingId === contributor.$id ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : contributor.isFollowing ? (
-                "Following"
-              ) : (
-                "Follow"
-              )}
-            </button>
-          </Link>
+      <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {displayContributors.map((contributor) => (
+          <div key={contributor.$id} className="min-w-[280px] max-w-[280px] snap-start shrink-0 md:min-w-0 md:max-w-none md:shrink">
+            <ContributorCard
+              id={contributor.$id}
+              contributorId={contributor.$id}
+              name={contributor.username}
+              institution={contributor.institution || ""}
+              category={contributor.category}
+              followers={contributor.followers || 0}
+              imageUrl={contributor.profileImage || ""}
+              initialIsFollowing={contributor.isFollowing}
+            />
+          </div>
         ))}
       </div>
+      
+      {contributors.length > 4 && (
+        <button 
+          onClick={() => setShowAll(!showAll)}
+          className="mt-4 flex items-center justify-center gap-1.5 w-full md:w-auto md:px-8 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors mx-auto"
+        >
+          {showAll ? "Show less" : "Show more"}
+          <ChevronDown size={16} className={`transition-transform ${showAll ? "rotate-180" : ""}`} />
+        </button>
+      )}
     </section>
   );
 }
@@ -311,161 +204,87 @@ function CourseSection({
   onLoadMore?: () => void;
   isLoading?: boolean;
 }) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || !onLoadMore) return;
-
-    const handleScroll = () => {
-      if (!container) return;
-
-      const { scrollLeft, clientWidth, scrollWidth } = container;
-
-      const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 5;
-
-      if (isAtEnd) {
-        onLoadMore();
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [courses, onLoadMore]);
+  const [showAll, setShowAll] = useState(false);
 
   if (!courses.length) return null;
+  
+  const displayCourses = showAll ? courses : courses.slice(0, 8);
 
   return (
-    <section className="mb-10" style={{ marginBottom: 30 }}>
-      <div className="mb-4 px-1">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
+    <section className="mb-10 w-full">
+      <div className="mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
           {title}
         </h2>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
-        style={{ paddingTop: 20 }}
-      >
-        {courses.map((course) => (
-          <React.Fragment key={course.id}>
-            <Link
-              href={`/courses/${course.id}`}
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shrink-0 flex flex-col"
-              style={{ minWidth: 200, maxWidth: 200 }}
-            >
-              <div className="relative h-32 bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-4xl">
-                <Image
-                  src={course.thumbnailUrl}
-                  alt={course.title}
-                  width={400}
-                  height={240}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-              </div>
-
-              <div className="p-3 flex flex-col gap-2 grow justify-between">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400">
-                      <span>{course.code}</span>
-                      <span>•</span>
-                      <span>{course.session}</span>
-                    </div>
-                    {course.department && (
-                      <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 line-clamp-1 truncate">
-                        {course.department}
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
-                    {course.title}
-                  </h3>
-
-                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                    {course.description}
-                  </p>
-                </div>
-
-                <CourseContributor userId={course.user} />
-              </div>
-            </Link>
-          </React.Fragment>
-        ))}
-
-        {isLoading && (
-          <div className="flex items-center justify-center min-w-15">
-            <div className="w-6 h-6 border-2 border-gray-300 dark:border-gray-700 border-t-blue-600 rounded-full animate-spin" />
+      <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {displayCourses.map((course) => (
+          <div key={course.id} className="min-w-[280px] max-w-[280px] snap-start shrink-0 md:min-w-0 md:max-w-none md:shrink">
+            <CourseCard course={course} />
           </div>
-        )}
+        ))}
       </div>
+
+      {(courses.length > 8 || onLoadMore) && (
+        <button 
+          onClick={() => {
+            if (showAll && onLoadMore && courses.length === displayCourses.length) {
+               onLoadMore();
+            } else {
+               setShowAll(!showAll);
+            }
+          }}
+          disabled={isLoading}
+          className="mt-4 flex items-center justify-center gap-1.5 w-full md:w-auto md:px-8 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors mx-auto disabled:opacity-50"
+        >
+          {isLoading ? "Loading..." : showAll && courses.length === displayCourses.length && onLoadMore ? "Load more" : showAll ? "Show less" : "Show more"}
+          {!isLoading && <ChevronDown size={16} className={`transition-transform ${showAll && courses.length > 8 && !onLoadMore ? "rotate-180" : ""}`} />}
+        </button>
+      )}
     </section>
   );
 }
 
-function CourseSearch({
-  onCourseResults,
-  onContributorResults,
-  onLoading,
-  onCancelAll,
-}: any) {
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    if (!query.trim()) {
-      onCourseResults(null);
-      return;
-    }
-
-    const t = setTimeout(async () => {
-      onLoading(true);
-      const res = await searchCourses(query);
-      const res1 = await searchContributors(query);
-      onCourseResults(res);
-      onContributorResults(res1);
-      console.log("Results: Contributors", res1);
-      onLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(t);
-  }, [query]);
-
+function CategoryPills() {
+  const categories = [
+    "All",
+    "DaVinci Resolve",
+    "Podcasts",
+    "Music",
+    "Graphic design",
+    "Startup company",
+    "Apple",
+    "AI",
+    "Adobe After Effects",
+    "Mixes",
+    "Live",
+    "Wealth"
+  ];
+  
   return (
-    <div className="text-center w-full max-w-4xl mx-auto mb-12">
-      <h1
-        className="text-4xl font-semibold mb-3 text-gray-900 dark:text-white"
-        style={{ marginBottom: 30 }}
-      >
-        What are you learning today?
-      </h1>
-
-      <div className="relative w-full max-w-xl mx-auto">
-        <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-          size={20}
-        />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search courses..."
-          className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 dark:border-gray-800"
-          style={{ color: "#6b7280" }}
-        />
-
-        {query && (
-          <button
-            onClick={() => {
-              setQuery("");
-              onCancelAll();
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-          >
-            <X size={18} />
-          </button>
-        )}
-      </div>
+    <div 
+      className="flex gap-3 overflow-x-auto mb-8 pb-2"
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+    >
+      <style jsx>{`
+        div::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      {categories.map((cat, i) => (
+        <button
+          key={i}
+          className={clsx(
+            "whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shrink-0",
+            i === 0
+              ? "bg-gray-900 text-white dark:bg-white dark:text-black"
+              : "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+          )}
+        >
+          {cat}
+        </button>
+      ))}
     </div>
   );
 }
@@ -498,109 +317,79 @@ export default function EDLibraryHome() {
     loadMore,
   } = useHome();
 
-  const [results, setResults] = useState<Course[] | null>(null);
-  const [contributorResults, setContributorResults] = useState<HomeContributor[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent text-gray-900 dark:text-white font-sans">
-        {" "}
-        <main className="max-w-7xl mx-auto px-5 py-12 md:py-16 flex flex-col items-center">
-          {" "}
-          {/* --- Hero Skeleton --- */}{" "}
-          <div className="text-center w-full max-w-3xl mb-14">
-            {" "}
-            <div className="h-10 md:h-12 bg-gray-200 dark:bg-gray-800 rounded-lg w-3/4 mx-auto mb-4 animate-pulse" />{" "}
-            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mx-auto mb-8 animate-pulse" />{" "}
-            {/* Search Skeleton */}{" "}
-            <div className="relative w-full max-w-xl mx-auto animate-pulse">
-              {" "}
-              <div className="absolute inset-y-0 left-4 flex items-center">
-                {" "}
-                <Search
-                  className="text-gray-300 dark:text-gray-600"
-                  size={20}
-                />{" "}
-              </div>{" "}
-              <div className="w-full h-14 rounded-xl bg-gray-200 dark:bg-gray-800" />{" "}
-            </div>{" "}
-          </div>{" "}
-          {/* --- Grid Skeleton --- */}{" "}
-          <div className="w-full">
-            {" "}
-            <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-6 animate-pulse" />{" "}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {" "}
-              {Array.from({ length: 8 }).map((_, i) => (
+      <div className="min-h-screen bg-transparent">
+        <main className="max-w-7xl mx-auto px-5 py-6 flex flex-col">
+          
+          {/* Pills Skeleton */}
+          <div className="flex gap-3 overflow-hidden mb-8 pb-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-8 w-24 bg-gray-200 dark:bg-gray-800 rounded-lg shrink-0 animate-pulse" />
+            ))}
+          </div>
+
+          {/* Course Section Skeleton */}
+          <div className="w-full mb-10">
+            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded-md mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden animate-pulse flex flex-col"
+                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden animate-pulse flex flex-col h-64"
                 >
-                  {" "}
-                  {/* Thumbnail */}{" "}
-                  <div className="h-32 sm:h-36 bg-gray-200 dark:bg-gray-800" />{" "}
-                  {/* Content */}{" "}
-                  <div className="p-4 flex flex-col gap-2">
-                    {" "}
-                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />{" "}
-                    <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />{" "}
-                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-full" />{" "}
-                  </div>{" "}
+                  <div className="h-32 bg-gray-200 dark:bg-gray-800" />
+                  <div className="p-3 flex flex-col gap-2">
+                    <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mt-1" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-full mt-1" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-2/3" />
+                  </div>
                 </div>
-              ))}{" "}
-            </div>{" "}
-          </div>{" "}
-        </main>{" "}
+              ))}
+            </div>
+          </div>
+
+          {/* Contributor Section Skeleton */}
+          <div className="w-full mb-10">
+            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded-md mb-4 animate-pulse" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 animate-pulse flex flex-col items-center p-4 h-56"
+                >
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full mb-3" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-2/3 mb-2" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-4" />
+                  <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded-lg w-full mt-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </main>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-transparent">
-      <main className="max-w-7xl mx-auto px-5 py-10">
+      <main className="max-w-7xl mx-auto px-5 py-6">
 
+        <CategoryPills />
 
-        <CourseSearch
-          onCourseResults={setResults}
-          onContributorResults={setContributorResults}
-          onLoading={setSearchLoading}
-          onCancelAll={() => {
-            setResults(null);
-            setContributorResults([]);
-            setSearchLoading(false);
-          }}
-        />
-
-        {searchLoading ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 mb-4" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Searching courses…
-            </p>
-          </div>
-        ) : (results || contributorResults.length !== 0) && !searchLoading ? (
+        {user ? (
           <>
-            {!results && contributorResults.length === 0 ? (
-              <div>Not Found</div>
-            ) : (
-              <>
-                <CourseSection title="Search results" courses={results || []} />
-                <ContributorSection
-                  title="Contributors"
-                  contributors={contributorResults || []}
-                  setContributors={setContributorResults}
-                />
-              </>
-            )}
-          </>
-        ) : user ? (
-          <>
-            <CourseSection title="For You" courses={forYou} />
-            <CourseSection title="Your Library" courses={library} />
+            <CourseSection title="Recommended For You" courses={forYou} />
+            
+            <ContributorSection
+              title="Top Contributors"
+              contributors={contributors}
+            />
 
             <RectangularAd
-              ads={largeSearchAds || []} // or whichever ad array you want
+              ads={largeSearchAds || []}
               className="my-6"
             />
 
@@ -611,20 +400,14 @@ export default function EDLibraryHome() {
               isLoading={loadingMore.popular}
             />
 
-            <ContributorSection
-              title="Top Contributors"
-              contributors={contributors}
-              setContributors={setContributors}
-            />
-
             <RectangularAd
-              ads={smallMiddleAds || []} // or whichever ad array you want
+              ads={smallMiddleAds || []}
               className="my-6"
               height={130}
             />
 
             <CourseSection
-              title="New"
+              title="New Courses"
               courses={newCourses}
               onLoadMore={() => loadMore("new")}
               isLoading={loadingMore.new}
@@ -633,7 +416,6 @@ export default function EDLibraryHome() {
             <ContributorSection
               title="New Contributors"
               contributors={newContributors}
-              setContributors={setNewContributors}
             />
 
             <RectangularAd
@@ -666,12 +448,10 @@ export default function EDLibraryHome() {
             <ContributorSection
               title="New Contributors"
               contributors={newContributors}
-              setContributors={setNewContributors}
             />
             <ContributorSection
               title="Top Contributors"
               contributors={contributors}
-              setContributors={setContributorResults}
             />
           </>
         )}

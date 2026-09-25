@@ -50,7 +50,7 @@ export default function StreakCelebrationModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+        className="bg-white dark:bg-black rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 w-full max-w-sm relative overflow-hidden"
         style={{
           transform: animateIn ? "scale(1)" : "scale(0.8)",
           opacity: animateIn ? 1 : 0,
@@ -64,7 +64,7 @@ export default function StreakCelebrationModal({
         <button
           style={{ marginTop: -40 }}
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-black/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
         >
           <X size={18} style={{ color: "black" }} />
         </button>
@@ -195,7 +195,7 @@ export default function StreakCelebrationModal({
         <div className="px-6 pb-6 pt-2">
           <button
             onClick={onClose}
-            className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition active:scale-[0.97]"
+            className="w-full py-3.5 rounded-xl font-bold text-white dark:text-black text-sm transition active:scale-[0.97]"
             style={{
               background: "linear-gradient(135deg, #FF6B35, #FF4500)",
               boxShadow: "0 4px 14px rgba(255, 69, 0, 0.3)",

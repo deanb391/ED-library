@@ -9,14 +9,15 @@ import {
   Wallet,
   ShieldCheck,
   Lock,
-  TrendingUp
+  TrendingUp,
+  ArrowLeft
 } from 'lucide-react';
 import { useRouter } from "@/components/useRouter";
 
 export default function BecomeContributorPage() {
   const router = useRouter()
   return (
-    <div className="min-h-screen bg-transparent font-sans text-gray-900 dark:text-white flex flex-col py-5">
+    <div className="min-h-screen bg-transparent dark:bg-black font-sans text-gray-900 dark:text-white flex flex-col py-5">
 
       {/* --- Main Content --- */}
       <main
@@ -26,6 +27,10 @@ export default function BecomeContributorPage() {
 
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto space-y-6" style={{ marginBottom: 20 }}>
+          <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition mb-4 group mx-auto md:mx-0 md:absolute md:top-24 md:left-6 lg:left-10">
+             <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+             Back
+          </button>
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight">
             Become a Contributor
           </h1>
@@ -38,8 +43,8 @@ export default function BecomeContributorPage() {
         {/* Value Proposition Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1 */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+          <div className="bg-white dark:bg-black rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl flex items-center justify-center mb-6">
               <BookOpen size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Structured Courses</h3>
@@ -49,8 +54,8 @@ export default function BecomeContributorPage() {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+          <div className="bg-white dark:bg-black rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl flex items-center justify-center mb-6">
               <Banknote size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Flexible Monetization</h3>
@@ -60,8 +65,8 @@ export default function BecomeContributorPage() {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+          <div className="bg-white dark:bg-black rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-start text-left hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl flex items-center justify-center mb-6">
               <Wallet size={24} />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">Transparent Fees</h3>
@@ -140,8 +145,8 @@ export default function BecomeContributorPage() {
             <div className="space-y-8" style={{ marginBottom: 40 }}>
               {/* Step 1 */}
               <div className="flex gap-4 items-start">
-                <div className="mt-1 text-blue-600">
-                  <ShieldCheck size={24} fill="currentColor" className="text-blue-600" />
+                <div className="mt-1 text-gray-900 dark:text-white">
+                  <ShieldCheck size={24} fill="currentColor" className="text-gray-900 dark:text-white" />
                 </div>
                 <div>
                   <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Content Quality Review</h4>
@@ -153,7 +158,7 @@ export default function BecomeContributorPage() {
 
               {/* Step 2 */}
               <div className="flex gap-4 items-start">
-                <div className="mt-1 text-blue-600">
+                <div className="mt-1 text-gray-900 dark:text-white">
                   <Lock size={24} strokeWidth={2.5} />
                 </div>
                 <div>
@@ -166,7 +171,7 @@ export default function BecomeContributorPage() {
 
               {/* Step 3 */}
               <div className="flex gap-4 items-start">
-                <div className="mt-1 text-blue-600">
+                <div className="mt-1 text-gray-900 dark:text-white">
                   <TrendingUp size={24} strokeWidth={2.5} />
                 </div>
                 <div>
@@ -187,7 +192,7 @@ export default function BecomeContributorPage() {
               width: "100%",
               maxWidth: 620,
               padding: "14px 18px",
-              background: "#2563eb",
+              background: "#000000",
               color: "white",
               fontWeight: 700,
               borderRadius: 12,
@@ -223,8 +228,6 @@ export default function BecomeContributorPage() {
               width: "100%",
               maxWidth: 620,
               padding: "14px 18px",
-              background: "#f3f4f6",
-              color: "#111827",
               fontWeight: 700,
               borderRadius: 12,
               border: "none",
@@ -234,6 +237,7 @@ export default function BecomeContributorPage() {
               transition: "transform 120ms ease",
               willChange: "transform"
             }}
+            className="bg-gray-100 text-gray-900 dark:bg-[#111] dark:text-white"
             onMouseDown={(e) => {
               (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.96)";
             }}

@@ -102,7 +102,7 @@ function getBankName(bankCode: string): string | null {
 }
 
 
-const BRAND_BLUE = "#2563EB";
+const BRAND_BLUE = "#000000";
 
 export default function WithdrawPage() {
   const router = useRouter();
@@ -331,8 +331,8 @@ export default function WithdrawPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-black dark:border-white border-solid mb-4"></div>
         <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
@@ -340,22 +340,21 @@ export default function WithdrawPage() {
 
   if (withdrawing) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-black dark:border-white border-solid mb-4"></div>
         <p className="text-gray-700 dark:text-gray-300 text-sm">Processing, please wait...</p>
       </div>
     );
   }
 
   return (
-    <div
+    <div className="text-gray-900 dark:text-white dark:bg-black"
       style={{
         minHeight: "100vh",
         backgroundColor: "transparent",
         display: "flex",
         flexDirection: "column",
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        color: "#111827",
         paddingBottom: "5rem",
         boxSizing: "border-box"
       }}
@@ -402,7 +401,6 @@ export default function WithdrawPage() {
             style={{
               fontSize: "1.875rem",
               fontWeight: "800",
-              color: "#111827",
               margin: "0 0 0.5rem 0",
               letterSpacing: "-0.025em"
             }}
@@ -425,7 +423,7 @@ export default function WithdrawPage() {
         {/* Card 1: Available Balance */}
         <div
           style={{
-            backgroundColor: "#ffffff",
+            backgroundColor: "transparent",
             borderRadius: "1.5rem", // 24px
             padding: "1.5rem",
             boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
@@ -446,7 +444,7 @@ export default function WithdrawPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: BRAND_BLUE || "#2563eb"
+              color: "#000000"
             }}
           >
             <Wallet size={16} strokeWidth={2.5} />
@@ -469,7 +467,6 @@ export default function WithdrawPage() {
             style={{
               fontSize: "2.25rem", // Responsive scaling is tricky in pure inline, 2.25rem works great for all
               fontWeight: "800",
-              color: "#111827",
               letterSpacing: "-0.025em",
               margin: "0 0 1rem 0"
             }}
@@ -492,13 +489,10 @@ export default function WithdrawPage() {
         </div>
 
         {/* Card 2: Initiate Transfer Form */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800" style={{
             borderRadius: "1.5rem",
             padding: "1.5rem",
             boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-            border: "1px solid #f3f4f6",
             boxSizing: "border-box"
           }}
         >
@@ -506,7 +500,6 @@ export default function WithdrawPage() {
             style={{
               fontSize: "1.25rem",
               fontWeight: "700",
-              color: "#111827",
               margin: "0 0 1.5rem 0"
             }}
           >
@@ -534,7 +527,7 @@ export default function WithdrawPage() {
                   border: "1px solid #d1d5db",
                   borderRadius: "0.75rem",
                   padding: "0.875rem 1rem",
-                  backgroundColor: "#ffffff",
+                  backgroundColor: "transparent",
                   boxSizing: "border-box"
                 }}
               >
@@ -552,7 +545,6 @@ export default function WithdrawPage() {
                     background: "transparent",
                     border: "none",
                     outline: "none",
-                    color: "#111827",
                     fontSize: "1rem"
                   }}
                 />
@@ -576,7 +568,7 @@ export default function WithdrawPage() {
                   style={{
                     fontSize: "0.875rem",
                     fontWeight: "600",
-                    color: BRAND_BLUE || "#2563eb",
+                    color: "#000000",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -682,7 +674,7 @@ export default function WithdrawPage() {
                     style={{
                       fontSize: "0.875rem",
                       fontWeight: "600",
-                      color: BRAND_BLUE || "#2563eb",
+                      color: "#000000",
                       background: "none",
                       border: "none",
                       cursor: "pointer",
@@ -699,7 +691,7 @@ export default function WithdrawPage() {
                   style={{
                     fontSize: "0.875rem",
                     fontWeight: "600",
-                    color: BRAND_BLUE || "#2563eb",
+                    color: "#000000",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -717,7 +709,7 @@ export default function WithdrawPage() {
               disabled={!hasValidAmount || !wallet?.cashout_account}
               style={{
                 width: "100%",
-                backgroundColor: (!hasValidAmount || !wallet?.cashout_account) ? "#9ca3af" : (BRAND_BLUE || "#2563eb"),
+                backgroundColor: (!hasValidAmount || !wallet?.cashout_account) ? "#9ca3af" : "#000000",
                 color: "#ffffff",
                 fontWeight: "700",
                 padding: "0.875rem",
@@ -751,7 +743,7 @@ export default function WithdrawPage() {
             boxSizing: "border-box"
           }}
         >
-          <div style={{ color: BRAND_BLUE || "#2563eb", flexShrink: 0, marginTop: "0.125rem" }}>
+          <div style={{ color: "#000000", flexShrink: 0, marginTop: "0.125rem" }}>
             <Info size={20} fill="currentColor" color="white" />
           </div>
           <div>
@@ -765,13 +757,10 @@ export default function WithdrawPage() {
         </div>
 
         {/* Card 3: Recent Withdrawals */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800" style={{
             borderRadius: "1.5rem",
             padding: "1.5rem",
             boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-            border: "1px solid #f3f4f6",
             marginBottom: "1rem",
             boxSizing: "border-box"
           }}
@@ -784,14 +773,14 @@ export default function WithdrawPage() {
               marginBottom: "1.5rem"
             }}
           >
-            <h3 style={{ fontSize: "1.125rem", fontWeight: "700", color: "#111827", margin: 0 }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: "700", margin: 0 }}>
               Recent Withdrawals
             </h3>
             <button
               style={{
                 fontSize: "0.875rem",
                 fontWeight: "600",
-                color: BRAND_BLUE || "#2563eb",
+                color: "#000000",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -811,7 +800,7 @@ export default function WithdrawPage() {
                 }}
               >
                 <div>
-                  <p style={{ fontSize: "1.1rem", fontWeight: "600", color: "#111827", margin: 0 }}>
+                  <p style={{ fontSize: "1.1rem", fontWeight: "600", margin: 0 }}>
                     Withdrawal
                   </p>
                   <p style={{ fontSize: "0.75rem", color: "#6b7280", margin: "0.125rem 0 0 0" }}>
@@ -819,7 +808,7 @@ export default function WithdrawPage() {
                   </p>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#111827", margin: 0 }}>
+                  <p style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0 }}>
                     {tx.amount}
                   </p>
                   <p style={{ fontSize: "10px", fontWeight: "600", color: tx.status === "successful" ? "#059669" : "red", margin: "0.125rem 0 0 0" }}>
@@ -854,12 +843,11 @@ export default function WithdrawPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#ffffff",
+             className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800" style={{
               borderRadius: "1rem",
               padding: "1.5rem",
               width: "100%",
-              maxWidth: "384px", // max-w-sm
+              maxWidth: "384px",
               display: "flex",
               flexDirection: "column",
               gap: "1rem",
@@ -912,7 +900,7 @@ export default function WithdrawPage() {
                 boxSizing: "border-box",
                 outline: "none",
                 fontSize: "1rem",
-                backgroundColor: "#ffffff"
+                backgroundColor: "transparent"
               }}
             >
               <option value="">Select Bank</option>
@@ -958,7 +946,7 @@ export default function WithdrawPage() {
               disabled={saving}
               style={{
                 width: "100%",
-                backgroundColor: BRAND_BLUE || "#2563eb",
+                backgroundColor: "#000000",
                 color: "#ffffff",
                 padding: "0.75rem",
                 borderRadius: "0.5rem",
@@ -1018,9 +1006,8 @@ export default function WithdrawPage() {
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "1rem",
+               className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800" style={{
+              borderRadius: "1rem",
                 padding: "1.5rem",
                 width: "100%",
                 maxWidth: "384px",
@@ -1149,7 +1136,7 @@ export default function WithdrawPage() {
                 onClick={() => setShowReceipt(false)}
                 style={{
                   width: "100%",
-                  backgroundColor: "#2563eb",
+                  backgroundColor: "#000000",
                   color: "#ffffff",
                   padding: "0.75rem",
                   borderRadius: "0.5rem",

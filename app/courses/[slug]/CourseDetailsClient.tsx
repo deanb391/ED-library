@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState, useRef } from 'react';
 import {
+  CreditCard,
   Search,
   Bell,
   User,
@@ -13,11 +14,21 @@ import {
   Hexagon,
   Share2,
   BookOpen,
-  Lock
+  Lock,
+  Tag,
+  Star,
+  Activity,
+  TrendingUp,
+  MessageSquare,
+  ChevronRight,
+  ArrowLeft,
+  X,
+  Check
 } from 'lucide-react';
 import NoteViewerModal from '@/components/NoteViewerModal';
 import { useParams } from 'next/navigation';
-import { Course, deleteCourse, deleteFileFromPost, deletePost, editCourse, editPost, fetchAllPosts, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit } from '@/lib/api/courses';
+import { Course, deleteCourse, deleteFileFromPost, deletePost, editCourse, editPost, fetchAllPosts, fetchCourseById, fetchPosts, fetchPostsAsc, recordCourseVisit, fetchRelatedCourse } from '@/lib/api/courses';
+import CourseCard from '@/components/CourseCard';
 import Image from 'next/image';
 import { getCurrentUser, updateUser } from '@/lib/services/auth.service';
 import ConfirmCourseDelete from '@/components/ConfirmCourseDelete';
@@ -51,9 +62,11 @@ import { createReview, fetchReviews, Review, calculateCourseAverageRating } from
 import { getMyContributor, toggleFollowContributor } from '@/lib/api/contributors';
 import { Contributor } from '@/lib/services/contributors.service';
 import Link from 'next/link';
-import { fetchLibrary } from '@/lib/api/library';
+import { fetchLibrary, addCourseToLibrary } from '@/lib/api/library';
+import { useLibrary } from '@/hooks/useLibrary';
 import { CourseDocument, fetchDocuments, deleteDocument, createDocumentReviewRequest } from '@/lib/api/documents';
-import DocumentViewerModal from '@/components/DocumentViewerModal';
+import dynamic from 'next/dynamic';
+const DocumentViewerModal = dynamic(() => import('@/components/DocumentViewerModal'), { ssr: false });
 import DocumentReviewModal from '@/components/DocumentReviewModal';
 
 function SwipeableDocumentItem({
@@ -107,7 +120,7 @@ function SwipeableDocumentItem({
         onTouchEnd={handleTouchEnd}
       >
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+          <div className="p-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl shrink-0">
             <FileText size={28} />
           </div>
           <div>
@@ -132,7 +145,7 @@ function SwipeableDocumentItem({
               <div className="mt-3 text-xs bg-red-50 p-3 rounded-lg border border-red-100 flex flex-col gap-2">
                 <span className="text-red-700 font-medium"><strong>Reason:</strong> {doc.reviewReason}</span>
                 {onRequestReview && (
-                  <button onClick={() => onRequestReview(doc.$id!)} className="text-blue-600 font-semibold self-start hover:underline active:opacity-70 transition-opacity">
+                  <button onClick={() => onRequestReview(doc.$id!)} className="text-gray-900 dark:text-white font-semibold self-start hover:underline active:opacity-70 transition-opacity">
                     Request Human Review
                   </button>
                 )}
@@ -142,7 +155,7 @@ function SwipeableDocumentItem({
         </div>
         <button
           onClick={() => onOpen(doc)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shrink-0 w-full md:w-auto shadow-sm"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors shrink-0 w-full md:w-auto shadow-sm"
         >
           <BookOpen size={18} /> Open
         </button>
@@ -150,6 +163,7 @@ function SwipeableDocumentItem({
     </div>
   );
 }
+
 
 const data = [
   { day: "Mon", visits: 120 },
@@ -178,6 +192,7 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
 
 interface ReviewUser {
   username: string;
@@ -225,6 +240,7 @@ function ReviewItem({ review }: { review: Review }) {
     </div>
   );
 }
+
 
 export type AdItem = {
   id: string;
@@ -282,26 +298,34 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [topAds, setTopAds] = useState<AdItem[]>([])
   type ViewMode = "timeline" | "pdf";
   const [viewMode, setViewMode] = useState<ViewMode>("pdf");
-  
+
   type SortOrder = "asc" | "desc";
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   const handleSortChange = async (newOrder: SortOrder) => {
     if (newOrder === sortOrder) return;
     setSortOrder(newOrder);
-    setPosts([]);
-    setCursor(null);
-    setHasMore(true);
+    setPdfImages([]);
+    setPdfCursor(null);
+    setHasMorePdf(true);
     const fetchFunc = newOrder === "asc" ? fetchPostsAsc : fetchPosts;
-    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
-    setPosts(firstPosts);
-    setCursor(lastId);
-    setHasMore(firstPosts.length === 5);
+    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 10);
+    setPdfImages(firstPosts.flatMap(p => p.images).filter(Boolean));
+    setPdfCursor(lastId);
+    setHasMorePdf(firstPosts.length === 10);
   };
 
-  
+
   const [showTimelineText, setShowTimelineText] = useState(false);
   const [showPdfText, setShowPdfText] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setIsOffline(!navigator.onLine);
+      if (!navigator.onLine) setActiveTab("content");
+    }
+  }, []);
   const [bounceTimeline, setBounceTimeline] = useState(false);
   const [bouncePdf, setBouncePdf] = useState(false);
 
@@ -355,8 +379,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewCursor, setReviewCursor] = useState<string | undefined>(undefined);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
-  type Tab = "lecture" | "information" | "review" | "documents";
-  const [activeTab, setActiveTab] = useState<Tab>('lecture')
+  type Tab = "controls" | "content" | "review";
+  const [activeTab, setActiveTab] = useState<Tab>('content');
+  const [showOverlay, setShowOverlay] = useState<"timeline" | "pdf" | null>(null);
   const [documents, setDocuments] = useState<CourseDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
@@ -376,10 +401,154 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const [following, setFollowing] = useState(false);
   const [showFollowSuggestion, setShowFollowSuggestion] = useState(false);
   const hasIncrementedVisits = useRef(false);
+  /** True when the page was loaded from localStorage cache (offline). Triggers full refetch on reconnect. */
+  const loadedOffline = useRef(false);
+  const [suggestedCourses, setSuggestedCourses] = useState<Course[]>([]);
 
   const [hasAccess, setHasAccess] = useState<boolean>(true);
   const [accessTag, setAccessTag] = useState<"free" | "paid" | "owned" | "subscribed" | null>(null);
   const [priceMeta, setPriceMeta] = useState<any>(null);
+
+  // ===== Payment & Library State =====
+  const router = useRouter();
+  const { user, loading, showAdCourse, courseBannerAds } = useUser();
+  const { isInLibrary, addToLibraryCache } = useLibrary(user?.$id);
+  const isSaved = course ? isInLibrary(course.id) : false;
+
+  let priceAmount = 0;
+  try {
+    if (course?.price && typeof course.price === 'string' && course.price.includes('{')) {
+      const parsed = JSON.parse(course.price);
+      priceAmount = parsed.isFree ? 0 : (parsed.amount || 0);
+    } else if (course?.price) {
+      priceAmount = Number(course.price) || 0;
+    }
+  } catch (e) {}
+
+  const isFree = priceAmount === 0;
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
+
+  const handlePay = () => {
+    if (!user) { router.push('/signin'); return; }
+    if (!course) return;
+    const type = (priceMeta && typeof priceMeta === 'object' && priceMeta.type) ? priceMeta.type : 'one-time';
+    router.push(`/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course.id)}&type=${encodeURIComponent(type)}`);
+  };
+
+  const handleAddToLibrary = async () => {
+    if (!user) { router.push('/signin'); return; }
+    if (!course) return;
+    setIsAddingToLibrary(true);
+    try {
+      await addCourseToLibrary(user.$id, [course.id], 'one-time');
+      addToLibraryCache(course.id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAddingToLibrary(false);
+    }
+  };
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloaded, setIsDownloaded] = useState(false);
+
+  useEffect(() => {
+    if (course) {
+      const downloaded = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+      if (downloaded.includes(course.id)) {
+        setIsDownloaded(true);
+      }
+    }
+  }, [course]);
+
+  const handleDownload = async () => {
+    if (!user) {
+      router.push('/signin');
+      return;
+    }
+    if (!(user as any).isPremium) {
+      router.push('/premium');
+      return;
+    }
+    if (!isFree && !hasAccess && !isOwner) {
+      alert("Please pay for this course first before downloading.");
+      return;
+    }
+    if (!course) return;
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    try {
+      const { posts } = await fetchAllPosts(course.id);
+      const docs = await fetchDocuments(course.id);
+      
+      localStorage.setItem(`downloaded_course_${course.id}`, JSON.stringify(course));
+      localStorage.setItem(`downloaded_posts_${course.id}`, JSON.stringify(posts));
+      localStorage.setItem(`downloaded_docs_${course.id}`, JSON.stringify(docs));
+
+      const imagesToCache = posts.flatMap((p: any) => p.images).filter(Boolean);
+      if (imagesToCache.length === 0) {
+        setIsDownloaded(true);
+        const downloadedCourses = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+        if (!downloadedCourses.includes(course.id)) {
+          downloadedCourses.push(course.id);
+          localStorage.setItem('downloaded_courses', JSON.stringify(downloadedCourses));
+        }
+        return;
+      }
+      
+      const cache = await caches.open('course-downloads');
+      let downloadedCount = 0;
+      for (const url of imagesToCache) {
+        if (url) {
+          try {
+            const hasCache = await cache.match(url);
+            if (!hasCache) {
+               await cache.add(url);
+            }
+          } catch(e) {}
+        }
+        downloadedCount++;
+        setDownloadProgress(Math.round((downloadedCount / imagesToCache.length) * 100));
+      }
+      setIsDownloaded(true);
+      const downloadedCourses = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+      if (!downloadedCourses.includes(course.id)) {
+        downloadedCourses.push(course.id);
+        localStorage.setItem('downloaded_courses', JSON.stringify(downloadedCourses));
+      }
+    } catch (e) {
+      console.error("Download error:", e);
+    } finally {
+      setIsDownloading(false);
+      setTimeout(() => setDownloadProgress(0), 1000);
+    }
+  };
+
+  const handleRemoveDownload = async () => {
+    if (!course) return;
+    // Remove from downloaded_courses list
+    const downloaded = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+    const updated = downloaded.filter((id: string) => id !== course.id);
+    localStorage.setItem('downloaded_courses', JSON.stringify(updated));
+
+    // Remove cached JSON data
+    localStorage.removeItem(`downloaded_course_${course.id}`);
+    localStorage.removeItem(`downloaded_posts_${course.id}`);
+    localStorage.removeItem(`downloaded_docs_${course.id}`);
+
+    // Remove cached images from CacheStorage
+    try {
+      const cache = await caches.open('course-downloads');
+      const keys = await cache.keys();
+      // We can't know exactly which URLs belong to this course without re-fetching,
+      // so we mark as not downloaded — the cache entries will be overwritten on next download.
+    } catch (e) {}
+
+    setIsDownloaded(false);
+  };
+
 
   function pickRandom<T>(arr: T[]): T | null {
     if (!arr.length) return null;
@@ -387,11 +556,6 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     return arr[index];
   }
 
-
-
-
-  const router = useRouter();
-  const { user, loading, showAdCourse, courseBannerAds } = useUser();
 
   const isActiveRef = useRef(false);
 
@@ -406,7 +570,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             courseId: course.id,
-            contributorId: course.user,
+            contributorId: typeof course.user === 'object' ? (course.user?.$id || course.user?.id) : course.user,
             userId: user.$id,
             activeTimeMs: 90000
           })
@@ -447,18 +611,43 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
 
   const fetchTimeLine = async () => {
-    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
-    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
-    setPosts(firstPosts);
-    setCursor(lastId);
-    setHasMore(firstPosts.length === 5);
+    try {
+      const fetchFunc = fetchPostsAsc;
+      const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
+      setPosts(firstPosts);
+      setCursor(lastId);
+      setHasMore(firstPosts.length === 5);
+    } catch (e) {
+      if (isOffline) {
+        const cached = localStorage.getItem(`downloaded_posts_${courseId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          // file view is always ascending offline since we save it that way or we enforce it
+          setPosts(parsed);
+        }
+        setHasMore(false);
+      }
+    }
   }
 
   const fetchPDf = async () => {
-    const { posts, lastId } = await fetchPostsAsc(courseId, "10");
-    setPdfImages(posts.flatMap(p => p.images));
-    setPdfCursor(lastId);
-    setHasMorePdf(posts.length === 10);
+    try {
+      const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
+      const { posts, lastId } = await fetchFunc(courseId, 10);
+      setPdfImages(posts.flatMap(p => p.images).filter(Boolean));
+      setPdfCursor(lastId);
+      setHasMorePdf(posts.length === 10);
+    } catch (e) {
+      if (isOffline) {
+        const cached = localStorage.getItem(`downloaded_posts_${courseId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (sortOrder === "desc") parsed.reverse();
+          setPdfImages(parsed.flatMap((p: any) => p.images).filter(Boolean));
+        }
+        setHasMorePdf(false);
+      }
+    }
   }
 
   const loadMoreReviews = async () => {
@@ -480,6 +669,9 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   };
 
   useEffect(() => {
+    // Reviews are not cached locally, so skip this fetch when offline
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+
     const loadInitialReviews = async () => {
       setLoadingReviews(true);
 
@@ -498,8 +690,19 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     loadInitialReviews();
   }, [courseId]);
 
+
   useEffect(() => {
     if (!courseId) return;
+
+    // Don't attempt to fetch documents while offline — load from cache instead
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      const cached = localStorage.getItem(`downloaded_docs_${courseId}`);
+      if (cached) {
+        try { setDocuments(JSON.parse(cached)); } catch {}
+      }
+      setLoadingDocs(false);
+      return;
+    }
 
     let isMounted = true;
     let timeoutId: NodeJS.Timeout;
@@ -516,7 +719,12 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         }
       } catch (err) {
         console.error(err);
-        if (isMounted) {
+        if (typeof window !== "undefined" && !navigator.onLine) {
+           const cached = localStorage.getItem(`downloaded_docs_${courseId}`);
+           if (cached && isMounted) {
+             setDocuments(JSON.parse(cached));
+           }
+        } else if (isMounted) {
           timeoutId = setTimeout(() => fetchLoop(false), 15000);
         }
       } finally {
@@ -533,8 +741,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   }, [courseId]);
 
   useEffect(() => {
-    if (user && course && user.$id !== course.user) {
-      // Record visit only once
+    // Only record a visit when online
+    if (user && course && user.$id !== course.user && navigator.onLine) {
       recordCourseVisit(courseId, user.$id).catch(console.error);
     }
   }, [courseId, user, course]);
@@ -543,8 +751,48 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     if (loading) return;
 
     const init = async () => {
+      const online = typeof navigator !== "undefined" ? navigator.onLine : true;
+
       if (user?.isAdmin) setIsAdmin(true);
 
+      // ─── OFFLINE PATH: load everything from localStorage cache ──────────────
+      if (!online) {
+        loadedOffline.current = true;
+        const cachedCourse = localStorage.getItem(`downloaded_course_${courseId}`);
+        if (cachedCourse) {
+          const courseDoc = JSON.parse(cachedCourse);
+          setCourse(courseDoc);
+
+          if (courseDoc.analytics) {
+            const data = courseDoc.analytics;
+            setVisitsPerDay(data.visits_per_day || { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
+            setTotalReach(data.reached?.length || 0);
+          }
+
+          // Grant access via downloads list
+          const downloadedCourses = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+          if (downloadedCourses.includes(courseDoc.id)) {
+            setHasAccess(true);
+            setAccessTag("owned");
+          }
+
+          // Load cached posts for timeline/pdf
+          const cachedPosts = localStorage.getItem(`downloaded_posts_${courseId}`);
+          if (cachedPosts) {
+            const posts = JSON.parse(cachedPosts);
+            setPosts(posts);
+            setPdfImages(posts.flatMap((p: any) => p.images).filter(Boolean));
+          }
+
+          const defaultView: ViewMode = courseDoc.isOnGoing ? "timeline" : "pdf";
+          setViewMode(defaultView);
+        }
+
+        setLoading(false);
+        return;
+      }
+
+      // ─── ONLINE PATH: normal full fetch ─────────────────────────────────────
       if (courseBannerAds.length > 0) {
         const value = showAdCourse()
         setBannerAdOpen(value)
@@ -563,8 +811,23 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
       }
 
 
-      const courseDoc = await fetchCourseById(courseId);
+      let courseDoc: any = null;
+      try {
+        courseDoc = await fetchCourseById(courseId);
+      } catch (err) {
+        const cached = localStorage.getItem(`downloaded_course_${courseId}`);
+        if (cached) courseDoc = JSON.parse(cached);
+      }
+      if (!courseDoc) return;
       setCourse(courseDoc);
+
+      if (user) {
+        fetchRelatedCourse(user).then((courses) => {
+          setSuggestedCourses(courses);
+        }).catch((err) => {
+          console.error("Failed to fetch suggested courses:", err);
+        });
+      }
 
       // TEMP: Sync pageCount logic (to be removed later)
       try {
@@ -578,17 +841,21 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
         console.error("PAGE COUNT SYNC ERROR:", err);
       }
 
-      if (courseDoc.user === user?.$id) setActiveTab("information");
+      if (courseDoc.user === user?.$id) setActiveTab("controls");
 
       // ===== COURSE LOCKING LOGIC =====
       try {
         let library: any = null;
 
         if (user) {
-          const res = (await fetchLibrary(user.$id)).wallet;
-          library = res;
+          try {
+            const res = (await fetchLibrary(user.$id)).wallet;
+            library = res;
+          } catch (e) {
+            // Ignore offline errors for library fetch
+          }
 
-          // TEMP fallback (so app doesn’t crash if not implemented yet)
+          // TEMP fallback (so app doesn't crash if not implemented yet)
           if (!library) {
             library = null;
           }
@@ -600,17 +867,29 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
 
         let parsedPrice: any = null;
+        let isFree = false;
 
-        try {
-          parsedPrice = JSON.parse(courseDoc.price || "{}");
-        } catch {
-          parsedPrice = null;
+        if (!courseDoc.price) {
+          isFree = true;
+          parsedPrice = "Free";
+        } else if (typeof courseDoc.price === 'string') {
+          try {
+            parsedPrice = JSON.parse(courseDoc.price);
+            isFree = parsedPrice.isFree === true || parsedPrice.amount === 0 || !parsedPrice.amount;
+          } catch (e) {
+            const num = Number(courseDoc.price);
+            isFree = isNaN(num) || num === 0;
+            parsedPrice = courseDoc.price;
+          }
+        } else if (typeof courseDoc.price === 'number') {
+          isFree = courseDoc.price === 0;
+          parsedPrice = String(courseDoc.price);
         }
 
         setPriceMeta(parsedPrice);
 
-        const isFree = parsedPrice?.isFree === true;
-        const isOwner = courseDoc.user === user?.$id;
+        const courseUserId = typeof courseDoc.user === 'object' ? (courseDoc.user?.$id || courseDoc.user?.id) : courseDoc.user;
+        const isOwner = courseUserId === user?.$id;
 
         if (isOwner) {
           localHasAccess = true;
@@ -619,8 +898,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           localHasAccess = true;
           localTag = "free";
         } else {
-          const oneTime = library?.oneTime ? JSON.parse(library.oneTime) : [];
-          const subscription = library?.subscription ? JSON.parse(library.subscription) : [];
+          const oneTime = library?.oneTime ? (typeof library.oneTime === 'string' ? JSON.parse(library.oneTime) : library.oneTime) : [];
+          const subscription = library?.subscription ? (typeof library.subscription === 'string' ? JSON.parse(library.subscription) : library.subscription) : [];
 
           const isOwned = oneTime.includes(courseDoc.id);
           const isInSubscriptionLibrary = subscription.includes(courseDoc.id);
@@ -650,6 +929,13 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           }
         }
 
+        // Also grant access if downloaded (belt-and-suspenders for edge cases)
+        const downloadedCourses = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+        if (downloadedCourses.includes(courseDoc.id)) {
+          localHasAccess = true;
+          localTag = "owned";
+        }
+
         setHasAccess(localHasAccess);
         setAccessTag(localTag);
         setPriceMeta(parsedPrice);
@@ -673,7 +959,8 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
       }
 
       try {
-        const c_response = await getMyContributor(courseDoc?.user)
+        const courseUserId = typeof courseDoc.user === 'object' ? (courseDoc.user?.$id || courseDoc.user?.id) : courseDoc.user;
+        const c_response = await getMyContributor(courseUserId)
         setContributor(c_response);
         const raw = c_response?.followersIds;
 
@@ -717,10 +1004,20 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     };
 
     init();
+
+    // When the user comes back online after loading from cache, re-run the full fetch
+    const handleOnline = () => {
+      if (loadedOffline.current) {
+        loadedOffline.current = false;
+        init();
+      }
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
   }, [courseId, courseBannerAds.length, user, loading]);
 
-  const isOwner = course?.user === user?.$id;
-
+  const courseUserIdTop = typeof course?.user === 'object' ? (course.user?.$id || course.user?.id) : course?.user;
+  const isOwner = user && courseUserIdTop && (courseUserIdTop === user.$id);
   useEffect(() => {
     hasIncrementedVisits.current = false;
   }, [courseId]);
@@ -755,24 +1052,11 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const effectiveTabs: Tab[] = React.useMemo(() => {
     const tabs: Tab[] = [];
-    if (isOwner) tabs.push("information");
-
-    // Hide lecture notes if there are documents but no posts
-    const shouldHideLecture = displayedDocuments.length > 0 && posts.length === 0;
-    if (!shouldHideLecture) {
-      tabs.push("lecture");
-    }
-
-    if (displayedDocuments.length > 0 || isOwner) {
-      tabs.push("documents");
-    }
-
-    if (!isOwner && displayedDocuments.length > 0) {
-      tabs.push("review");
-    }
-
+    if (isOwner) tabs.push("controls");
+    tabs.push("content");
+    if (!isOwner) tabs.push("review");
     return tabs;
-  }, [isOwner, displayedDocuments.length, posts.length]);
+  }, [isOwner]);
 
 
   useEffect(() => {
@@ -815,9 +1099,11 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const loadMorePosts = async () => {
     if (!hasMore || loadingPosts) return;
+    // Don't attempt network fetch offline
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
     setLoadingPosts(true);
-    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
+    const fetchFunc = fetchPostsAsc;
 
     const { posts: newPosts, lastId } = await fetchFunc(
       courseId,
@@ -834,10 +1120,13 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const loadMorePdf = async () => {
     if (!hasMorePdf || loadingPdf) return;
+    // Don't attempt network fetch offline
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
     setLoadingPdf(true);
+    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
 
-    const { posts, lastId } = await fetchPostsAsc(
+    const { posts, lastId } = await fetchFunc(
       courseId,
       10,
       pdfCursor || undefined
@@ -968,549 +1257,664 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     }
   };
 
-
   if (lloading || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
+      <div className="min-h-screen bg-white dark:bg-black animate-pulse">
+        {/* Banner Skeleton */}
+        <div className="w-full h-64 md:h-80 bg-gray-200 dark:bg-gray-900"></div>
+
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex-1 w-full">
+              {/* Title & Meta Skeleton */}
+              <div className="h-4 bg-gray-200 dark:bg-gray-900 rounded w-32 mb-4"></div>
+              <div className="h-10 bg-gray-200 dark:bg-gray-900 rounded w-3/4 mb-4"></div>
+              <div className="flex gap-2 mb-8">
+                <div className="h-8 bg-gray-200 dark:bg-gray-900 rounded-full w-16"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-900 rounded-full w-24"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-900 rounded-full w-20"></div>
+              </div>
+
+              {/* Contributor Skeleton */}
+              <div className="flex items-center gap-3 mb-10">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-900"></div>
+                <div className="flex flex-col gap-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-900 rounded w-24"></div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-900 rounded w-32"></div>
+                </div>
+              </div>
+
+              {/* Tabs Skeleton */}
+              <div className="flex gap-6 border-b border-gray-200 dark:border-gray-900 pb-2 mb-6">
+                <div className="h-5 bg-gray-200 dark:bg-gray-900 rounded w-20"></div>
+                <div className="h-5 bg-gray-200 dark:bg-gray-900 rounded w-20"></div>
+              </div>
+
+              {/* Content Skeleton */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-48 bg-gray-200 dark:bg-gray-900 rounded-3xl"></div>
+                <div className="h-48 bg-gray-200 dark:bg-gray-900 rounded-3xl"></div>
+              </div>
+            </div>
+
+            {/* Desktop Reviews Skeleton */}
+            <div className="hidden lg:block w-[350px] shrink-0">
+              <div className="h-[400px] bg-gray-200 dark:bg-gray-900 rounded-3xl"></div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white font-sans pb-10">
 
+      {/* Full-bleed Thumbnail Banner */}
+      <div className="relative w-full h-48 md:h-64 bg-gray-100 dark:bg-gray-900">
+        <img
+          src={course?.thumbnailUrl}
+          alt={course?.title}
+          className="w-full h-full object-cover"
+        />
+        {/* Gradient overlay blending into background */}
+        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-black to-transparent"></div>
 
+        {/* Floating Action Buttons over Image */}
+        <div className="absolute top-4 left-4 z-20">
+          <button
+            onClick={() => router.back()}
+            className="p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+        <div className="absolute top-4 right-4 flex items-center gap-3 z-20">
+          <button
+            onClick={handleShare}
+            className="p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md"
+          >
+            <Share2 size={20} />
+          </button>
+          {isOwner && (
+            <button
+              onClick={() => setIsCourseDeleteOpen(true)}
+              className="p-2.5 bg-black/40 hover:bg-black/60 text-red-400 rounded-full transition-colors backdrop-blur-md"
+              title="Delete Course"
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* --- Main Content --- */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-2">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1 w-full max-w-full overflow-hidden">
 
 
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
-              {course?.title}
-            </h1>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
-              <User size={16} />
-              <span>{course?.lecturer}</span>
-              <span className="mx-1">•</span>
-              <span>{course?.code}</span>
-            </div>
+            {/* Header Section */}
+            <div className="mb-8 mt-4 md:mt-6">
+              <div className="text-sm font-semibold mb-2 text-gray-500 dark:text-gray-400">
+                <span className="text-gray-900 dark:text-white dark:text-gray-900 dark:text-white">{course?.code}</span> • {course?.session || "2023/2024"}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400 ml-0 mt-3">
-              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                {course?.department}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                {course?.university || "University unavailable"}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                Level {String(course?.level)}
-              </span>
-            </div>
+              <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+                {course?.title}
+              </h1>
 
-            {accessTag && (
-              <div className="flex gap-2 mt-3 text-xs font-medium">
-                {accessTag === "free" && (
-                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
+              <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm font-bold text-gray-700 dark:text-gray-300">
+                <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                  {course?.department}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                  Level {String(course?.level)}
+                </span>
+
+                {/* Price Badge */}
+                {!isFree && !isOwner && !isSaved && !accessTag?.includes("subscribed") ? (
+                  <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                    NGN {priceAmount.toLocaleString()}
+                  </span>
+                ) : null}
+
+                {isFree && (
+                  <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
                     Free
                   </span>
                 )}
-
-                {accessTag === "paid" && (
-                  <>
-                    <span className="px-3 py-1 rounded-full bg-red-500 text-white text-xs font-medium">
-                      Paid ({priceMeta?.type})
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-medium">
-                      {priceMeta?.currency} {(priceMeta.type === "one-time" ? (Number(course?.pageCount) * priceMeta?.amount) : priceMeta.amount)}
-                    </span>
-                  </>
+                {isSaved && !isOwner && (
+                  <span className="px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold text-xs">
+                    Saved
+                  </span>
                 )}
-
-                {accessTag === "owned" && (
-                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
+                {isOwner && (
+                  <span className="px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold text-xs">
                     Owned
                   </span>
                 )}
-
                 {accessTag === "subscribed" && (
-                  <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-medium">
+                  <span className="px-3 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white dark:bg-gray-900/40 dark:text-gray-700 dark:text-gray-300">
                     Subscribed
                   </span>
                 )}
-              </div>
-            )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleShare}
-              className="p-2 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg transition-colors border border-gray-200 dark:border-gray-800 flex items-center justify-center">
-              <Share2 size={18} />
-            </button>
-            {isOwner && (
-              <>
-                <button
-                  onClick={() => setShowEditCourse(true)}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                  <Pencil size={16} />
-                  Edit Course
-                </button>
-                <button
-                  onClick={(e) => { setIsCourseDeleteOpen(true) }}
-                  className="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition-colors border border-red-100">
-                  <Trash2 size={18} />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {
-          !isOwner && (
-            <div className="flex items-center gap-3 mb-3">
-
-              {/* Avatar */}
-              <button className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden" onClick={() => router.push(`/contributor/account/${contributor?.$id}`)}>
-                <img
-                  src={contributor?.profileImage}
-                  alt={contributor?.username}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-
-              {/* Username + Follow */}
-              <div className="flex items-center gap-2 text-sm">
-
-                <Link className="font-semibold text-gray-900 dark:text-white" href={`/contributor/account/${contributor?.$id}`}>
-                  {contributor?.username || "unknown"}
-                </Link>
-
-                <span className="text-gray-300 dark:text-gray-600">•</span>
-
-                <button
-                  className={`font-semibold flex items-center gap-2 ${following
-                    ? "text-gray-500 dark:text-gray-400"
-                    : "text-blue-600 hover:underline"
-                    }`}
-                  onClick={handleFollow}
-                  disabled={follow}
-                >
-                  {follow ? (
-                    <span
-                      style={{
-                        width: 14,
-                        height: 14,
-                        border: "2px solid currentColor",
-                        borderTop: "2px solid transparent",
-                        borderRadius: "50%",
-                        display: "inline-block",
-                        animation: "spin 0.8s linear infinite",
-                      }}
-                    />
-                  ) : null}
-
-                  {following ? "Following" : "Follow"}
-                </button>
-
+                {(isOwner || isSaved || accessTag === "subscribed") && (
+                  isDownloaded ? (
+                    <button
+                      onClick={handleRemoveDownload}
+                      className="ml-auto px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/40 transition"
+                    >
+                      <Trash2 className="text-red-500 w-4 h-4" />
+                      <span className="text-xs font-bold text-red-600 dark:text-red-400">Remove from Downloads</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="ml-auto px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                    >
+                      {isDownloading ? (
+                        <>
+                          <div className="relative w-4 h-4">
+                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                              <path
+                                className="text-gray-300 dark:text-gray-600"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="text-blue-500"
+                                strokeDasharray={`${downloadProgress}, 100`}
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                            </svg>
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                            Saving... {downloadProgress}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="text-gray-500 w-4 h-4" />
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Save for Offline</span>
+                        </>
+                      )}
+                    </button>
+                  )
+                )}
               </div>
             </div>
-          )
-        }
 
-        {/* Meta row */}
-        {/*
+            {!isOwner && (
+              <div className="flex items-center gap-4 mb-8">
+                {/* Avatar */}
+                <button className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden shrink-0" onClick={() => router.push(`/contributor/account/${contributor?.$id}`)}>
+                  <img
+                    src={contributor?.profileImage}
+                    alt={contributor?.username}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+
+                {/* Info + Follow */}
+                <div className="flex items-start justify-start flex-1 flex-col">
+                  <div className="flex items-center gap-2">
+                    <Link className="font-bold text-gray-900 dark:text-white text-sm md:text-base" href={`/contributor/account/${contributor?.$id}`}>
+                      {contributor?.username || "unknown"}
+                    </Link>
+                    <button
+                      className={`text-sm font-bold ${following
+                        ? "text-gray-500 dark:text-gray-400"
+                        : "text-gray-900 dark:text-white hover:text-gray-900 dark:hover:text-white"
+                        }`}
+                      onClick={handleFollow}
+                      disabled={follow}
+                    >
+                      {follow ? "..." : following ? "Following" : "Follow"}
+                    </button>
+                  </div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {course?.university || "University unavailable"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Meta row */}
+            {/*
 
         <NativeBanner />
 */}
 
 
-        {/* Tabs */}
-        <div className=" mb-2 overflow-x-auto">
-          <div className="flex gap-8 min-w-max">
-            {
-              isOwner && (
+            {/* Tabs */}
+            <div className="mb-2 overflow-x-auto border-b border-gray-200 dark:border-gray-800">
+              <div className="flex gap-8 min-w-max">
+                {isOwner && !isOffline && (
+                  <button
+                    onClick={() => setActiveTab("controls")}
+                    className={`pb-3 font-semibold text-sm transition-colors border-b-4 ${activeTab === "controls"
+                        ? "border-black dark:border-white text-gray-900 dark:text-white"
+                        : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                      }`}
+                  >
+                    Controls
+                  </button>
+                )}
+
                 <button
-                  onClick={() => setActiveTab("information")}
-                  className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "information" ? 4 : 0, borderBottomColor: activeTab === "information" ? "#155dfc" : "", color: activeTab === "information" ? "#155dfc" : "#6a7282" }}>
-                  Information
-                </button>
-              )
-            }
-
-            <button
-              onClick={() => setActiveTab('lecture')}
-              className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "lecture" ? 4 : 0, borderBottomColor: activeTab === "lecture" ? "#155dfc" : "", color: activeTab === "lecture" ? "#155dfc" : "#6a7282" }}>
-              Lecture Notes
-            </button>
-
-            <button
-              onClick={() => setActiveTab('documents')}
-              className="pb-2 font-semibold text-sm" style={{ borderBottomWidth: activeTab === "documents" ? 4 : 0, borderBottomColor: activeTab === "documents" ? "#155dfc" : "", color: activeTab === "documents" ? "#155dfc" : "#6a7282" }}>
-              Documents
-            </button>
-
-            {
-              !isOwner && (
-                <button
-                  onClick={() => setActiveTab('review')}
-                  className="pb-2   font-semibold text-sm" style={{ borderBottomWidth: activeTab === "review" ? 4 : 0, borderBottomColor: activeTab === "review" ? "#155dfc" : "", color: activeTab === "review" ? "#155dfc" : "#6a7282" }}>
-                  Reviews ({totalReviews})
-                </button>
-              )
-            }
-
-          </div>
-        </div>
-
-        {
-          activeTab === "information" && isOwner && (
-            <div className="max-w-6xl mx-auto px-0 py-6 space-y-6">
-
-              {/* 1. REVIEW STATUS */}
-              {/* <section className="bg-yellow-50 border border-yellow-200 rounded-xl p-4" style={{borderWidth: 0.1}}>
-    <h2 className="text-sm font-semibold text-yellow-800">
-      Course Under Review
-    </h2>
-    <p className="text-sm text-yellow-700 mt-1">
-      This course is currently under review. Reviews typically take between 24 to 72 hours.
-      You will be notified once the course becomes active.
-    </p>
-  </section> */}
-
-              {/* 2. COURSE META */}
-              <section className="bg-white dark:bg-gray-900 rounded-xl p-4 md:p-5 shadow-sm hover:shadow-md transition mb-6 relative">
-
-                {/* EDIT BUTTON */}
-                <button
-                  onClick={() => setShowEditCourse(true)}
-                  className="absolute top-4 right-4 text-xs md:text-sm px-3 py-1.5 rounded-md bg-blue-600 hover:bg-gray-200 dark:bg-gray-800 transition text-white"
+                  onClick={() => setActiveTab("content")}
+                  className={`pb-3 font-semibold text-sm transition-colors border-b-4 ${activeTab === "content"
+                      ? "border-black dark:border-white text-gray-900 dark:text-white"
+                      : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                    }`}
                 >
-                  Edit
+                  Content
                 </button>
 
-                <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                {!isOwner && !isOffline && (
+                  <button
+                    onClick={() => setActiveTab("review")}
+                    className={`lg:hidden pb-3 font-semibold text-sm transition-colors border-b-4 ${activeTab === "review"
+                        ? "border-black dark:border-white text-gray-900 dark:text-white"
+                        : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                      }`}
+                  >
+                    Reviews ({totalReviews})
+                  </button>
+                )}
+              </div>
+            </div>
 
-                  {/* Thumbnail */}
-                  <div className="w-full md:w-40 h-48 md:h-40 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0" style={{ width: 200 }}>
-                    <img
-                      src={course?.thumbnailUrl}
-                      alt={course?.title}
-                      className="w-full h-full object-cover"
+            {activeTab === "controls" && isOwner && (
+              <div className="max-w-6xl mx-auto px-0 py-6 space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Course Controls</h2>
+                  <button
+                    onClick={() => setShowEditCourse(true)}
+                    className="flex items-center gap-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors border border-gray-200 dark:border-gray-800"
+                  >
+                    <Pencil size={16} />
+                    Edit Course
+                  </button>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Price */}
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2.5 rounded-xl">
+                      <Tag size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-900 dark:text-white text-lg">
+                          {isFree ? "Free" : `NGN ${priceAmount.toLocaleString()}`}
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">Price</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pages */}
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="bg-gray-200 dark:bg-gray-700 dark:bg-gray-700/30 text-gray-900 dark:text-white dark:text-gray-700 dark:text-gray-300 p-2.5 rounded-xl">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-900 dark:text-white text-lg">{course?.pageCount || 0}</span>
+                        <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">Pages</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rating */}
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 p-2.5 rounded-xl">
+                      <Star size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-900 dark:text-white text-lg">{avgRating ? avgRating.toFixed(1) : "—"}</span>
+                        <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">Rating</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2.5 rounded-xl">
+                      <Activity size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-900 dark:text-white text-lg">{course?.isOnGoing ? "Live" : "Past"}</span>
+                        <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">Status</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reach Analytics */}
+                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-6 text-purple-600 dark:text-purple-400">
+                    <TrendingUp size={20} />
+                    <h3 className="font-bold text-gray-900 dark:text-white text-base">Reach Analytics</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="font-bold text-gray-900 dark:text-white text-xl">—</span>
+                      <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">Today</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center border-l border-r border-gray-200 dark:border-gray-800">
+                      <span className="font-bold text-gray-900 dark:text-white text-xl">—</span>
+                      <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">This Week</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="font-bold text-gray-900 dark:text-white text-xl">—</span>
+                      <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mt-1">All Time</span>
+                    </div>
+                  </div>
+                  <div className="mt-8">
+                    <AnalyticsChart visitsPerDay={visitsPerDay} />
+                  </div>
+                </div>
+
+                {/* Reviews Link */}
+                <button
+                  onClick={() => setActiveTab("review")}
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="text-gray-900 dark:text-white" size={20} />
+                    <span className="font-bold text-gray-900 dark:text-white">{totalReviews} Reviews</span>
+                  </div>
+                  <ChevronRight size={20} className="text-gray-500" />
+                </button>
+              </div>
+            )}
+
+            {activeTab === "content" && (
+              <div className="max-w-6xl mx-auto px-0 py-6 space-y-8">
+
+                {(!isFree && !isSaved && !isOwner) ? (
+                  <div className="flex flex-col gap-4">
+                    <button
+                      onClick={() => setShowOverlay("pdf")}
+                      className="bg-white dark:bg-black rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-28 md:h-32 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm border border-gray-200 dark:border-gray-800"
+                    >
+                      <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-gray-100 dark:bg-gray-900 p-2 md:p-3 rounded-full">
+                        <FileText className="text-gray-900 dark:text-white" size={20} />
+                      </div>
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">View Preview</h3>
+                    </button>
+                    <button
+                      onClick={handlePay}
+                      className="bg-black dark:bg-white rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-28 md:h-32 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm border border-gray-800"
+                    >
+                      <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-white/20 dark:bg-black/20 p-2 md:p-3 rounded-full backdrop-blur-md">
+                        <CreditCard className="text-white dark:text-black" size={20} />
+                      </div>
+                      <h3 className="text-lg md:text-xl font-bold text-white dark:text-black mb-1 md:mb-2">Proceed to Payment</h3>
+                      <p className="text-gray-300 dark:text-gray-600 text-xs md:text-sm font-medium">NGN {priceAmount.toLocaleString()}</p>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <button onClick={() => setShowOverlay("pdf")} className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-32 md:h-40 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm">
+                        <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-white dark:bg-black p-2 md:p-3 rounded-full shadow-sm">
+                          <FileText className="text-gray-900 dark:text-white" size={20} />
+                        </div>
+                        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">File View</h3>
+                        <p className="text-gray-500 text-xs md:text-sm font-medium hidden md:block">View structured notes</p>
+                      </button>
+
+                      <button onClick={() => { setViewMode("timeline"); setShowOverlay("timeline"); posts.length === 0 && fetchTimeLine(); }} className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-32 md:h-40 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm">
+                        <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-gray-100 dark:bg-gray-900 p-2 md:p-3 rounded-full">
+                          <Hexagon className="text-gray-900 dark:text-white" size={20} />
+                        </div>
+                        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">Timeline</h3>
+                        <p className="text-gray-500 text-xs md:text-sm font-medium hidden md:block">Interactive posts</p>
+                      </button>
+                    </div>
+
+                    {isFree && !isSaved && !isOwner && !isDownloaded && (
+                      <button
+                        onClick={handleAddToLibrary}
+                        disabled={isAddingToLibrary}
+                        className="w-full py-4 rounded-2xl bg-black dark:bg-white text-white dark:text-black font-bold flex items-center justify-center gap-2 mt-2"
+                      >
+                        {isAddingToLibrary ? "Adding..." : "Add to Library (Free)"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+
+                <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 md:p-8">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">About this course</h3>
+                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{course?.description || "No description provided."}</p>
+                </div>
+
+                {suggestedCourses.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Suggested Courses</h3>
+                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x hide-scrollbar">
+                      {suggestedCourses.slice(0, 5).map((suggested) => (
+                        <div key={suggested.id} className="min-w-[280px] max-w-[280px] snap-start shrink-0">
+                          <CourseCard course={suggested} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* OVERLAYS */}
+            {showOverlay === "timeline" && (
+              <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setShowOverlay(null)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <ChevronDown className="rotate-90" size={24} />
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{course?.code} - Timeline</h2>
+                  </div>
+                </div>
+                <div className="max-w-2xl mx-auto p-4 md:p-6 pb-24">
+
+                  {(hasAccess ? posts : posts.slice(0, 1)).map(post => (
+                    <div key={post.id} className="mb-5">
+                      <ImageMessages
+                        id={post.id}
+                        images={hasAccess ? post.images : post.images.slice(0, 3)}
+                        message={post.description}
+                        onPress={(index) => {
+                          if (user) {
+                            setSelectedNoteIndex(index);
+                            setModalImages(hasAccess ? post.images : post.images.slice(0, 3));
+                            setIsViewerOpen(true);
+                            setPostId(post.id)
+                          } else {
+                            router.push("/signup")
+                          }
+                        }}
+                        onLongPress={(id) => {
+                          if (!user?.isAdmin) return;
+                          const found = posts.find(p => p.id === id);
+                          if (!found) return;
+                          setActivePost(found);
+                          setShowActions(true);
+                          setPostId(post.id);
+                        }}
+                        course_user={course?.user}
+                      />
+
+                      {(isOwner || user?.isAdmin) && (
+
+
+                        <button
+                          onClick={() => {
+                            if (!isOwner && !user?.isAdmin) return;
+
+                            const found = posts.find(p => p.id === post.id);
+                            if (!found) return;
+
+                            setActivePost(found);
+                            setShowActions(true);
+                            setPostId(post.id);
+                          }}
+                          className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+
+
+                      )}
+                      {!hasAccess && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="text-xs bg-black/40 text-white px-2 py-1 rounded">
+                            Preview
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {!hasAccess && course?.id && priceMeta && !isDownloaded && (
+                    <div className="mt-6">
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            router.push("/signup");
+                            return;
+                          }
+                          const type = priceMeta?.type ?? "one-time";
+                          router.push(
+                            `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course.id)}&type=${encodeURIComponent(type)}`
+                          );
+                        }}
+                        className="w-full py-3 rounded-xl text-white font-semibold"
+                        style={{ backgroundColor: "#155dfc" }}
+                      >
+                        {priceMeta?.type === "subscription" ? "Subscribe to Course" : "Pay for Course"}
+                      </button>
+                    </div>
+                  )}
+
+
+
+
+
+                  {loadingPosts && (
+                    <div className="flex justify-center py-6">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showOverlay === "pdf" && (
+              <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => setShowOverlay(null)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <ChevronDown className="rotate-90" size={24} />
+                    </button>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{course?.code} - File View</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Sort:</span>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => handleSortChange(e.target.value as any)}
+                      className="text-xs font-medium border border-gray-200 dark:border-gray-800 rounded-md p-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none"
+                    >
+                      <option value="asc">Ascending</option>
+                      <option value="desc">Descending</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="max-w-4xl mx-auto p-4 md:p-6 pb-24">
+
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Lecture Notes</h3>
+                    <PdfImageList
+                      images={(isFree || isSaved || isOwner) ? pdfImages : pdfImages.slice(0, 3)}
+                      onPress={(index) => {
+                        if (user) {
+                          setSelectedNoteIndex(index);
+                          setModalImages((isFree || isSaved || isOwner) ? pdfImages : pdfImages.slice(0, 3) as any);
+                          setIsViewerOpen(true);
+                        } else {
+                          router.push("/signup")
+                        }
+                      }}
+                      topAds={topAds}
                     />
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 flex flex-col justify-between">
-
-                    {/* Top */}
-                    <div>
-                      <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white leading-snug pr-16">
-                        {course?.title}
-                      </h1>
-
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {course?.code} • {course?.department} • Level {course?.level.toString()}
-                      </p>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">
-                        {course?.description}
-                      </p>
-                    </div>
-
-                    {/* Bottom row */}
-                    <div className="mt-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-
-                      {/* Meta tags */}
-                      <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                        {course?.lecturer && (
-                          <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                            {course.lecturer}
-                          </span>
-                        )}
-                        {course?.university && (
-                          <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                            {course.university}
-                          </span>
-                        )}
-                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                          {course?.session}
-                        </span>
-                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                          {course?.isOnGoing ? "Ongoing" : "Past"}
-                        </span>
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Documents</h3>
+                    <div className="relative">
+                      <div className={`space-y-6 ${!(isFree || isSaved || isOwner) ? "blur-md pointer-events-none opacity-50 select-none" : ""}`}>
+                        {((isFree || isSaved || isOwner) ? displayedDocuments : displayedDocuments.slice(0, 2)).map((doc) => (
+                          <SwipeableDocumentItem
+                            key={doc.$id}
+                            doc={doc}
+                            isOwner={isOwner}
+                            onOpen={(d) => {
+                              setSelectedDocument(d);
+                              setDocumentViewerOpen(true);
+                            }}
+                            onDelete={(id) => {
+                              setDeletingDocumentId(id);
+                              setDocumentDeleteOpen(true);
+                            }}
+                            onRequestReview={(id) => setReviewRequestDocumentId(id)}
+                          />
+                        ))}
                       </div>
-
-                      {/* Pricing */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Pricing:</span>
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {JSON.parse(course?.price || "")?.isFree || `${JSON.parse(course?.price || "")?.currency} ${JSON.parse(course?.price || "")?.amount}`} {JSON.parse(course?.price || "")?.type === "one-time" ? "per page" : "per month"}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          ({JSON.parse(course?.price || "")?.type})
-                        </span>
-                      </div>
-
+                      {!(isFree || isSaved || isOwner) && (
+                        <div className="absolute inset-0 flex flex-col items-start justify-start pt-10 pointer-events-auto px-4 z-20">
+                          <div className="bg-white dark:bg-gray-900/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl max-w-sm text-center border border-gray-200 dark:border-gray-800 mx-auto w-full">
+                            <Lock className="w-12 h-12 text-gray-900 dark:text-white mx-auto mb-3 opacity-80" />
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Premium Documents</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">Pay for this course to unlock full access to all structured notes and documents.</p>
+                            <button
+                              onClick={() => {
+                                if (!user) {
+                                  router.push("/signup");
+                                  return;
+                                }
+                                const type = (priceMeta && typeof priceMeta === 'object' && priceMeta.type) ? priceMeta.type : "one-time";
+                                router.push(
+                                  `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course?.id || "")}&type=${encodeURIComponent(type)}`
+                                );
+                              }}
+                              className="w-full py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold shadow-md hover:shadow-lg transition-all"
+                            >
+                              Pay to get full access
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-
                   </div>
-                </div>
-              </section>
-
-              {/* 3. ANALYTICS */}
-              <section className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm hover:shadow-md" style={{}}>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Analytics
-                  </h2>
 
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <Stat label="Avg Rating" value={`${avgRating.toFixed(1)} ⭐`} />
-                  <Stat label="Reviews" value={totalReviews.toString()} />
-                  <Stat label="Avg Daily Visits" value={Math.round(
-                    Object.values(visitsPerDay).reduce((a, b) => a + b, 0) / 7
-                  ).toString()} />
-                  <Stat label="Total Reach" value={totalReach.toString()} />
-                </div>
-                <div style={{ marginTop: 50 }}>
-                  <AnalyticsChart visitsPerDay={visitsPerDay} />
-                </div>
-
-              </section>
-
-              {/* 4. REVIEWS */}
-              <section className="bg-white dark:bg-gray-900 rounded-xl " style={{ marginTop: 40 }}>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Reviews
-                  </h2>
-                  <a href="#" className="text-sm text-blue-600 hover:underline">
-                    See all
-                  </a>
-                </div>
-
-                <div className="space-y-4">
-                  {reviews.length === 0 && !loadingReviews ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</p>
-                  ) : (
-                    reviews.map((review) => (
-                      <ReviewItem key={review.$id} review={review} />
-                    ))
-                  )}
-                </div>
-
-                {loadingReviews && (
-                  <div className="flex justify-center py-4">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
-                  </div>
-                )}
-
-                {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
-                  <div className="flex justify-center mt-3">
-                    <button
-                      onClick={loadMoreReviews}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      See more
-                    </button>
-                  </div>
-                )}
-              </section>
-
-            </div>
-          )}
-
-        {activeTab === "lecture" && (
-          <>
-            <div className="flex items-center justify-between mt-3 border-b border-gray-200 dark:border-gray-800 mb-8 pb-3 overflow-x-auto gap-4">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    if (!hasAccess) return;
-                    setViewMode("timeline");
-                    posts.length === 0 && fetchTimeLine()
-                  }}
-                  className={`p-2 rounded-lg border flex items-center justify-center transition-all duration-500 overflow-hidden ${viewMode === "timeline"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
-                    } ${bounceTimeline ? 'animate-bounce' : ''}`}
-                  title="Timeline view"
-                >
-                  <Hexagon size={18} className="shrink-0" />
-                  <span
-                    className={`transition-all duration-500 whitespace-nowrap overflow-hidden text-sm font-medium flex items-center ${
-                      showTimelineText ? "max-w-[150px] opacity-100 ml-2 mr-1" : "max-w-0 opacity-0 ml-0 mr-0"
-                    }`}
-                  >
-                    Timeline view
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewMode("pdf");
-                    pdfImages.length === 0 && fetchPDf()
-                  }}
-                  className={`p-2 rounded-lg border flex items-center justify-center transition-all duration-500 overflow-hidden ${viewMode === "pdf"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:bg-gray-900"
-                    } ${bouncePdf ? 'animate-bounce' : ''}`}
-                  title="PDF view"
-                >
-                  <FileText size={18} className="shrink-0" />
-                  <span
-                    className={`transition-all duration-500 whitespace-nowrap overflow-hidden text-sm font-medium flex items-center ${
-                      showPdfText ? "max-w-[150px] opacity-100 ml-2 mr-1" : "max-w-0 opacity-0 ml-0 mr-0"
-                    }`}
-                  >
-                    PDF view
-                  </span>
-                </button>
-              </div>
-
-              {viewMode === "timeline" && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Sort by date:</span>
-                  <select 
-                    value={sortOrder}
-                    onChange={(e) => handleSortChange(e.target.value as SortOrder)}
-                    className="text-xs font-medium border border-gray-200 dark:border-gray-800 rounded-md p-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-blue-500 transition"
-                  >
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-
-
-            <RectangularAd
-              ads={topAds}
-              className='mb-5'
-              height={130}
-            />
-
-
-
-            {viewMode === "timeline" ? (
-              (hasAccess ? posts : posts.slice(0, 1)).map(post => (
-                <div key={post.id} className="mb-5">
-                  <ImageMessages
-                    id={post.id}
-                    images={hasAccess ? post.images : post.images.slice(0, 3)}
-                    message={post.description}
-                    onPress={(index) => {
-                      if (user) {
-                        setSelectedNoteIndex(index);
-                        setModalImages(hasAccess ? post.images : post.images.slice(0, 3));
-                        setIsViewerOpen(true);
-                        setPostId(post.id)
-                      } else {
-                        router.push("/signup")
-                      }
-                    }}
-                    onLongPress={(id) => {
-                      if (!user?.isAdmin) return;
-                      const found = posts.find(p => p.id === id);
-                      if (!found) return;
-                      setActivePost(found);
-                      setShowActions(true);
-                      setPostId(post.id);
-                    }}
-                    course_user={course?.user}
-                  />
-
-                  {(course?.user === user?.$id || user?.isAdmin) && (
-
-
-                    <button
-                      onClick={() => {
-                        if (course?.user !== user?.$id && !user?.isAdmin) return;
-
-                        const found = posts.find(p => p.id === post.id);
-                        if (!found) return;
-
-                        setActivePost(found);
-                        setShowActions(true);
-                        setPostId(post.id);
-                      }}
-                      className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600"
-                    >
-                      <Pencil size={14} />
-                      Edit
-                    </button>
-
-
-                  )}
-                  {!hasAccess && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-xs bg-black/40 text-white px-2 py-1 rounded">
-                        Preview
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <>
-                <PdfImageList
-                  images={hasAccess ? pdfImages : pdfImages.slice(0, 3)}
-                  onPress={(index) => {
-                    if (user) {
-                      setSelectedNoteIndex(index);
-                      setModalImages(hasAccess ? pdfImages : pdfImages.slice(0, 3));
-                      setIsViewerOpen(true);
-                    } else {
-                      router.push("/signup")
-                    }
-                  }}
-                  topAds={topAds}
-                />
-
-                {loadingPdf && (
-                  <div className="flex justify-center py-6">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
-                  </div>
-                )}
-              </>
-            )}
-
-            {!hasAccess && course?.id && priceMeta && (
-              <div className="mt-6">
-                <button
-                  onClick={() => {
-                    if (!user) {
-                      router.push("/signup");
-                      return;
-                    }
-                    const type = priceMeta?.type ?? "one-time";
-                    router.push(
-                      `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course.id)}&type=${encodeURIComponent(type)}`
-                    );
-                  }}
-                  className="w-full py-3 rounded-xl text-white font-semibold"
-                  style={{ backgroundColor: "#155dfc" }}
-                >
-                  {priceMeta?.type === "subscription" ? "Subscribe to Course" : "Pay for Course"}
-                </button>
-              </div>
-            )}
-
-
-
-
-            {loadingPosts && (
-              <div className="flex justify-center py-6">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
               </div>
             )}
 
@@ -1585,223 +1989,206 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
 
 
-          </>
-        )}
-
-        {activeTab === "review" && !isOwner && (
-          <div>
-            {/* 4. REVIEWS */}
-            <section className="bg-white dark:bg-gray-900 rounded-xl " style={{ marginTop: 40 }}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Reviews
-                </h2>
-                <button onClick={() => setReviewModalOpen(true)} className="text-sm text-blue-600 hover:underline">
-                  Leave a review
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {reviews.length === 0 && !loadingReviews ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</p>
-                ) : (
-                  reviews.map((review) => (
-                    <ReviewItem key={review.$id} review={review} />
-                  ))
-                )}
-              </div>
-
-              {loadingReviews && (
-                <div className="flex justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
-                </div>
-              )}
-
-              {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
-                <div className="flex justify-center mt-3">
-                  <button
-                    onClick={loadMoreReviews}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    See more
-                  </button>
-                </div>
-              )}
-            </section>
-          </div>
-        )
-
-        }
-
-        {activeTab === "documents" && (
-          <div className="max-w-6xl mx-auto px-0 py-6">
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-6" style={{ marginTop: 20 }}>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Course Documents</h2>
-              {loadingDocs ? (
-                <div className="flex justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
-                </div>
-              ) : documents.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">No documents uploaded yet.</p>
-              ) : (
-                <div className="relative">
-                  <div className={`space-y-6 ${!hasAccess ? "blur-md pointer-events-none opacity-50 select-none" : ""}`}>
-                    {(hasAccess ? displayedDocuments : displayedDocuments.slice(0, 2)).map((doc) => (
-                      <SwipeableDocumentItem
-                        key={doc.$id}
-                        doc={doc}
-                        isOwner={isOwner}
-                        onOpen={(d) => {
-                          setSelectedDocument(d);
-                          setDocumentViewerOpen(true);
-                        }}
-                        onDelete={(id) => {
-                          setDeletingDocumentId(id);
-                          setDocumentDeleteOpen(true);
-                        }}
-                        onRequestReview={(id) => setReviewRequestDocumentId(id)}
-                      />
-                    ))}
+            {activeTab === "review" && !isOwner && (
+              <div>
+                {/* 4. REVIEWS */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl " style={{ marginTop: 40 }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Reviews
+                    </h2>
+                    <button onClick={() => setReviewModalOpen(true)} className="text-sm text-gray-900 dark:text-white hover:underline">
+                      Leave a review
+                    </button>
                   </div>
-                  {!hasAccess && (
-                    <div className="absolute inset-0 flex flex-col items-start justify-start pt-10 pointer-events-auto px-4 z-20">
-                      <div className="bg-white dark:bg-gray-900/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl max-w-sm text-center border border-gray-100 dark:border-gray-800 mx-auto w-full">
-                        <Lock className="w-12 h-12 text-blue-600 mx-auto mb-3 opacity-80" />
-                        <h3 className="font-bold text-gray-900 dark:text-white mb-2">Premium Documents</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">Subscribe or pay for this course to unlock full access to all structured notes and documents.</p>
-                        <button
-                          onClick={() => {
-                            if (!user) {
-                              router.push("/signup");
-                              return;
-                            }
-                            const type = priceMeta?.type ?? "one-time";
-                            router.push(
-                              `/subscribe/usbscribe-to-contributor/checkout?courses=${encodeURIComponent(course?.id || "")}&type=${encodeURIComponent(type)}`
-                            );
-                          }}
-                          className="w-full py-2.5 rounded-xl text-white font-semibold shadow-md hover:shadow-lg transition-all"
-                          style={{ backgroundColor: "#155dfc" }}
-                        >
-                          {priceMeta?.type === "subscription" ? "Subscribe to Course" : "Pay for Course"}
-                        </button>
-                      </div>
+
+                  <div className="space-y-4">
+                    {reviews.length === 0 && !loadingReviews ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No reviews yet.</p>
+                    ) : (
+                      reviews.map((review) => (
+                        <ReviewItem key={review.$id} review={review} />
+                      ))
+                    )}
+                  </div>
+
+                  {loadingReviews && (
+                    <div className="flex justify-center py-4">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
                     </div>
                   )}
-                </div>
-              )}
-            </div>
+
+                  {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
+                    <div className="flex justify-center mt-3">
+                      <button
+                        onClick={loadMoreReviews}
+                        className="text-sm text-gray-900 dark:text-white hover:underline"
+                      >
+                        See more
+                      </button>
+                    </div>
+                  )}
+                </section>
+              </div>
+            )
+
+            }
+
+            <ConfirmFileDelete
+              isOpen={isFileDeleteOpen}
+              onClose={() => setIsFileDeleteOpen(false)}
+              onConfirm={async () => {
+                await deleteFileFromPost(postId, deleteUrl);
+                setIsFileDeleteOpen(false);
+                router.replace(`/`)
+              }}
+              fileName={""}
+            />
+
+            {selectedDocument && (
+              <DocumentViewerModal
+                isOpen={documentViewerOpen}
+                onClose={() => setDocumentViewerOpen(false)}
+                fileUrl={selectedDocument.fileUrl}
+                fileType={selectedDocument.fileType}
+                fileName={selectedDocument.fileName}
+              />
+            )}
+
+            <ConfirmFileDelete
+              isOpen={documentDeleteOpen}
+              onClose={() => setDocumentDeleteOpen(false)}
+              onConfirm={async () => {
+                if (deletingDocumentId) {
+                  await deleteDocument(deletingDocumentId);
+                  setDocuments(docs => docs.filter(d => d.$id !== deletingDocumentId));
+                }
+                setDocumentDeleteOpen(false);
+              }}
+              fileName="this document"
+            />
+
+            <DocumentReviewModal
+              isOpen={!!reviewRequestDocumentId}
+              onClose={() => setReviewRequestDocumentId(null)}
+              onSubmit={async (complaint) => {
+                if (!reviewRequestDocumentId || !course?.id || !user?.$id) return;
+                await createDocumentReviewRequest({
+                  documents: reviewRequestDocumentId,
+                  courses: course.id,
+                  contributors: user.$id,
+                  complaint
+                });
+                alert("Review request submitted successfully!");
+              }}
+            />
+
+            {course && (
+              <EditCourseModal
+                isOpen={showEditCourse}
+                onClose={() => setShowEditCourse(false)}
+                course={{
+                  id: course.id,
+                  title: course.title,
+                  code: course.code,
+                  description: course.description,
+                  university: course.university,
+                  lecturer: course.lecturer,
+                  thumbnailId: course.thumbnailId,
+                  thumbnailUrl: course.thumbnailUrl,
+                  isOngoing: course.isOnGoing,
+                  price: course.price,
+                }}
+                onUpdated={(updated) =>
+                  setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)
+                }
+              />
+            )}
+
+            <ReviewModal
+              isOpen={reviewModalOpen}
+              isSaving={isReviewSaving}
+              onClose={() => setReviewModalOpen(false)}
+              onSubmit={({ rating, comment }) => handleCreateReview({ rating, comment })}
+            />
+
+            <ConfirmCourseDelete
+              isOpen={isCourseDeleteOpen}
+              onClose={() => setIsCourseDeleteOpen(false)}
+              onConfirm={async () => {
+                await deleteCourse(courseId);
+                setIsCourseDeleteOpen(false);
+                router.replace("/")
+              }}
+              courseTitle={course?.title}
+            />
+
+            <FollowSuggestionModal
+              open={showFollowSuggestion}
+              onClose={(dontShowAgain) => {
+                setShowFollowSuggestion(false);
+                if (dontShowAgain) {
+                  localStorage.setItem(`hide_follow_modal_course_${courseId}`, "true");
+                }
+              }}
+              contributorName={contributor?.username || "Contributor"}
+              onFollow={handleFollow}
+              loading={follow}
+            />
+
+            {isOwner && (
+              <FloatingActionButton />
+            )}
           </div>
-        )}
 
+          {/* Right Column for Desktop: Reviews */}
+          {!isOwner && (
+            <div className="hidden lg:block w-[350px] shrink-0">
+              <div className="sticky top-24">
+                <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      Reviews
+                    </h2>
+                    <button onClick={() => setReviewModalOpen(true)} className="text-sm font-semibold text-gray-900 dark:text-white hover:underline">
+                      Leave a review
+                    </button>
+                  </div>
 
-        <ConfirmFileDelete
-          isOpen={isFileDeleteOpen}
-          onClose={() => setIsFileDeleteOpen(false)}
-          onConfirm={async () => {
-            await deleteFileFromPost(postId, deleteUrl);
-            setIsFileDeleteOpen(false);
-            router.replace(`/`)
-          }}
-          fileName={""}
-        />
+                  <div className="space-y-4">
+                    {reviews.length === 0 && !loadingReviews ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No reviews yet.</p>
+                    ) : (
+                      reviews.map((review) => (
+                        <ReviewItem key={review.$id} review={review} />
+                      ))
+                    )}
+                  </div>
 
-        {selectedDocument && (
-          <DocumentViewerModal
-            isOpen={documentViewerOpen}
-            onClose={() => setDocumentViewerOpen(false)}
-            fileUrl={selectedDocument.fileUrl}
-            fileType={selectedDocument.fileType}
-            fileName={selectedDocument.fileName}
-          />
-        )}
+                  {loadingReviews && (
+                    <div className="flex justify-center py-4">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 dark:border-gray-700 border-t-blue-600" />
+                    </div>
+                  )}
 
-        <ConfirmFileDelete
-          isOpen={documentDeleteOpen}
-          onClose={() => setDocumentDeleteOpen(false)}
-          onConfirm={async () => {
-            if (deletingDocumentId) {
-              await deleteDocument(deletingDocumentId);
-              setDocuments(docs => docs.filter(d => d.$id !== deletingDocumentId));
-            }
-            setDocumentDeleteOpen(false);
-          }}
-          fileName="this document"
-        />
-
-        <DocumentReviewModal
-          isOpen={!!reviewRequestDocumentId}
-          onClose={() => setReviewRequestDocumentId(null)}
-          onSubmit={async (complaint) => {
-            if (!reviewRequestDocumentId || !course?.id || !user?.$id) return;
-            await createDocumentReviewRequest({
-              documents: reviewRequestDocumentId,
-              courses: course.id,
-              contributors: user.$id,
-              complaint
-            });
-            alert("Review request submitted successfully!");
-          }}
-        />
-
-        {course && (
-          <EditCourseModal
-            isOpen={showEditCourse}
-            onClose={() => setShowEditCourse(false)}
-            course={{
-              id: course.id,
-              title: course.title,
-              code: course.code,
-              description: course.description,
-              university: course.university,
-              lecturer: course.lecturer,
-              thumbnailId: course.thumbnailId,
-              thumbnailUrl: course.thumbnailUrl,
-              isOngoing: course.isOnGoing,
-              price: course.price,
-            }}
-            onUpdated={(updated) =>
-              setCourse((prev) => prev ? { ...prev, ...updated } as Course : null)
-            }
-          />
-        )}
-
-        <ReviewModal
-          isOpen={reviewModalOpen}
-          isSaving={isReviewSaving}
-          onClose={() => setReviewModalOpen(false)}
-          onSubmit={({ rating, comment }) => handleCreateReview({ rating, comment })}
-        />
-
-        <ConfirmCourseDelete
-          isOpen={isCourseDeleteOpen}
-          onClose={() => setIsCourseDeleteOpen(false)}
-          onConfirm={async () => {
-            await deleteCourse(courseId);
-            setIsCourseDeleteOpen(false);
-            router.replace("/")
-          }}
-          courseTitle={course?.title}
-        />
-
-        <FollowSuggestionModal
-          open={showFollowSuggestion}
-          onClose={(dontShowAgain) => {
-            setShowFollowSuggestion(false);
-            if (dontShowAgain) {
-              localStorage.setItem(`hide_follow_modal_course_${courseId}`, "true");
-            }
-          }}
-          contributorName={contributor?.username || "Contributor"}
-          onFollow={handleFollow}
-          loading={follow}
-        />
-
-        {isOwner && (
-          <FloatingActionButton />
-        )}
-
+                  {hasMoreReviews && !loadingReviews && reviews.length > 0 && (
+                    <div className="flex justify-center mt-6">
+                      <button
+                        onClick={loadMoreReviews}
+                        className="text-sm font-semibold text-gray-900 dark:text-white hover:underline"
+                      >
+                        See more
+                      </button>
+                    </div>
+                  )}
+                </section>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
+
+
     </div>
   );
 }

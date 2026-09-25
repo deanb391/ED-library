@@ -3,8 +3,16 @@ const jsonHeaders = {
 };
 
 export async function fetchLibrary(userId: string) {
-  const res = await fetch(`/api/library/fetch?userId=${userId}`);
-  return res.json();
+  try {
+    const res = await fetch(`/api/library/fetch?userId=${userId}`);
+    if (!res.ok) throw new Error("Network response was not ok");
+    const text = await res.text();
+    if (!text) throw new Error("Empty response");
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("fetchLibrary error:", err);
+    throw err; // MUST throw so offline cache fallback is triggered
+  }
 }
 
 export async function fetchLibraryCourse(userId: string) {

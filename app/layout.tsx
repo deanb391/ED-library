@@ -15,6 +15,9 @@ import ContributorChatFAB from "@/components/chats/ContributorChatFAB";
 import ReferralTracker from "@/components/ReferralTracker";
 import WhatsappChannel from "@/components/WhatsappChannel";
 import { ThemeProvider } from "next-themes";
+import Sidebar from "@/components/Sidebar";
+import SearchResultsOverlay from "@/components/SearchResultsOverlay";
+import NetworkStatusBanner from "@/components/NetworkStatusBanner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,25 +50,19 @@ export default function RootLayout({
           <AppProgressBar />
           <PHProvider>
             <UserProvider>
+              <NetworkStatusBanner />
               <HomeProvider>
                 <Header />
-              {/*
-              <div className="bg-amber-300 dark:bg-amber-900/60 text-blue-900 dark:text-blue-200 py-2.5 overflow-hidden relative z-40 border border-amber-400 dark:border-amber-700 shadow-sm mx-4 mt-2 mb-4 rounded-xl">
-                <div className="animate-marquee inline-block whitespace-nowrap">
-                  {[...Array(8)].map((_, i) => (
-                    <span key={i} className="font-bold text-sm mx-8 tracking-wide">
-                      🚧 We are currently under maintenance. Please try again later this evening. 🚧
-                    </span>
-                  ))}
+                <div className="flex w-full">
+                  <Sidebar />
+                  <main className="grow w-full min-w-0 relative">
+                    <GoogleAnalytics />
+                    <TrackPageView />
+                    <ReferralTracker />
+                    <SearchResultsOverlay />
+                    {children}
+                  </main>
                 </div>
-              </div> 
-              */}
-              <main className="grow w-full">
-                <GoogleAnalytics />
-                <TrackPageView />
-                <ReferralTracker />
-                {children}
-              </main>
 
               <Footer />
               <div className="fixed bottom-4 left-4 z-100">

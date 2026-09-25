@@ -24,6 +24,39 @@ export interface PaymentPayload {
   provider?: "flutterwave" | "wallet";
 }
 
+export async function subscribeToPremiumService(userId: string, email: string) {
+  const paymentTotal = 400; // NGN 400
+  const charge = 0.015 * paymentTotal;
+  const finalAmount = paymentTotal + charge;
+
+  const payment = await createPaymentService({
+    type: "subscription",
+    amount: paymentTotal,
+    status: "pending",
+    user: userId,
+    description: "ED-Library Premium Subscription",
+    courses: "PREMIUM",
+    provider: "flutterwave",
+  });
+
+  const flutter = await initFlutterwavePayment({
+    amount: finalAmount,
+    email: email,
+    tx_ref: payment.$id,
+    description: payment.description || "",
+    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/premium/verify?paymentId=${payment.$id}`,
+  });
+
+  if (!flutter?.data?.link) {
+    throw new Error("Failed to initialize payment");
+  }
+
+  return {
+    checkoutUrl: flutter.data.link,
+    paymentId: payment.$id,
+  };
+}
+
 export function mapPayment(doc: any) {
   if (!doc) return null;
   return {
@@ -113,11 +146,19 @@ export async function payForCourseService(params: {
 
   for (const id of params.courseIds) {
     const course = await fetchCourseByIdService(id);
-    const priceData = course?.price ? JSON.parse(course.price) : null;
-    let amount = priceData?.isFree ? 0 : priceData?.amount || 0;
-
-    if (priceData?.type === "one-time") {
-      amount = amount * (course.pageCount || 1);
+    let amount = 0;
+    try {
+      if (course?.price && typeof course.price === 'string' && course.price.includes('{')) {
+        const priceData = JSON.parse(course.price);
+        amount = priceData.isFree ? 0 : (priceData.amount || 0);
+        if (priceData.type === "one-time") {
+          amount = amount * (course.pageCount || 1);
+        }
+      } else if (course?.price) {
+        amount = Number(course.price) || 0;
+      }
+    } catch (e) {
+      console.error("Failed to parse course price:", e);
     }
 
     total += amount;
@@ -129,10 +170,12 @@ export async function payForCourseService(params: {
     });
   }
 
+  const paymentTotal = total + 50;
+
   // Create payment FIRST
   const payment = await createPaymentService({
     type: params.type,
-    amount: total,
+    amount: paymentTotal,
     status: "pending",
     user: params.userId,
     description: `Payment for ${courses.length} course(s)`,
@@ -145,7 +188,7 @@ export async function payForCourseService(params: {
     userId: params.userId,
     metadata: {
       paymentId: payment.$id,
-      amount: total,
+      amount: paymentTotal,
       type: params.type,
       method: params.paymentMethod,
       courseCount: params.courseIds.length
@@ -156,11 +199,11 @@ export async function payForCourseService(params: {
   // WALLET FLOW
   // =========================
   if (params.paymentMethod === "wallet") {
-    await debitWalletService(params.userId, total, "updated");
+    await debitWalletService(params.userId, paymentTotal, "updated");
 
     await updatePaymentService(payment.$id, {
       type: params.type,
-      amount: total,
+      amount: paymentTotal,
       status: "successful",
       user: params.userId,
       description: "Wallet payment",
@@ -170,7 +213,14 @@ export async function payForCourseService(params: {
     const rev = 0.85 * payment.amount;
     const cut = 0.15 * payment.amount;
 
-    const Contributor = await fetchContributorService(params.contributorId);
+    let Contributor = null;
+    try {
+      Contributor = await fetchContributorService(params.contributorId);
+    } catch (e) {
+      const { getContributorByUserIdService } = await import("@/lib/services/contributors.service");
+      Contributor = await getContributorByUserIdService(params.contributorId);
+    }
+    if (!Contributor) throw new Error("Contributor not found");
 
     await creditWalletService(Contributor.user, rev);
 
@@ -190,6 +240,13 @@ export async function payForCourseService(params: {
       reference: payment.description,
     });
 
+    // Ensure 'admin' user exists before logging admin transactions
+    await prisma.user.upsert({
+      where: { id: "admin" },
+      update: {},
+      create: { id: "admin", email: "admin@ed-library.com", name: "Admin" }
+    });
+
     await createTransactionService({
       user: "admin",
       type: "platform_cut",
@@ -199,7 +256,7 @@ export async function payForCourseService(params: {
     });
 
     await createTransactionService({
-      user: params.contributorId,
+      user: Contributor.user,
       type: "earning",
       direction: "credit",
       amount: rev,
@@ -271,7 +328,7 @@ export async function payForCourseService(params: {
       }
     }
 
-    trackCoursePayment(params.userId, total, { method: "wallet", type: params.type });
+    trackCoursePayment(params.userId, paymentTotal, { method: "wallet", type: params.type });
 
     return {
       type: "wallet",
@@ -282,8 +339,8 @@ export async function payForCourseService(params: {
   // =========================
   // FLUTTERWAVE FLOW
   // =========================
-  const charge = 0.015 * total;
-  const finalAmount = total + charge;
+  const charge = 0.015 * paymentTotal;
+  const finalAmount = paymentTotal + charge;
 
   const flutter = await initFlutterwavePayment({
     amount: finalAmount,
