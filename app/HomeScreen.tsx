@@ -12,6 +12,7 @@ import {
   fetchNewCourses,
   fetchPopularCourses,
   fetchRelatedCourse,
+  fetchCoursesByDepartment,
 } from "@/lib/api/courses";
 import clsx from "clsx";
 
@@ -247,7 +248,10 @@ function CourseSection({
 }
 
 function CategoryPills() {
-  const categories = [
+  const { user } = useUser();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([
     "All",
     "DaVinci Resolve",
     "Podcasts",
@@ -260,7 +264,45 @@ function CategoryPills() {
     "Mixes",
     "Live",
     "Wealth"
-  ];
+  ]);
+
+  useEffect(() => {
+    if (user?.department) {
+      setLoading(true);
+      fetchCoursesByDepartment(user.department, 10).then((courses: any) => {
+        const arr = courses.data || courses; // handle both possible response formats
+        if (Array.isArray(arr) && arr.length > 0) {
+          const dynamicCats = arr.map((c: any) => c.title);
+          const unique = Array.from(new Set<string>(dynamicCats));
+          setCategories(["All", ...unique.slice(0, 10)]);
+        }
+      }).catch((err) => {
+        console.error("Failed to fetch department courses for filters:", err);
+      }).finally(() => {
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, [user?.department]);
+
+  if (loading) {
+    return (
+      <div 
+        className="flex gap-3 overflow-x-auto mb-8 pb-2"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="h-8 w-24 bg-gray-200 dark:bg-gray-800 rounded-lg shrink-0 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
   
   return (
     <div 
@@ -275,6 +317,13 @@ function CategoryPills() {
       {categories.map((cat, i) => (
         <button
           key={i}
+          onClick={() => {
+            if (cat !== "All") {
+              router.push(`/all_courses?query=${encodeURIComponent(cat)}`);
+            } else {
+              router.push(`/all_courses`);
+            }
+          }}
           className={clsx(
             "whitespace-nowrap px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shrink-0",
             i === 0
