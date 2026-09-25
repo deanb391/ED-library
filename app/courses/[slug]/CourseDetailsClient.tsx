@@ -305,14 +305,14 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
   const handleSortChange = async (newOrder: SortOrder) => {
     if (newOrder === sortOrder) return;
     setSortOrder(newOrder);
-    setPdfImages([]);
-    setPdfCursor(null);
-    setHasMorePdf(true);
+    setPosts([]);
+    setCursor(null);
+    setHasMore(true);
     const fetchFunc = newOrder === "asc" ? fetchPostsAsc : fetchPosts;
-    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 10);
-    setPdfImages(firstPosts.flatMap(p => p.images).filter(Boolean));
-    setPdfCursor(lastId);
-    setHasMorePdf(firstPosts.length === 10);
+    const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
+    setPosts(firstPosts);
+    setCursor(lastId);
+    setHasMore(firstPosts.length === 5);
   };
 
 
@@ -612,7 +612,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const fetchTimeLine = async () => {
     try {
-      const fetchFunc = fetchPostsAsc;
+      const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
       const { posts: firstPosts, lastId } = await fetchFunc(courseId, 5);
       setPosts(firstPosts);
       setCursor(lastId);
@@ -621,8 +621,11 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
       if (isOffline) {
         const cached = localStorage.getItem(`downloaded_posts_${courseId}`);
         if (cached) {
-          const parsed = JSON.parse(cached);
-          // file view is always ascending offline since we save it that way or we enforce it
+          let parsed = JSON.parse(cached);
+          if (parsed && parsed.length > 0) {
+            parsed.sort((a: any, b: any) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
+            if (sortOrder === "desc") parsed.reverse();
+          }
           setPosts(parsed);
         }
         setHasMore(false);
@@ -632,7 +635,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
 
   const fetchPDf = async () => {
     try {
-      const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
+      const fetchFunc = fetchPostsAsc;
       const { posts, lastId } = await fetchFunc(courseId, 10);
       setPdfImages(posts.flatMap(p => p.images).filter(Boolean));
       setPdfCursor(lastId);
@@ -641,8 +644,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
       if (isOffline) {
         const cached = localStorage.getItem(`downloaded_posts_${courseId}`);
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (sortOrder === "desc") parsed.reverse();
+          let parsed = JSON.parse(cached);
+          if (parsed && parsed.length > 0) {
+            parsed.sort((a: any, b: any) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
+          }
           setPdfImages(parsed.flatMap((p: any) => p.images).filter(Boolean));
         }
         setHasMorePdf(false);
@@ -779,7 +784,10 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
           // Load cached posts for timeline/pdf
           const cachedPosts = localStorage.getItem(`downloaded_posts_${courseId}`);
           if (cachedPosts) {
-            const posts = JSON.parse(cachedPosts);
+            let posts = JSON.parse(cachedPosts);
+            if (posts && posts.length > 0) {
+              posts.sort((a: any, b: any) => new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime());
+            }
             setPosts(posts);
             setPdfImages(posts.flatMap((p: any) => p.images).filter(Boolean));
           }
@@ -1103,7 +1111,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
     setLoadingPosts(true);
-    const fetchFunc = fetchPostsAsc;
+    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
 
     const { posts: newPosts, lastId } = await fetchFunc(
       courseId,
@@ -1124,7 +1132,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
     if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
     setLoadingPdf(true);
-    const fetchFunc = sortOrder === "asc" ? fetchPostsAsc : fetchPosts;
+    const fetchFunc = fetchPostsAsc;
 
     const { posts, lastId } = await fetchFunc(
       courseId,
@@ -1648,7 +1656,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 {(!isFree && !isSaved && !isOwner) ? (
                   <div className="flex flex-col gap-4">
                     <button
-                      onClick={() => setShowOverlay("pdf")}
+                      onClick={() => { setViewMode("pdf"); setShowOverlay("pdf"); if(pdfImages.length === 0) fetchPDf(); }}
                       className="bg-white dark:bg-black rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-28 md:h-32 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm border border-gray-200 dark:border-gray-800"
                     >
                       <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-gray-100 dark:bg-gray-900 p-2 md:p-3 rounded-full">
@@ -1670,7 +1678,7 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                 ) : (
                   <div className="flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-3">
-                      <button onClick={() => setShowOverlay("pdf")} className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-32 md:h-40 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm">
+                      <button onClick={() => { setViewMode("pdf"); setShowOverlay("pdf"); if(pdfImages.length === 0) fetchPDf(); }} className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-4 md:p-6 text-left relative overflow-hidden h-32 md:h-40 flex flex-col justify-end transition hover:scale-[1.02] shadow-sm">
                         <div className="absolute top-3 right-3 md:top-6 md:right-6 bg-white dark:bg-black p-2 md:p-3 rounded-full shadow-sm">
                           <FileText className="text-gray-900 dark:text-white" size={20} />
                         </div>
@@ -1729,6 +1737,17 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                       <ChevronDown className="rotate-90" size={24} />
                     </button>
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">{course?.code} - Timeline</h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Sort:</span>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => handleSortChange(e.target.value as any)}
+                      className="text-xs font-medium border border-gray-200 dark:border-gray-800 rounded-md p-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none"
+                    >
+                      <option value="asc">Ascending</option>
+                      <option value="desc">Descending</option>
+                    </select>
                   </div>
                 </div>
                 <div className="max-w-2xl mx-auto p-4 md:p-6 pb-24">
@@ -1834,17 +1853,6 @@ export default function CourseDetailsClient({ courseId }: { courseId: string }) 
                       <ChevronDown className="rotate-90" size={24} />
                     </button>
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">{course?.code} - File View</h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Sort:</span>
-                    <select
-                      value={sortOrder}
-                      onChange={(e) => handleSortChange(e.target.value as any)}
-                      className="text-xs font-medium border border-gray-200 dark:border-gray-800 rounded-md p-1.5 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none"
-                    >
-                      <option value="asc">Ascending</option>
-                      <option value="desc">Descending</option>
-                    </select>
                   </div>
                 </div>
                 <div className="max-w-4xl mx-auto p-4 md:p-6 pb-24">
