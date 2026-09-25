@@ -27,9 +27,10 @@ const serwist = new Serwist({
   },
   runtimeCaching: [
     {
-      matcher: ({ url }) => url.pathname.startsWith('/courses/'),
+      matcher: ({ request, url }) => request.destination === 'document' || url.pathname.startsWith('/courses/'),
       handler: new NetworkFirst({
-        cacheName: 'course-pages',
+        cacheName: 'pages-and-courses',
+        networkTimeoutSeconds: 3,
         plugins: [
           new ExpirationPlugin({
             maxEntries: 100,
