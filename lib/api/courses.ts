@@ -15,6 +15,7 @@ export type Course = {
   thumbnailUrl: string;
   files?: string[];
   user?: any;
+  userId?: string;
   isOnGoing: boolean;
   session: string;
   level: number;
