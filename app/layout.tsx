@@ -18,6 +18,7 @@ import { ThemeProvider } from "next-themes";
 import Sidebar from "@/components/Sidebar";
 import SearchResultsOverlay from "@/components/SearchResultsOverlay";
 import NetworkStatusBanner from "@/components/NetworkStatusBanner";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,6 +48,7 @@ export default function RootLayout({
         className={`${inter.className} bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col transition-colors duration-200`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ServiceWorkerRegister />
           <AppProgressBar />
           <PHProvider>
             <UserProvider>
