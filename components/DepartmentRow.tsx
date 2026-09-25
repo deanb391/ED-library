@@ -32,9 +32,10 @@ export default function DepartmentRow({ department }: { department: string }) {
     const res = await fetchCoursesByDepartment(department, PAGE_SIZE, offset);
 
     setCourses(prev => {
-      const next = [...prev, ...res.courses];
+      const arr = Array.isArray(res) ? res : res.data || res.courses || [];
+      const next = [...prev, ...arr];
 
-      if (next.length >= res.total) {
+      if (arr.length < PAGE_SIZE) {
         setHasMore(false);
       }
 
