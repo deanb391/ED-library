@@ -18,6 +18,13 @@ const serwist = new Serwist({
   fallbacks: {
     entries: [
       {
+        url: '/~offline-course',
+        matcher({ request }) {
+          const url = new URL(request.url);
+          return request.destination === 'document' && url.pathname.startsWith('/courses/');
+        },
+      },
+      {
         url: '/~offline',
         matcher({ request }) {
           return request.destination === 'document';

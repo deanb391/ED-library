@@ -249,6 +249,7 @@ function CourseSection({
 
 function CategoryPills() {
   const { user } = useUser();
+  const { submitSearch, closeSearch } = useHome();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([
@@ -319,9 +320,9 @@ function CategoryPills() {
           key={i}
           onClick={() => {
             if (cat !== "All") {
-              router.push(`/all_courses?query=${encodeURIComponent(cat)}`);
+              submitSearch(cat);
             } else {
-              router.push(`/all_courses`);
+              closeSearch();
             }
           }}
           className={clsx(
