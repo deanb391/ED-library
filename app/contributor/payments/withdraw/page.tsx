@@ -73,7 +73,7 @@ const bankCodes: Record<string, string> = {
   "Zenith Bank": "057",
 };
 
-export function getBankCode(bankName: string): string | null {
+function getBankCode(bankName: string): string | null {
   const code = bankCodes[bankName];
   if (!code) {
     console.warn(`Bank code not found for: "${bankName}"`);
