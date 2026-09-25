@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist, CacheFirst, ExpirationPlugin } from "serwist";
+import { Serwist, CacheFirst, NetworkFirst, ExpirationPlugin } from "serwist";
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -15,7 +15,29 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
+  fallbacks: {
+    entries: [
+      {
+        url: '/~offline',
+        matcher({ request }) {
+          return request.destination === 'document';
+        },
+      },
+    ],
+  },
   runtimeCaching: [
+    {
+      matcher: ({ url }) => url.pathname.startsWith('/courses/'),
+      handler: new NetworkFirst({
+        cacheName: 'course-pages',
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+          }),
+        ],
+      }),
+    },
     {
       matcher: ({ url }) => url.pathname.startsWith('/v1/storage/buckets/'),
       handler: new CacheFirst({
