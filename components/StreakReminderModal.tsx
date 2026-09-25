@@ -37,7 +37,7 @@ export default function StreakReminderModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div
-        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden"
+        className="bg-white dark:bg-black rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 w-full max-w-sm relative overflow-hidden"
         style={{
           transform: animateIn ? "scale(1) translateY(0)" : "scale(0.95) translateY(10px)",
           opacity: animateIn ? 1 : 0,
@@ -50,7 +50,7 @@ export default function StreakReminderModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
+          className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-black/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400 transition"
         >
           <X size={18} />
         </button>
@@ -71,7 +71,7 @@ export default function StreakReminderModal({
             {hasStreak ? "🔥" : "🚀"}
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl font-bold text-black dark:text-white mb-2">
             {hasStreak
               ? `Don't lose your ${currentStreak}-day streak!`
               : "Start your upload streak!"}
@@ -110,7 +110,7 @@ export default function StreakReminderModal({
           <Link
             href="/contributor/dashboard/upload"
             onClick={onClose}
-            className="w-full py-3.5 rounded-xl font-bold text-sm text-white text-center transition active:scale-[0.97] flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl font-bold text-sm text-white dark:text-black text-center transition active:scale-[0.97] flex items-center justify-center gap-2"
             style={{
               background: hasStreak
                 ? "linear-gradient(135deg, #FF6B35, #FF4500)"

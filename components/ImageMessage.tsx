@@ -48,7 +48,7 @@ const handleMouseUp = () => {
       : "grid-cols-2 grid-rows-2";
 
   return (
-    <div className="max-w-[360px] rounded-2xl bg-blue-500 p-1">
+    <div className="max-w-[360px] rounded-2xl bg-gray-200 dark:bg-gray-800 p-1">
       <div className={`grid ${gridClass} gap-1 overflow-hidden rounded-xl`}>
         {previewImages.map((img, i) => (
           <div
@@ -58,7 +58,7 @@ const handleMouseUp = () => {
             onMouseUp={handleMouseUp}
             onTouchStart={handleMouseDown}
             onTouchEnd={handleMouseUp}
-            className="relative aspect-square overflow-hidden bg-blue-400"
+            className="relative aspect-square overflow-hidden bg-gray-300 dark:bg-gray-700"
           >
 
             {/* Loading overlay */}

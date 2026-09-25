@@ -13,7 +13,8 @@ import {
   Trash2,
   Lightbulb,
   GraduationCap,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft
 } from 'lucide-react';
 import { appendFilesToCourse, createPost, fetchCourses, fetchCoursesByAdmin, uploadImage } from '@/lib/api/courses';
 import { useRouter } from "@/components/useRouter";
@@ -115,8 +116,8 @@ export default function UploadPage() {
 
   if (userLoading || contributorLoading || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-black dark:border-white border-solid mb-4"></div>
         <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
       </div>
     );
@@ -132,8 +133,8 @@ export default function UploadPage() {
 
   if (isUploading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-black dark:border-white border-solid mb-4"></div>
         <p className="text-gray-700 dark:text-gray-300 text-sm">Uploading, please wait...</p>
       </div>
     );
@@ -312,7 +313,7 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F8] font-sans text-gray-900 dark:text-white pb-12">
+    <div className="min-h-screen bg-[#F4F6F8] dark:bg-black font-sans text-gray-900 dark:text-white pb-12">
 
 
       {/* --- Content Body --- */}
@@ -323,6 +324,10 @@ export default function UploadPage() {
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
+              <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition mb-4 group">
+                <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
+                Back to Dashboard
+              </button>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Upload Course Notes</h1>
               <p className="text-gray-500 dark:text-gray-400 mt-1">Contribute to the community by sharing your academic materials.</p>
             </div>
@@ -330,13 +335,13 @@ export default function UploadPage() {
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg self-start md:self-auto">
               <button
                 onClick={() => setUploadType('images')}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'images' ? 'bg-white dark:bg-gray-900 text-blue-700 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'images' ? 'bg-white dark:bg-[#111] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
               >
                 Images
               </button>
               <button
                 onClick={() => setUploadType('document')}
-                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'document' ? 'bg-white dark:bg-gray-900 text-blue-700 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-all ${uploadType === 'document' ? 'bg-white dark:bg-[#111] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
               >
                 Document
               </button>
@@ -346,11 +351,11 @@ export default function UploadPage() {
 
         {/* Batch Upload Info Section */}
         {showInfo && (
-          <div className="mb-8 bg-blue-50 border border-blue-100 rounded-2xl p-6 relative overflow-hidden transition-all animate-in fade-in slide-in-from-top-4 duration-500"
+          <div className="mb-8 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 relative overflow-hidden transition-all animate-in fade-in slide-in-from-top-4 duration-500"
             style={{ paddingBottom: 35 }}
           >
             <div className="flex items-start gap-4 pr-10">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-100">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg shadow-sm">
                 <Info size={20} />
               </div>
               <div>
@@ -360,7 +365,7 @@ export default function UploadPage() {
                   <strong> batch uploading</strong>. This means you should upload your course materials in
                   logical batches of a <strong>maximum of {MAX_FILES} images</strong> per upload.
                 </p>
-                <div className="flex gap-4 mt-4 text-xs font-semibold text-blue-700">
+                <div className="flex gap-4 mt-4 text-xs font-semibold text-gray-900 dark:text-white">
                   <div className="flex items-center gap-1">
                     <CheckCircle2 size={14} />
                     <span>Better image quality</span>
@@ -374,7 +379,7 @@ export default function UploadPage() {
             </div>
             <button
               onClick={() => setShowInfo(false)}
-              className=" absolute top-4 right-4 p-2 hover:bg-blue-100 rounded-full text-blue-400 transition-colors"
+              className=" absolute top-4 right-4 p-2 hover:bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300 transition-colors"
               style={{ paddingBottom: 30 }}
             >
               <X size={20} />
@@ -398,13 +403,13 @@ export default function UploadPage() {
             {/* Drag & Drop Zone */}
             {uploadType === 'images' ? (
               <div
-                className={`bg-white dark:bg-gray-900 border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 dark:border-gray-700 hover:border-blue-400'}`}
+                className={`bg-white dark:bg-black border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-800' : 'border-gray-300 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-500'}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrag}
               >
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-900 dark:text-white mb-4">
                   <UploadCloud size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Drag and drop your notes here</h3>
@@ -421,10 +426,10 @@ export default function UploadPage() {
 
                 <button
                   onClick={() => document.getElementById("fileInput")?.click()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-semibold shadow-sm
+                  className="bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-8 py-2.5 rounded-lg font-semibold shadow-sm
                   transition
       active:scale-[0.98]
-      active:bg-gray-50 dark:bg-gray-900
+      active:bg-gray-50 dark:active:bg-[#111]
       hover:shadow-md
       cursor-pointer"
                 >
@@ -433,21 +438,21 @@ export default function UploadPage() {
               </div>
             ) : (
               <div
-                className={`bg-white dark:bg-gray-900 border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 dark:border-gray-700 hover:border-blue-400'}`}
+                className={`bg-white dark:bg-black border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center text-center transition-all duration-200 ${dragActive ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-800' : 'border-gray-300 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-500'}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrag}
               >
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-4">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-900 dark:text-white mb-4">
                   <FileText size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Upload a Document</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Select a single PDF or DOCX file</p>
 
                 {documentFile ? (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 flex items-center gap-3">
-                    <FileText className="text-blue-500" />
+                  <div className="mb-6 p-4 bg-gray-50 dark:bg-black rounded-lg border border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                    <FileText className="text-gray-900 dark:text-white" />
                     <span className="font-medium text-gray-700 dark:text-gray-300">{documentFile.name}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); setDocumentFile(null); }}
@@ -470,10 +475,10 @@ export default function UploadPage() {
 
                 <button
                   onClick={() => document.getElementById("docInput")?.click()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-semibold shadow-sm
+                  className="bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-8 py-2.5 rounded-lg font-semibold shadow-sm
                   transition
       active:scale-[0.98]
-      active:bg-gray-50 dark:bg-gray-900
+      active:bg-gray-50 dark:active:bg-[#111]
       hover:shadow-md
       cursor-pointer"
                 >
@@ -491,7 +496,7 @@ export default function UploadPage() {
 */}
 
           {uploadType === 'images' && queuedFiles.length > 0 && (
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 overflow-x-auto">
+            <div className="bg-white dark:bg-black rounded-xl border border-gray-200 dark:border-gray-800 p-4 overflow-x-auto">
               <div className="flex gap-4">
                 {queuedFiles.map((qf, index) => (
                   <div
@@ -513,7 +518,7 @@ export default function UploadPage() {
                       className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1
                       transition
     active:scale-[0.98]
-    active:bg-gray-50 dark:bg-gray-900
+    active:bg-gray-50 dark:active:bg-[#111]
     hover:shadow-md
     cursor-pointer z-10"
                     >
@@ -553,7 +558,7 @@ export default function UploadPage() {
           <div className="space-y-6">
 
             {/* Metadata Card */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+            <div className="bg-white dark:bg-black rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-6">
                 <CheckCircle2 size={18} className="text-gray-900 dark:text-white" />
                 <h3 className="font-bold text-gray-900 dark:text-white">Common Metadata</h3>
@@ -568,7 +573,7 @@ export default function UploadPage() {
                   <select
                     value={selectedCourse}
                     onChange={(e) => setSelectedCourse(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm"
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 rounded-lg text-sm"
                   >
                     <option value="">Select a course</option>
                     {courses.map((course) => (
@@ -588,14 +593,14 @@ export default function UploadPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none text-blue-400 resize-none"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-gray-900 dark:focus:ring-white focus:outline-none text-gray-700 dark:text-gray-300 resize-none"
                   />
                 </div>
 
                 {/* Doc Type Dropdown */}
                 {/* <div>
                   <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Document Type</label>
-                  <select className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                  <select className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-800 transition-all">
                     <option>Lecture Notes</option>
                     <option>Exam Prep</option>
                     <option>Assignment</option>
@@ -608,13 +613,13 @@ export default function UploadPage() {
                   <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                     <button 
                       onClick={() => setSemester('Fall 2023')}
-                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${semester === 'Fall 2023' ? 'bg-blue-100 text-blue-700 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${semester === 'Fall 2023' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
                     >
                       Fall 2023
                     </button>
                     <button 
                       onClick={() => setSemester('Spring 2024')}
-                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${semester === 'Spring 2024' ? 'bg-blue-100 text-blue-700 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all ${semester === 'Spring 2024' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300'}`}
                     >
                       Spring 2024
                     </button>
@@ -643,10 +648,10 @@ export default function UploadPage() {
                 <button
                   disabled={isUploading || !selectedCourse || (uploadType === 'images' ? queuedFiles.length === 0 : !documentFile)}
                   onClick={handleUpload}
-                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg disabled:opacity-50
+                  className="w-full bg-black dark:bg-white text-white dark:text-black font-bold py-3 rounded-lg disabled:opacity-50
                   transition
     active:scale-[0.98]
-    active:bg-gray-50 dark:bg-gray-900
+    active:bg-gray-50 dark:active:bg-[#111]
     hover:shadow-md
     cursor-pointer"
                 >
@@ -698,7 +703,7 @@ export default function UploadPage() {
       {/* Document Review Modal */}
       {showDocReviewModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative p-8 text-center animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative p-8 text-center animate-in zoom-in-95 duration-200">
             <button
               onClick={() => {
                 setShowDocReviewModal(false);
@@ -708,7 +713,7 @@ export default function UploadPage() {
                   router.replace(`/courses/${selectedCourse}`);
                 }
               }}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:bg-gray-800 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:text-white bg-gray-100 dark:bg-[#111] hover:bg-gray-200 dark:hover:bg-[#222] rounded-full transition-colors"
             >
               <X size={20} />
             </button>
@@ -736,7 +741,7 @@ export default function UploadPage() {
                   router.replace(`/courses/${selectedCourse}`);
                 }
               }}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
+              className="w-full bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black font-bold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
             >
               Go to Course Page
             </button>

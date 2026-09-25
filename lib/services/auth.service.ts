@@ -65,6 +65,9 @@ export async function createUser({
     if (data.token) {
       setAuthToken(data.token);
     }
+    if (data.user && typeof window !== "undefined") {
+      localStorage.setItem("cached_user", JSON.stringify(data.user));
+    }
 
     trackUserSignup(data.user.id, { email, username, level, department });
     return data.user;
@@ -89,6 +92,9 @@ export async function signIn(email: string, password: string) {
     if (data.token) {
       setAuthToken(data.token);
     }
+    if (data.user && typeof window !== "undefined") {
+      localStorage.setItem("cached_user", JSON.stringify(data.user));
+    }
 
     trackUserSignin(data.user.id, { email });
     return data;
@@ -112,20 +118,49 @@ export async function getCurrentUser() {
     if (!res.ok) {
       if (res.status === 401) {
         removeAuthToken();
+        if (typeof window !== "undefined") localStorage.removeItem("cached_user");
+        return null;
+      }
+      // If it's a 5xx or offline error, try to fallback to cache
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("cached_user");
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            return null;
+          }
+        }
       }
       return null;
     }
 
     const data = await res.json();
+    if (data.user && typeof window !== "undefined") {
+      localStorage.setItem("cached_user", JSON.stringify(data.user));
+    }
     return data.user || null;
   } catch (error) {
-    console.error("Failed to fetch current user:", error);
+    console.error("Failed to fetch current user (possibly offline):", error);
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("cached_user");
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+          return null;
+        }
+      }
+    }
     return null;
   }
 }
 
 export async function signOut() {
   removeAuthToken();
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("cached_user");
+  }
 }
 
 export async function updateUser({

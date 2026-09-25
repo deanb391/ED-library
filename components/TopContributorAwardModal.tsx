@@ -95,20 +95,20 @@ export default function TopContributorAwardModal({
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm overflow-y-auto" style={{ marginTop: "70px" }}>
       <div className="flex min-h-full items-start justify-center p-4 sm:p-6 pt-[100px] pb-[100px]">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md relative flex flex-col mb-auto shrink-0"
+        <div className="bg-white dark:bg-black rounded-2xl shadow-xl w-full max-w-md relative flex flex-col mb-auto shrink-0"
           style={{ animation: "awardSlideIn 0.4s ease-out" }}
         >
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-900/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
+            className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-black/80 hover:bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 transition"
           >
             <X size={20} />
           </button>
 
           {/* Header */}
           <div className="p-6 text-center border-b border-gray-100 dark:border-gray-800" style={{ paddingBottom: 12 }}>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl md:text-2xl font-bold text-black dark:text-white">
               🏆 You're the Top Contributor!
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400" style={{ fontSize: 10 }}>
@@ -234,7 +234,7 @@ export default function TopContributorAwardModal({
             <button
               onClick={handleShare}
               disabled={!imageLoaded || isGenerating}
-              className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition active:scale-[0.98] disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 text-white dark:text-black font-bold py-3.5 rounded-xl transition active:scale-[0.98] disabled:opacity-60"
               style={{
                 background: "linear-gradient(135deg, #FFB300, #FF8F00)",
                 boxShadow: "0 4px 14px rgba(255, 143, 0, 0.3)",

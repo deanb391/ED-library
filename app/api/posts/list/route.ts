@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
 
   const courseId = searchParams.get("courseId");
   const cursor = searchParams.get("cursor");
+  const offset = searchParams.get("offset");
   const limitStr = searchParams.get("limit");
 
   if (!courseId) {
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const order = searchParams.get("order") || "desc";
   const limit = limitStr ? parseInt(limitStr, 10) : (order === "asc" ? 10 : 5);
 
-  const res = await fetchPostsService(courseId, { cursor, limit, order });
+  const res = await fetchPostsService(courseId, { cursor, offset, limit, order });
 
   return NextResponse.json(res);
 }

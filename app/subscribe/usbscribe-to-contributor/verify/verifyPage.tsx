@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/components/useRouter";
 
-const BRAND_BLUE = "#2563EB";
+const BRAND_BLUE = "#000000";
 
 export default function VerifyPaymentPage() {
   const router = useRouter();
@@ -74,7 +74,7 @@ export default function VerifyPaymentPage() {
   }, [paymentId, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4 text-center">
       <div
         className="rounded-full h-12 w-12 border-t-4 border-solid mb-4 animate-spin"
         style={{ borderColor: BRAND_BLUE, borderTopColor: "transparent" }}

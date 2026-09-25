@@ -52,7 +52,13 @@ export async function GET(request: Request) {
       courseIds = [];
     }
 
-    const contributor = await fetchContributorService(contributorId);
+    let contributor = null;
+    try {
+      contributor = await fetchContributorService(contributorId);
+    } catch (e) {
+      const { getContributorByUserIdService } = await import("@/lib/services/contributors.service");
+      contributor = await getContributorByUserIdService(contributorId);
+    }
     if (!contributor) throw new Error("Contributor not found");
 
     const flutter_fee = 0.02 * payment.amount;
@@ -64,11 +70,18 @@ export async function GET(request: Request) {
     await updatePaymentStatus(paymentId, "successful");
     await creditWalletService(contributor.user, rev);
 
+    // Ensure 'admin' user exists before logging admin transactions
+    await prisma.user.upsert({
+      where: { id: "admin" },
+      update: {},
+      create: { id: "admin", email: "admin@ed-library.com", name: "Admin" }
+    });
+
     await createTransactionService({ user: userId, type: 'deposit', direction: "credit", amount: payment.amount, reference: payment.description });
     await createTransactionService({ user: "admin", type: "deposit_fee", direction: "debit", amount: ed_fee, reference: payment.description });
     await createTransactionService({ user: "admin", type: "payment_processing_fee", direction: "debit", amount: flutter_fee, reference: payment.description });
     await createTransactionService({ user: "admin", type: 'platform_cut', direction: "debit", amount: cut, reference: payment.description });
-    await createTransactionService({ user: contributor.$id, type: 'earning', direction: "credit", amount: rev, reference: payment.description });
+    await createTransactionService({ user: contributor.user, type: 'earning', direction: "credit", amount: rev, reference: payment.description });
 
     await createEarningService({
       amount: rev,

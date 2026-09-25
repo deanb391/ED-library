@@ -40,6 +40,14 @@ body {
 }
 
 /* ===== Custom Scrollbar ===== */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent; /* Tailwind gray-300 */

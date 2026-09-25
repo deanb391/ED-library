@@ -8,7 +8,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "user is required" }, { status: 400 });
   }
 
-  const result = await fetchForYouCoursesService(user);
+  const userId = typeof user === 'object' ? (user.id || user.$id) : user;
+
+  if (!userId) {
+    return NextResponse.json({ error: "userId is missing" }, { status: 400 });
+  }
+
+  const result = await fetchForYouCoursesService(userId);
 
   return NextResponse.json(result);
 }

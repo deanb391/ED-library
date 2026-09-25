@@ -7,11 +7,13 @@ import {
   fetchNewCourses,
   fetchPopularCourses,
   fetchRelatedCourse,
+  searchCourses,
 } from "@/lib/api/courses";
 import { fetchLibraryCourse } from "@/lib/api/library";
 import {
   getTopContributors,
   getNewContributors,
+  searchContributors,
 } from "@/lib/api/contributors";
 import type { Contributor } from "@/lib/services/contributors.service";
 import { fetchSmallAds, fetchMediumAds } from "@/lib/api/ads";
@@ -55,6 +57,16 @@ type HomeContextType = {
   loadingMore: { popular: boolean; new: boolean };
   
   loadMore: (type: "popular" | "new") => Promise<void>;
+
+  isSidebarExpanded: boolean;
+  setIsSidebarExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  
+  isSearchOverlayOpen: boolean;
+  searchOverlayQuery: string;
+  searchOverlayResults: { courses: Course[]; contributors: Contributor[] };
+  isSearchOverlayLoading: boolean;
+  submitSearch: (query: string) => Promise<void>;
+  closeSearch: () => void;
 };
 
 const HomeContext = createContext<HomeContextType | undefined>(undefined);
@@ -91,6 +103,12 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loadingMore, setLoadingMore] = useState({ popular: false, new: false });
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  
+  const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
+  const [searchOverlayQuery, setSearchOverlayQuery] = useState("");
+  const [searchOverlayResults, setSearchOverlayResults] = useState<{ courses: Course[]; contributors: Contributor[] }>({ courses: [], contributors: [] });
+  const [isSearchOverlayLoading, setIsSearchOverlayLoading] = useState(false);
 
   // A flag to trace the user ID we last loaded data for, to refresh user-specific sections if user changes
   const [lastUserId, setLastUserId] = useState<string | undefined>(undefined);
@@ -192,6 +210,36 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     setLoadingMore((l) => ({ ...l, [type]: false }));
   };
 
+  const submitSearch = async (query: string) => {
+    if (!query.trim()) return;
+    setIsSearchOverlayOpen(true);
+    setSearchOverlayQuery(query);
+    setIsSearchOverlayLoading(true);
+    
+    try {
+      const [coursesData, contributorsData] = await Promise.all([
+        searchCourses(query),
+        searchContributors(query)
+      ]);
+      
+      setSearchOverlayResults({
+        courses: Array.isArray(coursesData) ? coursesData : (coursesData?.courses || []),
+        contributors: Array.isArray(contributorsData) ? contributorsData : (contributorsData?.contributors || [])
+      });
+    } catch (err) {
+      console.error("Search error in overlay", err);
+      setSearchOverlayResults({ courses: [], contributors: [] });
+    } finally {
+      setIsSearchOverlayLoading(false);
+    }
+  };
+
+  const closeSearch = () => {
+    setIsSearchOverlayOpen(false);
+    setSearchOverlayQuery("");
+    setSearchOverlayResults({ courses: [], contributors: [] });
+  };
+
   return (
     <HomeContext.Provider
       value={{
@@ -213,6 +261,14 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         loading,
         loadingMore,
         loadMore,
+        isSidebarExpanded,
+        setIsSidebarExpanded,
+        isSearchOverlayOpen,
+        searchOverlayQuery,
+        searchOverlayResults,
+        isSearchOverlayLoading,
+        submitSearch,
+        closeSearch,
       }}
     >
       {children}

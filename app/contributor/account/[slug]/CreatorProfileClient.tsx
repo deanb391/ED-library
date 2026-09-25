@@ -13,6 +13,7 @@ import {
   Share2,
   X,
   Crown,
+  ArrowLeft,
 } from "lucide-react";
 import deskImg from "@/assets/images/desk.webp";
 import Link from "next/link";
@@ -21,10 +22,10 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/components/useRouter";
 
-// ✅ REAL API IMPORTS
-import { getContributor, toggleFollowContributor } from "@/lib/api/contributors";
+import { getContributor, toggleFollowContributor, checkFollowContributor } from "@/lib/api/contributors";
 import { fetchCoursesByAdmin } from "@/lib/api/courses";
 import { useUser } from "@/context/UserContext";
+import BannerAd from "@/components/BannerAd";
 
 const BRAND_BLUE = "#2962FF";
 const BRAND_BLUE_LIGHT = "#EAF0FF";
@@ -234,21 +235,9 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
           return;
         }
 
-        const raw = contributorRes?.followersIds;
-
-        let followersIds: string[] = [];
-
-        if (raw) {
-          try {
-            followersIds = JSON.parse(raw);
-            if (!Array.isArray(followersIds)) followersIds = [];
-          } catch {
-            followersIds = [];
-          }
-        }
-
-        if (user?.$id && followersIds.includes(user.$id)) {
-          setFollowing(true);
+        if (user?.$id) {
+          const isFollowing = await checkFollowContributor(user.$id, contributorRes.$id);
+          setFollowing(isFollowing);
         } else {
           setFollowing(false);
         }
@@ -310,174 +299,205 @@ export default function CreatorProfilePage({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
+      <div className="min-h-screen bg-transparent text-gray-900 dark:text-white flex flex-col w-full">
+        <main className="flex-1 w-full pb-20">
+          {/* Skeleton Banner */}
+          <div className="w-full h-32 md:h-56 bg-gray-200 dark:bg-gray-800 animate-pulse relative" />
+          
+          <div className="max-w-6xl mx-auto px-4 md:px-6 w-full -mt-10 md:-mt-16">
+            <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6 w-full">
+              {/* Skeleton Avatar */}
+              <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-700 animate-pulse z-10 shrink-0" />
+              
+              {/* Skeleton Header Info */}
+              <div className="flex flex-col gap-2 flex-1 pb-2">
+                <div className="h-8 w-48 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+                <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+              </div>
+            </div>
+
+            {/* Skeleton Buttons */}
+            <div className="flex items-center gap-3 mt-6">
+              <div className="h-10 w-32 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+              <div className="h-10 w-32 bg-gray-200 dark:bg-gray-800 rounded-full animate-pulse" />
+            </div>
+
+            {/* Skeleton Tabs */}
+            <div className="flex gap-6 mt-8 border-b border-gray-200 dark:border-gray-800">
+              <div className="h-6 w-16 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+              <div className="h-6 w-16 bg-gray-200 dark:bg-gray-800 rounded mb-2 animate-pulse" />
+            </div>
+
+            {/* Skeleton Courses */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-64 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
+  const [bannerAdOpen, setBannerAdOpen] = useState(false);
+  const [currentBanner, setCurrentBanner] = useState<any>(null);
+  const { allScreenBannerAds, showAdAll } = useUser();
+
+  useEffect(() => {
+    if (allScreenBannerAds.length > 0) {
+      const value = showAdAll();
+      setBannerAdOpen(value);
+      setCurrentBanner(allScreenBannerAds[Math.floor(Math.random() * allScreenBannerAds.length)]);
+    }
+  }, [allScreenBannerAds]);
+
   return (
-    <div className="min-h-screen bg-transparent text-gray-900 dark:text-white flex flex-col">
-      <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4">
+    <div className="min-h-screen bg-transparent text-gray-900 dark:text-white flex flex-col w-full overflow-x-hidden">
+      <main className="flex-1 w-full pb-20">
+        
+        {currentBanner && (
+          <BannerAd
+            ad={currentBanner}
+            isOpen={bannerAdOpen}
+            onClose={() => setBannerAdOpen(false)}
+          />
+        )}
 
-          {/* Profile */}
-          <section className="py-8 flex flex-col items-center text-center">
+        {/* Responsive Banner */}
+        <div className="relative w-full h-32 md:h-56 lg:h-64 bg-gray-100 dark:bg-gray-800 overflow-hidden">
+          {/* Desktop Image Banner (hidden on mobile) */}
+          <div className="hidden md:block absolute inset-0">
+            <img 
+              src="https://picsum.photos/id/1050/1920/400" 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Mobile Gradient Banner (hidden on desktop) */}
+          <div className="md:hidden absolute inset-0 bg-gradient-to-tr from-pink-500 via-purple-400 to-blue-400" />
+          
+          {/* Mobile Back Button (on banner) */}
+          <button 
+            className="md:hidden absolute top-4 left-4 p-2 bg-black/20 hover:bg-black/30 backdrop-blur-md rounded-full text-white transition-colors z-10"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft size={24} />
+          </button>
+        </div>
 
+        <div className="max-w-6xl mx-auto px-4 md:px-6 w-full -mt-10 md:-mt-16">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6 relative w-full">
+            
+            {/* Avatar */}
             <div
-              className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden shadow border-2 border-white mb-4 cursor-pointer"
-              style={{ height: 190, width: 190 }}
+              className="w-20 h-20 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-900 bg-gray-100 dark:bg-gray-800 cursor-pointer z-10 shrink-0"
               onClick={() => setShowExpandedImage(true)}
             >
               <img
                 src={contributor?.profileImage || deskImg.src}
                 className="w-full h-full object-cover"
-                alt=""
+                alt={contributor?.username || "Contributor"}
               />
             </div>
 
-            <div className="flex flex-col items-center gap-1.5">
-              <h1 className="text-2xl md:text-3xl font-bold">
-                {contributor?.username || "Contributor"}
-              </h1>
-
-              {contributor?.isTopContributor && (
-                <div
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-                  style={{
-                    backgroundColor: "#FFF8E1",
-                    border: "1px solid #FFE082",
-                    color: "#FF8F00",
-                  }}
-                >
-                  <Crown size={14} color="#FF8F00" />
-                  <span className="text-xs font-bold uppercase tracking-wide">
-                    Top Contributor
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="mt-5 w-full flex flex-col items-center gap-3">
-              <button
-                onClick={handleFollow}
-                disabled={follow}
-                className="max-w-xs py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition disabled:opacity-70"
-                style={{
-                  backgroundColor: following ? "#16a34a" : BRAND_BLUE,
-                  paddingRight: 20,
-                  paddingLeft: 20,
-                  marginTop: 10,
-                  cursor: follow ? "not-allowed" : "pointer",
-                }}
-              >
-                {follow ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : null}
-
-                {following ? "Following" : "Follow"}
-              </button>
-
-              <div className="flex gap-2 max-w-xs w-full">
-                <button
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-semibold"
-                  onClick={() =>
-                    router.push(
-                      `/subscribe/usbscribe-to-contributor/${slug}`
-                    )
-                  }
-                  style={{ paddingRight: 20, paddingLeft: 20 }}
-                >
-                  Subscribe
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-50 dark:bg-gray-900 transition"
-                >
-                  <Share2 size={20} />
-                </button>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="w-full max-w-sm mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden flex">
-              <div className="flex-1 flex flex-col items-center py-4">
-                <span className="text-xl font-bold"> {courses.length}</span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                  Courses
-                </span>
+            {/* Profile Info (Name, Handle, Stats) */}
+            <div className="flex flex-col gap-1 md:pb-2 pt-2 md:pt-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                  {contributor?.username || "Contributor"}
+                </h1>
+                {contributor?.isTopContributor && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-50 text-yellow-600 border border-yellow-200">
+                    <Crown size={14} />
+                  </div>
+                )}
               </div>
 
-              <div className="w-px bg-gray-200 dark:bg-gray-800" />
-
-              <div className="flex-1 flex flex-col items-center py-4">
-                <span className="text-xl font-bold">
-                  {contributor?.followers || 0}
-                </span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                  Followers
-                </span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                <span>@{contributor?.username?.toLowerCase().replace(/\s+/g, '') || "user"}</span>
+                <span className="hidden md:inline">•</span>
+                <span>{contributor?.followers || 0} followers</span>
+                <span className="hidden md:inline">•</span>
+                <span>{courses.length} courses</span>
               </div>
-
-              <div className="w-px bg-gray-200 dark:bg-gray-800" />
-
-              <div className="flex-1 flex flex-col items-center py-4">
-                <span className="text-xl font-bold">---</span>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                  Rating
-                </span>
-              </div>
-            </div>
-
-            {/* Bio */}
-            <div className="max-w-md mt-6">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {contributor?.bio ||
-                  "Contributor on ED-Library platform."}
-              </p>
-            </div>
-          </section>
-
-          {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-800 mb-6">
-            <div className="flex gap-8">
-              <button
-                className="pb-3 text-sm font-semibold border-b-2"
-                style={{
-                  color: BRAND_BLUE,
-                  borderColor: BRAND_BLUE,
-                }}
-              >
-                Courses
-              </button>
-              <button className="pb-3 text-sm text-gray-500 dark:text-gray-400">
-                About
-              </button>
             </div>
           </div>
 
-          <CourseSection title="courses" courses={courses} />
+          {/* Bio and Links */}
+          <div className="mt-4 md:mt-5 max-w-2xl w-full">
+            <p className="text-sm md:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contributor?.bio || "Contributor on ED-Library platform sharing quality educational resources and guides."} 
+              <span className="font-bold cursor-pointer hover:underline text-gray-900 dark:text-white ml-1">...more</span>
+            </p>
+            
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-sm md:text-[15px] font-semibold text-gray-900 dark:text-white cursor-pointer hover:underline">
+              <Link2 size={16} className="text-gray-700 dark:text-gray-300" />
+              <span>Rivers State University</span>
+              <span className="text-gray-500 font-normal">and 1 more links</span>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-center gap-3 mt-6">
+            <button
+              onClick={handleFollow}
+              disabled={follow}
+              className={`px-6 py-2 rounded-full font-semibold transition flex items-center justify-center gap-2 disabled:opacity-70 text-sm md:text-[15px] ${
+                following 
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700" 
+                  : "bg-black dark:bg-white text-white dark:text-black"
+              }`}
+              style={{ cursor: follow ? "not-allowed" : "pointer" }}
+            >
+              {follow && <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
+              {following ? (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  Unfollow
+                </>
+              ) : "Follow"}
+            </button>
+            
+            <button className="px-6 py-2 rounded-full font-semibold transition flex items-center justify-center gap-2 text-sm md:text-[15px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">
+              <Users size={18} />
+              Community
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-6 md:gap-8 mt-8 border-b border-gray-200 dark:border-gray-800">
+            <button className="pb-3 text-sm md:text-[15px] font-bold border-b-2 text-gray-900 dark:text-white border-gray-900 dark:border-white">
+              Courses
+            </button>
+            <button className="pb-3 text-sm md:text-[15px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+              About
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="mt-6">
+            <CourseSection title="" courses={courses} />
+          </div>
         </div>
       </main>
 
       {/* Expanded Image Modal */}
       {showExpandedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={() => setShowExpandedImage(false)}
         >
           <button
-            className="absolute top-4 right-4 text-white p-2"
+            className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full transition"
             onClick={() => setShowExpandedImage(false)}
           >
-            <X size={24} color="red" />
+            <X size={28} />
           </button>
           <img
             src={contributor?.profileImage || deskImg.src}
-            className="max-w-full max-h-full object-contain rounded-lg"
-            alt=""
+            className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            alt={contributor?.username || "Contributor"}
             onClick={(e) => e.stopPropagation()}
           />
         </div>

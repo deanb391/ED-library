@@ -6,8 +6,8 @@ import { ArrowLeft, BadgeCheck, Scale, ShieldAlert } from "lucide-react";
 
 export default function ContributorTermsPage() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 py-12 px-6">
-      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white py-12 px-6">
+      <div className="max-w-3xl mx-auto bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-gray-800 shadow-sm overflow-hidden">
         {/* Header decoration */}
         <div className="h-2 bg-blue-600" />
         
@@ -15,26 +15,26 @@ export default function ContributorTermsPage() {
           {/* Back button */}
           <Link
             href="/onboarding/step-1"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition mb-8 group"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white transition mb-8 group"
           >
             <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
             Back to Application
           </Link>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-100 text-blue-600 p-2.5 rounded-2xl">
+            <div className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white p-2.5 rounded-2xl">
               <Scale size={24} />
             </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
               Contributor Terms & Conditions
             </h1>
           </div>
 
-          <p className="text-slate-500 text-xs mb-8">
+          <p className="text-slate-500 dark:text-gray-400 text-xs mb-8">
             Last Updated: December 5, 2026. Please read these terms carefully before joining as an ED-Library Contributor.
           </p>
 
-          <div className="space-y-8 text-xs sm:text-sm text-slate-700 max-h-[60vh] overflow-y-auto pr-2">
+          <div className="space-y-8 text-xs sm:text-sm text-slate-700 dark:text-gray-300 max-h-[60vh] overflow-y-auto pr-2">
             <p className="font-bold text-sm">ED-LIBRARY CONTRIBUTOR TERMS AND CONDITIONS</p>
             <p>Effective Date: 12/05/2026</p>
             <p>These Contributor Terms and Conditions (“Terms”) govern the relationship between ED-Library (“ED-Library,” “we,” “our,” or “us”) and any individual or entity (“Contributor,” “you,” or “your”) who uploads, publishes, distributes, sells, or otherwise provides content through the ED-Library platform, including its website, mobile applications, APIs, affiliated services, future applications, and related technologies.</p>
@@ -45,7 +45,7 @@ export default function ContributorTermsPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">1. DEFINITIONS</h3>
               <p>For the purpose of these Terms:</p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600">
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-gray-400">
                 <li>“Platform” refers to ED-Library websites, applications, software, systems, APIs, databases, and services.</li>
                 <li>“Content” refers to notes, textbooks, summaries, slides, documents, PDFs, images, questions, answers, academic resources, metadata, thumbnails, previews, descriptions, tags, and any uploaded material.</li>
                 <li>“Contributor” refers to any user who uploads or distributes content through ED-Library.</li>
@@ -58,12 +58,12 @@ export default function ContributorTermsPage() {
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">2. ELIGIBILITY</h3>
               <p>To become a Contributor, you must:</p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600">
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-gray-400">
                 <li>Be at least 18 years old; or</li>
                 <li>Have permission and supervision from a parent or legal guardian where required by applicable law.</li>
               </ul>
               <p>By using ED-Library as a Contributor, you represent that:</p>
-              <ul className="list-disc pl-5 space-y-1 text-slate-600">
+              <ul className="list-disc pl-5 space-y-1 text-slate-600 dark:text-gray-400">
                 <li>You are legally capable of entering binding agreements;</li>
                 <li>The information you provide is accurate and complete;</li>
                 <li>You are not prohibited from using the Platform under any applicable law.</li>
@@ -180,10 +180,10 @@ export default function ContributorTermsPage() {
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-slate-200 text-center">
+          <div className="mt-12 pt-8 border-t border-slate-200 dark:border-gray-800 text-center">
             <Link
               href="/onboarding/step-1"
-              className="inline-flex px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition"
+              className="inline-flex px-6 py-3 bg-blue-600 hover:bg-gray-100 dark:bg-gray-8000 text-white font-medium rounded-xl transition"
             >
               Understand & Return to Application
             </Link>

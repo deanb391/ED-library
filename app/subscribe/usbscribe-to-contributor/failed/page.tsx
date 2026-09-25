@@ -5,15 +5,15 @@ import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from "@/components/useRouter";
 
-const BRAND_BLUE = "#1C64F2";
+const BRAND_BLUE = "#000000";
 
 export default function SubscriptionFailedPage() {
   const router = useRouter()
   return (
-    <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-3 font-sans">
+    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-3 font-sans">
 
       {/* Main Failed Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-[24px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-800 p-5 w-full max-w-[360px] flex flex-col items-center text-center">
+      <div className="bg-white dark:bg-black rounded-[24px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-800 p-5 w-full max-w-[360px] flex flex-col items-center text-center">
 
         {/* Icon Container */}
         <div
@@ -42,7 +42,14 @@ export default function SubscriptionFailedPage() {
             <button
               className="w-full text-white font-bold text-lg py-4 px-4 rounded-xl shadow-sm transition-transform active:scale-[0.98] leading-tight"
               style={{ backgroundColor: BRAND_BLUE }}
-              onClick={() => router.back()}
+              onClick={() => {
+                const lastCheckoutUrl = typeof window !== "undefined" ? localStorage.getItem("lastCheckoutUrl") : null;
+                if (lastCheckoutUrl) {
+                  window.location.href = lastCheckoutUrl;
+                } else {
+                  router.back();
+                }
+              }}
             >
               Try Again
             </button>

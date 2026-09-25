@@ -59,7 +59,7 @@ function CourseSection({
 
         <Link
           href="/contributor/courses"
-          className="text-sm font-medium text-blue-600 hover:text-blue-700 transition"
+          className="text-sm font-medium text-black dark:text-white underline hover:opacity-70 transition"
         >
           See all
         </Link>
@@ -70,7 +70,7 @@ function CourseSection({
           <Link
             key={course.id}
             href={`/courses/${course.id}`}
-            className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800
+            className="group bg-white dark:bg-black rounded-2xl border border-gray-200 dark:border-gray-800
                        hover:border-gray-300 dark:border-gray-700 overflow-hidden
                        flex flex-col transition
                        active:scale-[0.98]
@@ -167,34 +167,34 @@ export default function DashboardUnderReviewPage() {
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false, isPastStart: false, isPastEnd: false });
 
   useEffect(() => {
+    let isMounted = true;
     const loadDashboard = async () => {
       if (!user) {
-        setDashboardLoading(false);
+        if (isMounted) setDashboardLoading(false);
         return;
-      }
-
-      if (!contributor && !contributorLoading) {
-        await refetchContributor();
       }
 
       try {
         const adminCourses = await fetchCoursesByAdmin(user.$id);
-        setCourses(adminCourses.slice(0, 8));
+        if (isMounted) setCourses(adminCourses.slice(0, 8));
       } catch (err) {
         console.error("Failed to load contributor dashboard data", err);
-        setCourses([]);
+        if (isMounted) setCourses([]);
       } finally {
-        setDashboardLoading(false);
+        if (isMounted) setDashboardLoading(false);
       }
     };
 
     loadDashboard();
-  }, [user?.$id, contributor, contributorLoading, refetchContributor]);
+    return () => { isMounted = false; };
+  }, [user?.$id]);
 
   // Check if we should show the celebration modal
+  const [hasTriggeredCelebration, setHasTriggeredCelebration] = useState(false);
   useEffect(() => {
-    if (contributor && contributor.status === 'live' && contributor.hasSeenCelebration !== true) {
+    if (contributor && contributor.status === 'live' && contributor.hasSeenCelebration !== true && !hasTriggeredCelebration) {
       setIsModalOpen(true);
+      setHasTriggeredCelebration(true);
       // Immediately mark it as seen in the database so it won't show again on reload
       editContributor(contributor.$id, { hasSeenCelebration: true })
         .then(() => {
@@ -203,7 +203,7 @@ export default function DashboardUnderReviewPage() {
         })
         .catch(console.error);
     }
-  }, [contributor, refetchContributor]);
+  }, [contributor, refetchContributor, hasTriggeredCelebration]);
 
   // Check if we should show the terms modal
   useEffect(() => {
@@ -384,17 +384,28 @@ export default function DashboardUnderReviewPage() {
   const profileBio = contributor?.bio ?? "No bio available yet.";
   const profileStatus = contributor?.status ?? "pending";
 
-  if (dashboardLoading) {
+    if (dashboardLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
-        <p className="text-gray-700 dark:text-gray-300 text-sm">Loading dashboard data...</p>
+      <div className="min-h-screen bg-white dark:bg-black px-4 py-8 md:py-12 animate-pulse flex flex-col font-sans">
+        <main className="flex-1 max-w-5xl mx-auto w-full space-y-8">
+          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 h-64 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F7F9] flex flex-col font-sans text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-white dark:bg-transparent flex flex-col font-sans text-gray-900 dark:text-white">
 
 
       {/* --- Page Layout (Sidebar + Main) --- */}
@@ -402,126 +413,13 @@ export default function DashboardUnderReviewPage() {
 
 
         {/* --- Main Content Area --- */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-white dark:bg-gray-900">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-white dark:bg-transparent">
           <div style={{ marginBottom: 20, fontSize: 20, fontWeight: "bold" }}>
             My Dashboard
           </div>
           <div className="max-w-5xl mx-auto space-y-8">
 
-            {/* Screaming Contest Banner (When NOT Enrolled) */}
-            {!contributor.joinedContest && (
-              <div
-                className="relative overflow-hidden rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-indigo-500/30 text-white animate-fade-in"
-                style={{
-                  background: "linear-gradient(135deg, #312e81 0%, #4c1d95 50%, #831843 100%)",
-                  boxShadow: "0 10px 30px -5px rgba(76, 29, 149, 0.5), 0 0 20px rgba(131, 24, 67, 0.25)",
-                }}
-              >
-                {/* Decorative backgrounds */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white dark:bg-gray-900/5 rounded-full blur-2xl -translate-y-12 translate-x-12 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-xl translate-y-12 -translate-x-12 pointer-events-none" />
-
-                <div className="flex items-start gap-4 relative z-10">
-                  <div
-                    className="mt-1 w-12 h-12 bg-white dark:bg-gray-900/10 backdrop-blur-md rounded-xl flex items-center justify-center text-2xl shrink-0 border border-white/20"
-                    style={{
-                      animation: "dashboardFireBounce 1.5s ease-in-out infinite"
-                    }}
-                  >
-                    🏆
-                  </div>
-                  <div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-gray-900/10 backdrop-blur-sm text-white text-xs font-bold uppercase tracking-wider mb-2 border border-white/10">
-                      🔥 15-Day Contributor Challenge
-                    </div>
-                    <h3 className="text-xl md:text-2xl font-extrabold text-white mb-2 tracking-tight drop-shadow-sm">
-                      Win up to <span className="text-amber-300">₦100,000</span> in cash!
-                    </h3>
-                    <p className="text-xs md:text-sm text-white/90 leading-relaxed max-w-xl font-medium">
-                      Upload courses, reach unique students, generate new users, and climb the leaderboard to secure your share of the prize pool.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-center md:items-end gap-3 shrink-0 relative z-10 w-full md:w-auto">
-                  <div className="text-center md:text-right bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 w-full md:w-auto">
-                    <div className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">
-                      {timeLeft.isPastEnd ? "Contest Finished" : timeLeft.isPastStart ? "Contest Ends In" : "Count Down to Kickoff"}
-                    </div>
-                    <div className="font-mono text-lg font-black text-amber-300 tracking-wider">
-                      {timeLeft.isPastEnd ? (
-                        <span className="text-red-400">ENDED</span>
-                      ) : (
-                        `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
-                      )}
-                    </div>
-                  </div>
-
-                  {/* <Link
-                    href="/contest"
-                    className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
-                  >
-                    {timeLeft.isPastStart ? "Enter Contest Arena" : "Join & View Rules"}
-                  </Link> */}
-                  <Link
-                    href="/contributor/dashboard/contest-report"
-                    className="w-full md:w-auto text-center bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-gray-950 text-xs md:text-sm font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-amber-500/20 hover:scale-[1.03] active:scale-[0.98] border border-amber-300/30 uppercase tracking-wider text-decoration-none"
-                  >
-                    View Contest Report
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Compact Contest Banner (When Enrolled) */}
-            {contributor.joinedContest && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md text-white animate-fade-in">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center text-xl shrink-0 border border-indigo-500/20">
-                    🏆
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-white">Challenge Arena Access</h4>
-                    <p className="text-xs text-slate-405">You are registered in the Contributor Challenge.</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-                  <div className="bg-slate-950/60 border border-slate-800 px-4 py-2 rounded-xl text-center md:text-right shrink-0 w-full sm:w-auto">
-                    <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                      {timeLeft.isPastEnd ? "Contest Finished" : timeLeft.isPastStart ? "Contest Ends In" : "Contest Starts In"}
-                    </div>
-                    <div className="font-mono text-sm font-bold text-amber-300">
-                      {timeLeft.isPastEnd ? (
-                        <span className="text-red-400">ENDED</span>
-                      ) : (
-                        `${timeLeft.days}d : ${timeLeft.hours}h : ${timeLeft.minutes}m : ${timeLeft.seconds}s`
-                      )}
-                    </div>
-                  </div>
-
-                  {/* <Link
-                    href="/contest/leaderboard"
-                    className="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-550 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-indigo-600/10 text-decoration-none"
-                  >
-                    View Contest Leaderboard
-                  </Link> */}
-                  <Link
-                    href="/contributor/dashboard/contest-report"
-                    className="w-full sm:w-auto text-center bg-indigo-600 hover:bg-indigo-550 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-indigo-600/10 text-decoration-none"
-                  >
-                    View Contest Report
-                  </Link>
-                  <Link
-                    href="/contributor/dashboard/referrals"
-                    className="w-full sm:w-auto text-center bg-slate-800 hover:bg-slate-700 hover:scale-[1.02] text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md shadow-slate-900/10 text-decoration-none border border-slate-700"
-                  >
-                    My Referrals
-                  </Link>
-                </div>
-              </div>
-            )}
-
+            {/* Contest banners disabled */}
             {/* Missing Wallet Banner */}
             {
               !hasWallet && (
@@ -566,29 +464,23 @@ export default function DashboardUnderReviewPage() {
               )
             }
 
-            {/* Profile & Stats Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* LEFT SIDE - PROFILE */}
-              <div className="lg:col-span-2">
-                <div
-                  className="rounded-2xl  border-slate-200 p-6 shadow-sm hover:shadow-md transition"
-                  style={{ backgroundImage: "linear-gradient(135deg, #f8fafc, #f1f5f9)", borderWidth: 0 }}
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                      Profile
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ShareProfileButton contributorId={contributor?.$id || ""} />
-                      <Link
-                        href="/account"
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg"
-                      >
-                        Edit
-                      </Link>
-                    </div>
+            {/* --- Bento Grid Hero --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+              {/* Profile Card (Col Span 2) */}
+              <div className="lg:col-span-2 flex flex-col justify-between p-8 bg-white dark:bg-black border border-gray-200 dark:border-[#222] rounded-3xl relative overflow-hidden">
+                {/* Background Accent */}
+                <div className="absolute top-0 right-0 p-32 bg-gray-50 dark:bg-[#0a0a0a] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 opacity-50 pointer-events-none"></div>
+                
+                <div className="relative z-10 flex flex-col gap-8 h-full justify-between">
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 w-full">
+                    <ShareProfileButton contributorId={contributor?.$id || ""} />
+                    <Link
+                      href="/account"
+                      className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-bold rounded-xl hover:opacity-80 transition-opacity"
+                    >
+                      Edit Profile
+                    </Link>
                   </div>
 
                   {/* CONTENT */}
@@ -610,20 +502,20 @@ export default function DashboardUnderReviewPage() {
 
                     {/* INFO */}
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-xl font-bold text-slate-900 mb-1" style={{ fontSize: 16 }}>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1" style={{ fontSize: 16 }}>
                         {profileName}
                       </h2>
 
-                      <div className="text-sm text-slate-500 mb-2" style={{ fontSize: 10 }}>
+                      <div className="text-sm text-slate-500 dark:text-slate-400 mb-2" style={{ fontSize: 10 }}>
                         {profileInstitution}
                       </div>
 
-                      <p className="text-sm text-slate-600 mb-3 line-clamp-2" style={{ fontSize: 10 }}>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mb-3 line-clamp-2" style={{ fontSize: 10 }}>
                         {profileBio}
                       </p>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-semibold text-slate-500 uppercase" style={{ fontSize: 10 }}>
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase" style={{ fontSize: 10 }}>
                           Status:
                         </span>
                         <span
@@ -650,104 +542,43 @@ export default function DashboardUnderReviewPage() {
                       </div>
                     </div>
 
-                    {/* STATS */}
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-slate-900" style={{ fontSize: 12 }}>
-                        {followerCount.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-slate-500" style={{ fontSize: 10 }}>Followers</div>
-
-                      <div className="mt-3 text-xs text-slate-500" style={{ fontSize: 9 }}>
-                        Member since
-                      </div>
-                      <div className="text-xs font-semibold text-slate-700">
-                        {contributor?.$createdAt
-                          ? new Date(contributor.$createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                          })
-                          : "Recently"}
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Streak & Leaderboard Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Streak Card */}
-                <button
-                  onClick={() => setShowStreakCalendar(true)}
-                  className="rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-md active:scale-[0.98] text-left"
-                  style={{
-                    background: streakData && streakData.currentStreak > 0
-                      ? 'linear-gradient(135deg, #FFF3E0, #FFE0B2)'
-                      : 'linear-gradient(135deg, #F3F4F6, #E5E7EB)',
-                    border: streakData && streakData.currentStreak > 0
-                      ? '1px solid #FFE0B2'
-                      : '1px solid #E5E7EB',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 36,
-                      lineHeight: 1,
-                      animation: streakData && streakData.currentStreak > 0
-                        ? 'dashboardFireBounce 1.2s ease-in-out infinite'
-                        : 'none',
-                      filter: streakData && streakData.currentStreak > 0
-                        ? 'drop-shadow(0 2px 6px rgba(255, 69, 0, 0.3))'
-                        : 'grayscale(0.5)',
-                      opacity: streakData && streakData.currentStreak > 0 ? 1 : 0.5,
-                    }}
-                  >
-                    🔥
+              {/* Stats Stack (Col Span 1) */}
+              <div className="lg:col-span-1 flex flex-row lg:flex-col gap-4 lg:gap-6">
+                <div className="flex-1 bg-white dark:bg-black border border-gray-200 dark:border-[#222] rounded-3xl p-4 lg:p-6 flex flex-col justify-center">
+                  <div className="text-[10px] lg:text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Total Followers</div>
+                  <div className="text-2xl lg:text-4xl font-black text-black dark:text-white tracking-tighter">
+                    {followerCount.toLocaleString()}
                   </div>
-                  <div>
-                    <div style={{
-                      fontSize: 28,
-                      fontWeight: 900,
-                      color: streakData && streakData.currentStreak > 0 ? '#FF4500' : '#9CA3AF',
-                      lineHeight: 1,
-                    }}>
-                      {streakData?.currentStreak ?? 0}
-                    </div>
-                    <div style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: streakData && streakData.currentStreak > 0 ? '#E65100' : '#9CA3AF',
-                      marginTop: 2,
-                    }}>
-                      Day Upload Streak
-                    </div>
+                </div>
+                <div className="flex-1 bg-white dark:bg-black border border-gray-200 dark:border-[#222] rounded-3xl p-4 lg:p-6 flex flex-col justify-center">
+                  <div className="text-[10px] lg:text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Member Since</div>
+                  <div className="text-lg lg:text-2xl font-black text-black dark:text-white tracking-tighter">
+                    {contributor?.$createdAt
+                      ? new Date(contributor.$createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                      })
+                      : "Recently"}
                   </div>
-                </button>
-
-                {/* Leaderboard Card */}
-                <Link
-                  href="/contributor/dashboard/leaderboard"
-                  className="rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-md active:scale-[0.98]"
-                  style={{
-                    background: 'linear-gradient(135deg, #EDE7F6, #D1C4E9)',
-                    border: '1px solid #D1C4E9',
-                  }}
-                >
-                  <div style={{ fontSize: 36, lineHeight: 1 }}>🏆</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#4A148C' }}>
-                      Leaderboard
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 500, color: '#7B1FA2', marginTop: 2 }}>
-                      See where you rank among contributors
-                    </div>
-                  </div>
-                </Link>
+                </div>
               </div>
+            </div>
+
+            {/* --- Workspace --- */}
+            <div className="mb-12">
+              <div className="flex flex-col gap-4">
+                <h3 className="text-xs uppercase tracking-widest font-black text-gray-400 dark:text-gray-500 mb-2 pl-2">Creator Workspace</h3>
+                <div className="bg-white dark:bg-black border border-gray-200 dark:border-[#222] rounded-3xl overflow-hidden shadow-sm">
 
 
               {/* RIGHT SIDE - FIRST ACTION */}
               <ActionCard
                 icon={<PlusCircle size={20} />}
+                iconColor="text-blue-500"
                 title="Create Course"
                 desc="Launch a new course and publish learning materials."
                 enabled={isContributorActive}
@@ -758,6 +589,7 @@ export default function DashboardUnderReviewPage() {
               {/* SECOND ROW */}
               <ActionCard
                 icon={<UploadCloud size={20} />}
+                iconColor="text-emerald-500"
                 title="Upload Assets"
                 desc="Batch upload notes and course assets for published classes."
                 enabled={isContributorActive}
@@ -765,18 +597,10 @@ export default function DashboardUnderReviewPage() {
                 index={1}
               />
 
-              <ActionCard
-                icon={<LineChart size={20} />}
-                title="Deep Analytics"
-                desc="Track student engagement, visits, and content performance."
-                enabled={false}
-                link={`/contributor/dashboard/deep-analytics`}
-                index={2}
-              />
-
               {/* THIRD ROW */}
               <ActionCard
                 icon={<PlusCircle size={20} />}
+                iconColor="text-purple-500"
                 title="Subscriptions & Payments"
                 desc="Monitor paid subscribers and payouts across your work."
                 enabled={isContributorActive}
@@ -786,6 +610,7 @@ export default function DashboardUnderReviewPage() {
 
               <ActionCard
                 icon={<Share2 size={20} />}
+                iconColor="text-orange-500"
                 title="Referrals & Contests"
                 desc="Track referral clicks, sign-ups, and get your custom link."
                 enabled={isContributorActive}
@@ -793,6 +618,8 @@ export default function DashboardUnderReviewPage() {
                 index={4}
               />
 
+                </div>
+              </div>
             </div>
 
 
@@ -905,6 +732,7 @@ export default function DashboardUnderReviewPage() {
 
 function ActionCard({
   icon,
+  iconColor = "text-black dark:text-white",
   title,
   desc,
   enabled = false,
@@ -912,56 +740,58 @@ function ActionCard({
   index = 0,
 }: {
   icon: React.ReactNode;
+  iconColor?: string;
   title: string;
   desc: string;
   enabled?: boolean;
   link?: string;
   index?: number;
 }) {
-  const gradientConfigs = [
-    { from: "#3b82f6", to: "#06b6d4" }, // Blue → Violet (clean, modern default)
-    { from: "#3b82f6", to: "#8b5cf6" }, // Blue → Cyan (fresh, techy)
-    { from: "#3b82f6", to: "#10b981" }, // Blue → Emerald (calm, trustworthy)
-    { from: "#3b82f6", to: "#f97316" }, // Blue → Orange (balanced contrast)
-    { from: "#3b82f6", to: "#ec4899" }, // Blue → Pink (vibrant but controlled)
-  ];
-
-  const gradient = gradientConfigs[index % 4];
-
   const cardContent = (
     <div
-      style={enabled ? { backgroundImage: `linear-gradient(170deg, ${gradient.from}, ${gradient.to})` } : undefined}
       className={clsx(
-        "rounded-2xl border p-6 flex flex-col transition-all duration-500",
+        "group/card relative flex items-center justify-between p-5 transition-all duration-300 border-b border-gray-100 dark:border-[#222] last:border-0",
         enabled
-          ? "shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer text-white"
-          : "bg-transparent border-gray-100 dark:border-gray-800 opacity-70 pointer-events-none"
+          ? "bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
+          : "bg-gray-50 dark:bg-black opacity-50 pointer-events-none"
       )}
     >
-      <div className={clsx(
-        "w-10 h-10 rounded-full flex items-center justify-center mb-4",
-        enabled ? "bg-white dark:bg-gray-900/20 text-white" : "bg-gray-200 dark:bg-gray-800/50 text-gray-400"
-      )}>
-        {icon}
+      <div className="flex items-center gap-5">
+        <div className={clsx(
+          "w-12 h-12 rounded-xl flex items-center justify-center border",
+          enabled 
+            ? `bg-white dark:bg-black ${iconColor} border-gray-200 dark:border-[#333] shadow-sm` 
+            : "bg-gray-100 dark:bg-[#111] text-gray-400 border-transparent"
+        )}>
+          {icon}
+        </div>
+        <div className="flex flex-col">
+          <h4 className={clsx("text-[15px] font-bold tracking-tight", enabled ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400")}>
+            {title}
+          </h4>
+          <p className={clsx("text-[13px] font-medium mt-0.5", enabled ? "text-gray-500 dark:text-gray-400" : "text-gray-400")}>
+            {desc}
+          </p>
+        </div>
       </div>
-      <h4 className={clsx("text-sm font-bold mb-2", enabled ? "text-white" : "text-gray-600 dark:text-gray-400")}>
-        {title}
-      </h4>
-      <p className={clsx("text-xs leading-relaxed", enabled ? "text-white/90" : "text-gray-400")}>{desc}</p>
-      <div className="mt-4 text-[11px] uppercase tracking-[0.12em] font-semibold">
-        {!enabled && <span className="text-gray-500 dark:text-gray-400">Your Account Is Under Review</span>}
-        {enabled && <span className="text-white/80">Click to explore</span>}
+      
+      <div className="flex items-center gap-3">
+        {!enabled && <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 border border-gray-200 dark:border-[#333] px-2 py-1 rounded-md">Under Review</span>}
+        {enabled && (
+           <div className="w-8 h-8 rounded-full border border-gray-200 dark:border-[#333] flex items-center justify-center text-gray-400 group-hover/card:text-black dark:group-hover/card:text-white group-hover/card:border-black dark:group-hover/card:border-white transition-colors">
+             <span className="text-sm leading-none transform group-hover/card:translate-x-0.5 transition-transform">→</span>
+           </div>
+        )}
       </div>
     </div>
   );
 
   if (enabled && link) {
     return (
-      <Link href={link} className="group active:scale-95 transition-transform">
+      <Link href={link} className="block active:scale-[0.99] transition-transform">
         {cardContent}
       </Link>
     );
   }
-
   return cardContent;
 }

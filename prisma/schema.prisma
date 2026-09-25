@@ -30,6 +30,8 @@ model User {
   status                Boolean   @default(true)
   emailVerification     Boolean   @default(false)
   phone                 String?
+  isPremium             Boolean   @default(false)
+  premiumExpiresAt      DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

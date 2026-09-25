@@ -12,6 +12,7 @@ import { useRouter } from "@/components/useRouter";
 import { useUser } from "@/context/UserContext";
 import { fetchWallet } from "@/lib/api/wallet";
 import { fetchContributorEarnings } from "@/lib/api/earnings";
+import BannerAd from "@/components/BannerAd";
 
 import {
   LineChart,
@@ -106,7 +107,7 @@ function AnalyticsChart({
   setRange: (r: "7d" | "30d" | "1y") => void;
 }) {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 w-full">
+    <div className="bg-white dark:bg-black rounded-3xl p-6 border border-gray-100 dark:border-gray-800 w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -126,7 +127,7 @@ function AnalyticsChart({
           onChange={(e) =>
             setRange(e.target.value as "7d" | "30d" | "1y")
           }
-          className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none"
+          className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg focus:outline-none"
         >
           <option value="7d">Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
@@ -143,7 +144,7 @@ function AnalyticsChart({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#2563EB"
+              stroke="#000000"
               strokeWidth={2.5}
               dot={{ r: 3 }}
             />
@@ -200,15 +201,34 @@ export default function EarningsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 px-4">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-solid mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black px-4">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-black dark:border-white border-solid mb-4"></div>
     <p className="text-gray-700 dark:text-gray-300 text-sm">Loading, please wait...</p>
   </div>
     );
   }
 
+  const [bannerAdOpen, setBannerAdOpen] = useState(false);
+  const [currentBanner, setCurrentBanner] = useState<any>(null);
+  const { allScreenBannerAds, showAdAll } = useUser();
+
+  useEffect(() => {
+    if (allScreenBannerAds.length > 0) {
+      const value = showAdAll();
+      setBannerAdOpen(value);
+      setCurrentBanner(allScreenBannerAds[Math.floor(Math.random() * allScreenBannerAds.length)]);
+    }
+  }, [allScreenBannerAds]);
+
   return (
     <div className="min-h-screen bg-transparent flex flex-col text-gray-900 dark:text-white pb-20">
+      {currentBanner && (
+        <BannerAd
+          ad={currentBanner}
+          isOpen={bannerAdOpen}
+          onClose={() => setBannerAdOpen(false)}
+        />
+      )}
       <main className="flex-1 w-full">
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
@@ -229,7 +249,7 @@ export default function EarningsPage() {
           </div>
 
           {/* Balance */}
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 ">
+          <div className="bg-white dark:bg-black rounded-3xl p-6 border border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mb-4">
               <Landmark size={20} />
               <span className="text-sm">Available balance</span>
@@ -243,7 +263,7 @@ export default function EarningsPage() {
               Total Earnings: NGN {totalEarnings.toLocaleString()}
             </p>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2" onClick={() => router.push("/contributor/payments/withdraw")}>
+            <button className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-xl flex items-center justify-center gap-2" onClick={() => router.push("/contributor/payments/withdraw")}>
               <Wallet size={18} />
               Withdraw Funds
             </button>
@@ -257,7 +277,7 @@ export default function EarningsPage() {
           />
 
           {/* Transactions */}
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-6">
+          <div className="bg-white dark:bg-black rounded-3xl p-6 border border-gray-200 dark:border-gray-800">
             <h3 className="text-lg font-bold mb-6">
               Recent Transactions
             </h3>
@@ -266,7 +286,7 @@ export default function EarningsPage() {
               {earnings.map((tx) => (
                 <div key={tx.$id} className="flex justify-between">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
                       {tx.type === "subscription" ? (
                         <Monitor size={20} />
                       ) : (

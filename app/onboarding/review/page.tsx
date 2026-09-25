@@ -20,7 +20,7 @@ export default function ApplicationUnderReviewPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-transparent flex flex-col text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-transparent dark:bg-black flex flex-col text-gray-900 dark:text-white">
       <main className="grow flex flex-col items-center justify-center px-4 w-full max-w-3xl mx-auto" style={{ paddingTop: 40 }}>
 
 
@@ -35,11 +35,11 @@ export default function ApplicationUnderReviewPage() {
         </div>
 
         {/* CARD */}
-        <div className="w-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm" style={{ marginTop: 25 }}>
+        <div className="w-full bg-white dark:bg-black border border-gray-100 dark:border-gray-800 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm" style={{ marginTop: 25 }}>
 
           {/* STATUS HEADER */}
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold tracking-widest text-blue-600 uppercase">
+            <span className="text-xs font-semibold tracking-widest text-gray-900 dark:text-white uppercase">
               Verification Status
             </span>
             <div style={{ backgroundColor: 'yellow', paddingRight: 10, paddingLeft: 10, paddingTop: 1, paddingBottom: 2, borderRadius: 20 }}>
@@ -59,7 +59,7 @@ export default function ApplicationUnderReviewPage() {
           </div>
 
           {/* INFO BOX */}
-          <div className="flex gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+          <div className="flex gap-4 p-4 rounded-xl bg-gray-50 dark:bg-[#111] border border-gray-100 dark:border-gray-800">
             <Clock size={18} className="text-gray-400 mt-0.5" />
 
             <div className="space-y-1">
@@ -78,7 +78,7 @@ export default function ApplicationUnderReviewPage() {
         <div className="w-full flex flex-col items-center gap-4 mt-10">
 
           <Link href={dashboardHref} className="w-full max-w-[260px]">
-            <button className="w-full bg-blue-600 text-white text-sm font-medium py-3 rounded-xl hover:bg-blue-700 active:scale-[0.90] transition-all">
+            <button className="w-full bg-black dark:bg-white text-white dark:text-black text-sm font-medium py-3 rounded-xl hover:bg-blue-700 active:scale-[0.90] transition-all">
               Return to Dashboard
             </button>
           </Link>

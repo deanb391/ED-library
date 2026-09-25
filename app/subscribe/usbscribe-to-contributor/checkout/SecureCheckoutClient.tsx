@@ -20,8 +20,6 @@ import { addCourseToLibrary, addSubscriptionsCoursesToLibrary } from "@/lib/api/
 import { fetchLibrary } from "@/lib/api/library";
 import { checkSubscriptionAccess } from "@/lib/api/subscriptions";
 
-const BRAND_BLUE = "#1C64F2";
-
 type CheckoutCourse = {
   id: string;
   title: string;
@@ -47,6 +45,7 @@ export default function SecureCheckoutPage() {
   const { user } = useUser()
   const [contributor, setContributor] = useState<Contributor>()
   const [showPaymentTransferModal, setShowPaymentTransferModal] = useState(false)
+  const [showConfirmPaymentModal, setShowConfirmPaymentModal] = useState(false)
 
   const router = useRouter();
 
@@ -61,16 +60,18 @@ export default function SecureCheckoutPage() {
           try {
             const course = await fetchCourseById(id);
 
-            const priceData = course?.price
-              ? JSON.parse(course.price)
-              : null;
-
-
-            let finalPrice = priceData?.isFree ? 0 : priceData?.amount || 0;
-
-            if (priceData.type === "one-time") {
-              finalPrice = finalPrice * (course?.pageCount || 0)
-            }
+            let finalPrice = 0;
+            try {
+              if (course?.price && typeof course.price === 'string' && course.price.includes('{')) {
+                const priceData = JSON.parse(course.price);
+                finalPrice = priceData.isFree ? 0 : (priceData.amount || 0);
+                if (priceData.type === "one-time") {
+                  finalPrice = finalPrice * (course?.pageCount || 0);
+                }
+              } else if (course?.price) {
+                finalPrice = Number(course.price) || 0;
+              }
+            } catch (e) {}
 
 
 
@@ -79,7 +80,7 @@ export default function SecureCheckoutPage() {
               id: course.id,
               title: course.title,
               price: finalPrice,
-              user: course.user,
+              user: typeof course.user === 'object' ? course.user?.id : (course.user || course.userId),
               alreadyOwned: false, // resolved below
             });
 
@@ -144,6 +145,11 @@ export default function SecureCheckoutPage() {
     }
 
     loadWallet();
+    
+    // Save current checkout URL for the Failed page to redirect back
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lastCheckoutUrl", window.location.href);
+    }
   }, [idsParam, user?.$id]);
 
   const total = courses.reduce((sum, c) => sum + c.price, 0);
@@ -172,12 +178,16 @@ export default function SecureCheckoutPage() {
       return;
     }
 
+    setShowConfirmPaymentModal(true);
+  }
+
+  const handleInitiatePayment = () => {
+    setShowConfirmPaymentModal(false);
     if (selectedPaymentMethod === "flutterwave") {
       setShowPaymentTransferModal(true);
     } else if (selectedPaymentMethod === "wallet") {
-      handleConfirm()
+      handleConfirm();
     }
-
   }
 
   const handleConfirm = async () => {
@@ -187,16 +197,18 @@ export default function SecureCheckoutPage() {
       setShowPaymentTransferModal(false);
       setLoading(true);
       const ids = courses.map((c) => c.id);
-
-
-      if (!contributor) return;
-      if (!type) return;
-
-
+      
+      const paymentType = type || "one-time";
+      const contributorId = contributor?.$id || courses[0]?.user;
+      
+      if (!contributorId) {
+        console.error("Missing contributor ID");
+        return;
+      }
 
       if (selectedPaymentMethod === "wallet") {
         setShowPaymentModal(true);
-        const res = await payForCourse(ids, user.$id, user.email, "wallet", type, contributor.$id);
+        const res = await payForCourse(ids, user.$id, user.email, "wallet", paymentType, contributorId);
         if (res.success) {
           router.push("/subscribe/usbscribe-to-contributor/success");
         } else {
@@ -204,7 +216,7 @@ export default function SecureCheckoutPage() {
         }
         setShowPaymentModal(false);
       } else {
-        const res = await payForCourse(ids, user.$id, user.email, "flutterwave", type, contributor.$id);
+        const res = await payForCourse(ids, user.$id, user.email, "flutterwave", paymentType, contributorId);
         if (res.checkoutUrl) {
           window.location.href = res.checkoutUrl;
         }
@@ -233,11 +245,8 @@ export default function SecureCheckoutPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: BRAND_BLUE }}
-          >
-            <Lock size={18} className="text-white" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-black dark:bg-white">
+            <Lock size={18} className="text-white dark:text-black" />
           </div>
 
           <div>
@@ -305,61 +314,29 @@ export default function SecureCheckoutPage() {
 
           <div className="flex justify-between text-base font-semibold text-gray-900 dark:text-white">
             <span>Amount to pay</span>
-            <span style={{ color: BRAND_BLUE }}>
+            <span>
               ₦{total.toLocaleString()}
             </span>
           </div>
         </div>
 
         {/* Payment Method */}
-        <div
-          style={{
-            backgroundColor: "#ffffff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "16px",
-            padding: "1.5rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.25rem",
-            boxSizing: "border-box",
-            width: "100%",
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          }}
-        >
-          <h3
-            style={{
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              color: "#374151",
-              margin: 0,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em"
-            }}
-          >
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-2xl p-6 flex flex-col gap-5 w-full">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
             Payment Method
           </h3>
 
           {/* Wallet Option */}
           <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              padding: "1rem",
-              border: selectedPaymentMethod === "wallet" ? "2px solid #2563eb" : "1px solid #e5e7eb",
-              borderRadius: "12px",
-              backgroundColor: selectedPaymentMethod === "wallet" ? "#eff6ff" : "transparent",
-              opacity: (!wallet || wallet.balance < total) ? 0.75 : 1,
-              transition: "all 0.2s ease-in-out"
-            }}
+            className={`flex flex-col p-4 rounded-xl border-2 transition-all ${
+              selectedPaymentMethod === "wallet"
+                ? "border-black dark:border-white bg-gray-50 dark:bg-gray-900"
+                : "border-gray-200 dark:border-gray-800 bg-transparent"
+            }`}
+            style={{ opacity: (!wallet || wallet.balance < total) ? 0.75 : 1 }}
           >
             <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                cursor: (!wallet || wallet.balance < total) ? "not-allowed" : "pointer",
-                margin: 0
-              }}
+              className={`flex items-center gap-3 m-0 ${(!wallet || wallet.balance < total) ? "cursor-not-allowed" : "cursor-pointer"}`}
             >
               <input
                 type="radio"
@@ -368,50 +345,19 @@ export default function SecureCheckoutPage() {
                 checked={selectedPaymentMethod === "wallet"}
                 onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
                 disabled={!wallet || wallet.balance < total}
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  cursor: "inherit",
-                  accentColor: "#2563eb"
-                }}
+                className="w-5 h-5 accent-black dark:accent-white cursor-inherit"
               />
-              <span
-                style={{
-                  fontSize: "0.95rem",
-                  fontWeight: "600",
-                  color: "#111827"
-                }}
-              >
+              <span className="text-[0.95rem] font-semibold text-gray-900 dark:text-white">
                 Wallet
               </span>
             </label>
 
             {wallet ? (
-              <div
-                style={{
-                  marginLeft: "30px", // Align perfectly with the label text, skipping the radio button
-                  marginTop: "0.5rem",
-                  fontSize: "0.85rem",
-                  color: "#4b5563",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem"
-                }}
-              >
+              <div className="ml-[32px] mt-2 text-[0.85rem] text-gray-600 dark:text-gray-400 flex flex-col gap-2">
                 <div>
                   Balance: ₦{wallet?.balance?.toLocaleString()}
                   {wallet?.balance < total && (
-                    <span
-                      style={{
-                        color: "#dc2626",
-                        fontWeight: "600",
-                        marginLeft: "0.5rem",
-                        backgroundColor: "#fef2f2",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        fontSize: "0.75rem"
-                      }}
-                    >
+                    <span className="text-red-600 dark:text-red-400 font-semibold ml-2 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-xl text-xs">
                       Insufficient balance
                     </span>
                   )}
@@ -421,18 +367,7 @@ export default function SecureCheckoutPage() {
                   <div>
                     <button
                       onClick={() => router.push("/wallet/topup")}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#2563eb",
-                        padding: 0,
-                        fontSize: "0.85rem",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px"
-                      }}
+                      className="bg-transparent border-none text-black dark:text-white p-0 text-[0.85rem] font-semibold cursor-pointer text-left underline underline-offset-[3px]"
                     >
                       Top Up Wallet
                     </button>
@@ -440,26 +375,10 @@ export default function SecureCheckoutPage() {
                 )}
               </div>
             ) : (
-              <div
-                style={{
-                  marginLeft: "30px",
-                  marginTop: "0.5rem"
-                }}
-              >
+              <div className="ml-[32px] mt-2">
                 <button
                   onClick={() => router.push("/wallet/create")}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#2563eb",
-                    padding: 0,
-                    fontSize: "0.85rem",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "3px"
-                  }}
+                  className="bg-transparent border-none text-black dark:text-white p-0 text-[0.85rem] font-semibold cursor-pointer text-left underline underline-offset-[3px]"
                 >
                   Create Wallet
                 </button>
@@ -469,45 +388,22 @@ export default function SecureCheckoutPage() {
 
           {/* Flutterwave Option */}
           <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              padding: "1rem",
-              border: selectedPaymentMethod === "flutterwave" ? "2px solid #2563eb" : "1px solid #e5e7eb",
-              borderRadius: "12px",
-              backgroundColor: selectedPaymentMethod === "flutterwave" ? "#eff6ff" : "transparent",
-              transition: "all 0.2s ease-in-out"
-            }}
+            className={`flex flex-col p-4 rounded-xl border-2 transition-all ${
+              selectedPaymentMethod === "flutterwave"
+                ? "border-black dark:border-white bg-gray-50 dark:bg-gray-900"
+                : "border-gray-200 dark:border-gray-800 bg-transparent"
+            }`}
           >
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                cursor: "pointer",
-                margin: 0
-              }}
-            >
+            <label className="flex items-center gap-3 cursor-pointer m-0">
               <input
                 type="radio"
                 name="paymentMethod"
                 value="flutterwave"
                 checked={selectedPaymentMethod === "flutterwave"}
                 onChange={(e) => setSelectedPaymentMethod(e.target.value as "wallet" | "flutterwave")}
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  cursor: "inherit",
-                  accentColor: "#2563eb"
-                }}
+                className="w-5 h-5 accent-black dark:accent-white cursor-inherit"
               />
-              <span
-                style={{
-                  fontSize: "0.95rem",
-                  fontWeight: "600",
-                  color: "#111827"
-                }}
-              >
+              <span className="text-[0.95rem] font-semibold text-gray-900 dark:text-white">
                 Card / Bank Transfer
               </span>
             </label>
@@ -564,7 +460,8 @@ export default function SecureCheckoutPage() {
                   strokeWidth="4"
                 ></circle>
                 <path
-                  fill={BRAND_BLUE}
+                  fill="currentColor"
+                  className="text-black dark:text-white"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 >
                   <animateTransform
@@ -649,8 +546,7 @@ export default function SecureCheckoutPage() {
 
               <button
                 onClick={handleConfirm}
-                className="w-full py-3 rounded-xl text-white font-semibold"
-                style={{ backgroundColor: BRAND_BLUE }}
+                className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-semibold"
               >
                 Continue
               </button>
@@ -660,56 +556,13 @@ export default function SecureCheckoutPage() {
 
 
         {showFreeModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              backdropFilter: "blur(4px)", // Adds a professional blur effect to the background
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "1rem",
-              zIndex: 1000,
-              boxSizing: "border-box",
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-            }}
-          >
-            <div
-              style={{
-                width: "100%",
-                maxWidth: "400px",
-                backgroundColor: "#ffffff",
-                borderRadius: "16px",
-                padding: "2rem",
-                textAlign: "center",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                boxSizing: "border-box",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.25rem",
-                  fontWeight: "600",
-                  color: "#111827",
-                  marginTop: 0,
-                  marginBottom: "0.5rem"
-                }}
-              >
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[1000]">
+            <div className="w-full max-w-[400px] bg-white dark:bg-gray-900 rounded-2xl p-8 text-center shadow-2xl border border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 You're Good to Go
               </h2>
 
-              <p
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#4b5563",
-                  margin: "0 0 1.5rem 0",
-                  lineHeight: 1.5
-                }}
-              >
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
                 The selected course{courses.length > 1 ? "s are" : " is"} free.
                 You can start learning immediately.
               </p>
@@ -718,21 +571,9 @@ export default function SecureCheckoutPage() {
                 disabled={processingFree}
                 onClick={() => {
                   setShowFreeModal(false);
-                  router.replace('/library')
+                  router.replace('/library');
                 }}
-                style={{
-                  width: "100%",
-                  padding: "0.875rem",
-                  borderRadius: "12px",
-                  color: "#ffffff",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  backgroundColor: BRAND_BLUE,
-                  border: "none",
-                  cursor: processingFree ? "not-allowed" : "pointer",
-                  transition: "opacity 0.2s ease-in-out",
-                  opacity: processingFree ? 0.7 : 1
-                }}
+                className="w-full py-3.5 rounded-xl text-white dark:text-black font-semibold text-base bg-black dark:bg-white transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {processingFree ? "Preparing your library..." : "Go to Courses"}
               </button>
@@ -755,11 +596,11 @@ export default function SecureCheckoutPage() {
               <button
                 onClick={handleShowModel}
                 disabled={courses.length === 0 || allOwned}
-                className="w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition"
-                style={{
-                  backgroundColor: (courses.length === 0 || allOwned) ? "#D1D5DB" : BRAND_BLUE,
-                  cursor: (courses.length === 0 || allOwned) ? "not-allowed" : "pointer",
-                }}
+                className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
+                  (courses.length === 0 || allOwned)
+                    ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                    : "bg-black dark:bg-white text-white dark:text-black cursor-pointer hover:bg-gray-900 dark:hover:bg-gray-100"
+                }`}
               >
                 <CheckCircle2 size={18} />
                 Confirm Payment
@@ -773,6 +614,46 @@ export default function SecureCheckoutPage() {
           Cancel
         </button>
       </div>
+
+      {/* Confirm Payment Modal (from CourseDetailsClient) */}
+      {showConfirmPaymentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl relative">
+            <button
+              onClick={() => setShowConfirmPaymentModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-black dark:hover:text-white transition"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Confirm Payment</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+              You are about to purchase <strong>{courses.map(c => c.title).join(", ")}</strong> for NGN {total.toLocaleString()}.
+              A transaction fee of NGN 50 will be applied.
+            </p>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4 mb-6 border border-gray-200 dark:border-gray-800">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Course Price</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">NGN {total.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Transaction Fee</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">NGN 50</span>
+              </div>
+              <div className="h-px bg-gray-200 dark:bg-gray-800 my-3"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-base font-bold text-gray-900 dark:text-white">Total</span>
+                <span className="text-lg font-black text-gray-900 dark:text-white">NGN {(total + 50).toLocaleString()}</span>
+              </div>
+            </div>
+            <button
+              onClick={handleInitiatePayment}
+              className="w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-2xl transition hover:opacity-90"
+            >
+              Pay Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

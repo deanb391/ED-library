@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, RefreshCw, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, RefreshCw, Calendar, Clock, WifiOff, Download, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "@/components/useRouter";
 import { useUser } from "@/context/UserContext";
@@ -26,10 +26,12 @@ function isExpired(endDate: string) {
 }
 
 import AccessWall from "@/components/AccessWall";
+import CourseCard from "@/components/CourseCard";
+import BannerAd from "@/components/BannerAd";
 
 export default function LibraryPage() {
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, allScreenBannerAds, showAdAll, isOfflineMode } = useUser();
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("subscription");
@@ -37,13 +39,53 @@ export default function LibraryPage() {
   const [oneTimeCourses, setOneTimeCourses] = useState<Course[]>([]);
   const [subscriptionMap, setSubscriptionMap] = useState<Record<string, Subscription>>({});
 
+  const [bannerAdOpen, setBannerAdOpen] = useState(false);
+  const [currentBanner, setCurrentBanner] = useState<any>(null);
+
+  useEffect(() => {
+    if (allScreenBannerAds.length > 0) {
+      const value = showAdAll();
+      setBannerAdOpen(value);
+      setCurrentBanner(allScreenBannerAds[Math.floor(Math.random() * allScreenBannerAds.length)]);
+    }
+  }, [allScreenBannerAds]);
+
+
   useEffect(() => {
     if (!user?.$id) return;
 
     const loadLibrary = async () => {
-      try {
-        setLoading(true);
+      const online = typeof navigator !== "undefined" ? navigator.onLine : true;
 
+      setLoading(true);
+
+      // ─── OFFLINE: load from localStorage immediately, no network calls ───
+      if (!online) {
+        try {
+          const cachedSubMap = localStorage.getItem("cached_library_sub_map");
+          const cachedSubCourses = localStorage.getItem("cached_library_sub_courses");
+          const cachedOneCourses = localStorage.getItem("cached_library_one_courses");
+          const downloaded = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+
+          if (cachedSubMap) setSubscriptionMap(JSON.parse(cachedSubMap));
+          if (cachedSubCourses) {
+            const parsed = JSON.parse(cachedSubCourses);
+            setSubscriptionCourses(parsed.filter((c: Course) => downloaded.includes(c.id)));
+          }
+          if (cachedOneCourses) {
+            const parsed = JSON.parse(cachedOneCourses);
+            setOneTimeCourses(parsed.filter((c: Course) => downloaded.includes(c.id)));
+          }
+        } catch (e) {
+          // ignore parse errors
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // ─── ONLINE: full network fetch ────────────────────────────────
+      try {
         const lib = (await fetchLibrary(user.$id)).wallet;
 
         if (!lib) {
@@ -75,7 +117,6 @@ export default function LibraryPage() {
           Promise.all(oneIds.map((id) => fetchCourseById(id).catch(() => null))),
           fetchUserSubscriptions(user.$id).catch(() => [] as Subscription[]),
         ]);
-        console.log("userSubs: ", userSubs);
 
         // Build a quick lookup: courseId → Subscription
         const subLookup: Record<string, Subscription> = {};
@@ -84,17 +125,47 @@ export default function LibraryPage() {
         }
 
         setSubscriptionMap(subLookup);
-        console.log(subLookup);
-        setSubscriptionCourses(subCourses.filter(Boolean) as Course[]);
-        setOneTimeCourses(oneCourses.filter(Boolean) as Course[]);
+        const validSubCourses = subCourses.filter(Boolean) as Course[];
+        const validOneTimeCourses = oneCourses.filter(Boolean) as Course[];
+
+        setSubscriptionCourses(validSubCourses);
+        setOneTimeCourses(validOneTimeCourses);
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("cached_library_sub_map", JSON.stringify(subLookup));
+          localStorage.setItem("cached_library_sub_courses", JSON.stringify(validSubCourses));
+          localStorage.setItem("cached_library_one_courses", JSON.stringify(validOneTimeCourses));
+        }
       } catch (err) {
         console.error("LIBRARY LOAD ERROR:", err);
+        // fallback to cache on unexpected error
+        try {
+          const cachedSubMap = localStorage.getItem("cached_library_sub_map");
+          const cachedSubCourses = localStorage.getItem("cached_library_sub_courses");
+          const cachedOneCourses = localStorage.getItem("cached_library_one_courses");
+          const downloaded = JSON.parse(localStorage.getItem('downloaded_courses') || '[]');
+
+          if (cachedSubMap) setSubscriptionMap(JSON.parse(cachedSubMap));
+          if (cachedSubCourses) {
+            const parsed = JSON.parse(cachedSubCourses);
+            setSubscriptionCourses(parsed.filter((c: Course) => downloaded.includes(c.id)));
+          }
+          if (cachedOneCourses) {
+            const parsed = JSON.parse(cachedOneCourses);
+            setOneTimeCourses(parsed.filter((c: Course) => downloaded.includes(c.id)));
+          }
+        } catch (e) {}
       } finally {
         setLoading(false);
       }
     };
 
     loadLibrary();
+
+    // When connection restores, re-fetch the full library
+    const handleOnline = () => loadLibrary();
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
   }, [user?.$id]);
 
   if (userLoading) {
@@ -117,10 +188,35 @@ export default function LibraryPage() {
     );
   }
 
-  const courses =
-    activeTab === "subscription" ? subscriptionCourses : oneTimeCourses;
+  const allCourses = [...subscriptionCourses, ...oneTimeCourses].filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i);
+
+  // ─── Offline non-premium wall ──────────────────────────────────────────────
+  if (isOfflineMode && !user?.isPremium) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-white dark:bg-gray-950 text-center gap-6">
+        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <WifiOff size={32} className="text-gray-500 dark:text-gray-400" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">You're offline</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Offline access requires an <strong>ED-Library Premium</strong> subscription.
+            Download courses in advance to read them without internet.
+          </p>
+        </div>
+        <Link
+          href="/premium"
+          className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black font-semibold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition-opacity"
+        >
+          <Lock size={14} />
+          Get ED-Library Premium
+        </Link>
+      </div>
+    );
+  }
 
   return (
+
     <div
       style={{
         minHeight: "100vh",
@@ -134,13 +230,21 @@ export default function LibraryPage() {
       <div
         style={{
           width: "100%",
-          maxWidth: "672px",
+          maxWidth: "1200px",
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
           boxSizing: "border-box",
         }}
       >
+        {currentBanner && (
+          <BannerAd
+            ad={currentBanner}
+            isOpen={bannerAdOpen}
+            onClose={() => setBannerAdOpen(false)}
+          />
+        )}
+
         {/* HEADER */}
         <div
           style={{
@@ -176,47 +280,8 @@ export default function LibraryPage() {
           </h1>
         </div>
 
-        {/* TABS */}
-        <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-          <button
-            onClick={() => setActiveTab("subscription")}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              border: "none",
-              transition: "all 0.2s ease-in-out",
-              backgroundColor:
-                activeTab === "subscription" ? BRAND_BLUE : "#f3f4f6",
-              color: activeTab === "subscription" ? "#ffffff" : "#4b5563",
-            }}
-          >
-            Subscriptions
-          </button>
-
-          <button
-            onClick={() => setActiveTab("one-time")}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              cursor: "pointer",
-              border: "none",
-              transition: "all 0.2s ease-in-out",
-              backgroundColor:
-                activeTab === "one-time" ? BRAND_BLUE : "#f3f4f6",
-              color: activeTab === "one-time" ? "#ffffff" : "#4b5563",
-            }}
-          >
-            Bought
-          </button>
-        </div>
-
         {/* CONTENT */}
-        {courses.length === 0 ? (
+        {allCourses.length === 0 ? (
           <div
             style={{
               textAlign: "center",
@@ -228,109 +293,13 @@ export default function LibraryPage() {
             No courses here yet.
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            {courses.map((course) => {
-              const sub =
-                activeTab === "subscription"
-                  ? subscriptionMap[course.id]
-                  : undefined;
-              const expired = sub ? isExpired(sub.endDate) : false;
-
-              return (
-                <div
-                  key={course.id}
-                  className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col transition hover:shadow-md"
-                >
-                  <Link
-                    href={`/courses/${course.id}`}
-                    className="flex gap-4 p-4"
-                  >
-                    {/* Thumbnail */}
-                    <div className="relative h-20 w-24 shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden">
-                      <Image
-                        src={course.thumbnailUrl}
-                        alt={course.title}
-                        width={96}
-                        height={80}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex flex-col gap-1 justify-center">
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        <span>{course.code}</span>
-                        <span className="text-gray-300 dark:text-gray-600">•</span>
-                        <span>{course.session}</span>
-                      </div>
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">
-                        {course.title}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-gray-600 dark:text-gray-400">
-                        <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                          {course.department}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                          Level {String(course.level)}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Subscription metadata row */}
-                  {activeTab === "subscription" && sub && (
-                    <div
-                      className="flex items-center justify-between px-4 pb-4 gap-3 flex-wrap"
-                      style={{ borderTop: "1px solid #f3f4f6", paddingTop: "0.75rem" }}
-                    >
-                      <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <Calendar size={12} />
-                          <span>
-                            Start: {formatDate(sub.startDate)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock size={12} />
-                          <span>
-                            Ends: {formatDate(sub.endDate)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: expired ? "#fee2e2" : "#dcfce7",
-                            color: expired ? "#991b1b" : "#166534",
-                          }}
-                        >
-                          {expired ? "Expired" : "Active"}
-                        </span>
-
-                        {expired && (
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/subscribe/usbscribe-to-contributor/checkout?courses=${course.id}&type=subscription`
-                              )
-                            }
-                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg text-white"
-                            style={{ backgroundColor: BRAND_BLUE }}
-                          >
-                            <RefreshCw size={12} />
-                            Resubscribe
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {allCourses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
           </div>
         )}
+
       </div>
     </div>
   );

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { uploadThumbnail } from "@/lib/api/courses";
 import { editCourse } from "@/lib/api/courses";
 import { bool } from "aws-sdk/clients/signer";
-import { Currency } from "lucide-react";
+import { Currency, ImageIcon, Loader2 } from "lucide-react";
+import { useRef } from "react";
 
 interface EditCourseModalProps {
   isOpen: boolean;
@@ -37,12 +38,12 @@ export default function EditCourseModal({
   const [lecturer, setLecturer] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isOnGoing, setIsOnGoing] = useState(false);
-  const [amount, setAmount] = useState(0);
-  const [isFree, setIsFree] = useState(false);
-  const [parse, setParsed] = useState<any>({})
 
 
+  const [price, setPrice] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!isOpen) return;
 
@@ -51,27 +52,19 @@ export default function EditCourseModal({
     setDescription(course.description);
     setUniversity(course.university || "");
     setLecturer(course.lecturer || "");
-    setIsOnGoing(course.isOngoing || true)
+    setThumbnailUrl(course.thumbnailUrl || "");
 
     try {
       const parsed = JSON.parse((course as any).price || "{}");
-      setParsed(parsed);
-
-      setIsOnGoing(parsed?.type === "subscription");
-      setIsFree(parsed.isFree)
-
-      if (parsed?.type === "subscription") {
-
-        setAmount(parsed.amount || 0);
+      if (parsed?.amount !== undefined) {
+        setPrice(String(parsed.amount));
       } else {
-        setAmount(parsed.amount || 0);
+        setPrice(course.price || "");
       }
     } catch {
-      setIsOnGoing(false);
-      setAmount(0);
+      setPrice(course.price || "");
     }
-
-  }, [isOpen, course]);
+  }, [isOpen]);
 
 
   if (!isOpen) return null;
@@ -87,22 +80,9 @@ export default function EditCourseModal({
         description,
         university,
         lecturer: lecturer || undefined,
-        isOnGoing,
-        price: JSON.stringify(
-          {
-            type: isOnGoing ? "subscription" : "one-time",
-            currency: parse.currency,
-            isFree: amount > 0 ? false : true,
-            amount: amount,
-          }
-        )
+        price: price,
+        thumbnailUrl: thumbnailUrl,
       };
-
-      if (thumbnail) {
-        const uploaded = await uploadThumbnail(thumbnail);
-        payload.thumbnailId = uploaded.fileId;
-        payload.thumbnailUrl = uploaded.url;
-      }
 
       await editCourse(course.id, payload);
 
@@ -113,6 +93,24 @@ export default function EditCourseModal({
       alert("Failed to update course");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingThumbnail(true);
+    try {
+      const result = await uploadThumbnail(file);
+      setThumbnailUrl(result.url);
+      setThumbnail(file);
+    } catch (error) {
+      console.error("Failed to upload thumbnail", error);
+      alert("Failed to upload thumbnail");
+    } finally {
+      setIsUploadingThumbnail(false);
     }
   };
 
@@ -129,34 +127,10 @@ export default function EditCourseModal({
         padding: "16px",
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "520px",
-          height: "80vh",
-          backgroundColor: "#fff",
-          borderRadius: "24px",
-          border: "1px solid #e5e7eb",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+      <div className="w-full max-w-[520px] h-[80vh] bg-white dark:bg-black rounded-3xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden">
         {/* Header */}
-        <div
-          style={{
-            padding: "24px",
-            borderBottom: "1px solid #e5e7eb",
-            textAlign: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "18px",
-              fontWeight: 600,
-              color: "#111827",
-            }}
-          >
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800 text-center">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Edit course
           </h2>
         </div>
@@ -180,211 +154,153 @@ export default function EditCourseModal({
           >
             {/* Title */}
             <div>
-              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Course title
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: "1px solid #d1d5db",
-                  marginTop: "6px",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition mt-1.5"
               />
             </div>
 
             {/* Code */}
             <div>
-              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Course code
               </label>
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: "1px solid #d1d5db",
-                  marginTop: "6px",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition mt-1.5"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Description
               </label>
               <textarea
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: "1px solid #d1d5db",
-                  marginTop: "6px",
-                  resize: "none",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition mt-1.5 resize-none"
               />
             </div>
 
             {/* University */}
             <div>
-              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 University
               </label>
               <input
                 value={university}
                 onChange={(e) => setUniversity(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: "1px solid #d1d5db",
-                  marginTop: "6px",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition mt-1.5"
               />
             </div>
 
             {/* Lecturer */}
             <div>
-              <label style={{ fontSize: "14px", fontWeight: 500 }}>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Lecturer
               </label>
               <input
                 value={lecturer}
                 onChange={(e) => setLecturer(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  border: "1px solid #d1d5db",
-                  marginTop: "6px",
-                }}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition mt-1.5"
               />
             </div>
 
-            {/* File */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Change thumbnail <span className="text-gray-400">(optional)</span>
+            {/* Thumbnail */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Course thumbnail
               </label>
+              
+              <div 
+                className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 transition overflow-hidden relative"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {thumbnailUrl ? (
+                  <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center text-gray-500 dark:text-gray-400">
+                    <ImageIcon size={32} className="mb-2 opacity-50" />
+                    <span className="text-sm font-medium">Click to upload image</span>
+                  </div>
+                )}
+
+                {isUploadingThumbnail && (
+                  <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center backdrop-blur-sm">
+                    <Loader2 className="animate-spin text-white mb-2" size={32} />
+                    <span className="text-white text-sm font-medium">Uploading...</span>
+                  </div>
+                )}
+              </div>
               <input
                 type="file"
+                ref={fileInputRef}
+                className="hidden"
                 accept="image/*"
-                onChange={(e) =>
-                  setThumbnail(e.target.files ? e.target.files[0] : null)
-                }
-                className="block w-full text-sm text-gray-600 dark:text-gray-400
-                           file:mr-4 file:py-2.5 file:px-4
-                           file:rounded-xl file:border-0
-                           file:bg-blue-50 file:text-blue-600"
-              />
-            </div>
-
-            {/* Toggle */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span style={{ fontSize: "14px", fontWeight: 500 }}>
-                Is Ongoing
-              </span>
-              <input
-                type="checkbox"
-                checked={isOnGoing}
-                onChange={(e) => {
-                  setIsOnGoing(e.target.checked)
-                  setAmount(0)
-                }}
+                onChange={handleThumbnailChange}
               />
             </div>
 
             {/* Price */}
-            {
-              !isOnGoing && (
-                <div>
-                  <label style={{ fontSize: "14px", fontWeight: 500 }}>
-                    Price Per Page (NGN)
-                  </label>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Price (Optional)
+              </label>
+              <input
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="e.g. 5000"
+                type="number"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400
+                         focus:outline-none focus:bg-white dark:focus:bg-[#111] focus:ring-2 focus:ring-gray-900 dark:focus:ring-white transition"
+              />
+            </div>
 
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #d1d5db",
-                      marginTop: "10px",
-                    }}
-                    placeholder="Enter price per page"
-                  />
-                </div>
-              )
-            }
-
-            {
-              isOnGoing && (
-                <div>
-                  <label style={{ fontSize: "14px", fontWeight: 500 }}>
-                    Subscription Price (NGN)
-                  </label>
-
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      border: "1px solid #d1d5db",
-                      marginTop: "10px",
-                    }}
-                    placeholder="Enter subscription price"
-                  />
-                </div>
-              )
-            }
-
+            {/* Actions */}
             <div
               style={{
-                padding: "16px",
-                borderTop: "1px solid #e5e7eb",
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: "12px",
+                marginTop: "16px",
               }}
             >
-              <button type="button" onClick={onClose} style={{ color: "#6b7280" }}>
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "12px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                }}
+              >
                 Cancel
               </button>
-
               <button
                 type="submit"
                 disabled={isLoading}
                 style={{
-                  background: "#2563eb",
+                  padding: "10px 20px",
+                  borderRadius: "12px",
+                  backgroundColor: "#000",
                   color: "#fff",
-                  padding: "10px 16px",
-                  borderRadius: "10px",
-                  border: "none",
+                  fontWeight: 500,
+                  fontSize: "14px",
+                  opacity: isLoading ? 0.7 : 1,
                 }}
               >
-                {isLoading ? "Saving…" : "Save"}
+                {isLoading ? "Saving..." : "Save changes"}
               </button>
-
             </div>
           </form>
         </div>
