@@ -15,7 +15,15 @@ export default function SearchResultsOverlay() {
     <div className="absolute inset-0 bg-gray-50 dark:bg-black z-30 overflow-y-auto w-full">
       <main className="max-w-7xl mx-auto px-5 pt-4 pb-8">
         <div className="flex items-center gap-3 mb-6">
-          
+          <button
+            type="button"
+            onClick={closeSearch}
+            aria-label="Back to home"
+            title="Back to home"
+            className="size-9 shrink-0 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             Search results for &quot;{searchOverlayQuery}&quot;
           </h1>

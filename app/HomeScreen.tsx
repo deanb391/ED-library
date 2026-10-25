@@ -306,16 +306,19 @@ function CategoryPills() {
   }
   
   return (
-    <div 
+    <div
       className="flex gap-3 overflow-x-auto mb-8 pb-2"
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
     >
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-      {categories.map((cat, i) => (
+      <div
+        className="flex gap-3"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        {categories.map((cat, i) => (
         <button
           key={i}
           onClick={() => {
@@ -334,7 +337,8 @@ function CategoryPills() {
         >
           {cat}
         </button>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
